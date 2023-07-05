@@ -1,0 +1,25 @@
+
+body {
+    background-color: black;
+    margin: 0;
+    padding: 0;
+}
+
+.map {
+    width: 100%;
+    height: 100vh;
+    background-color: black;
+}
+
+.pocketmap-coords {
+    background-color: #fff;
+    border-bottom: 1px solid #ccc;
+    width: auto;
+    height: 26px;
+    line-height: 26px;
+    display: block;
+    text-align: center;
+    text-decoration: none;
+    color: black;
+    padding: 0 5px 0 5px;
+}

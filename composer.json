@@ -1,0 +1,10 @@
+{
+  "name": "hebbinkpro/pocketmap",
+  "require": {
+    "hebbinkpro/pmmp-webserver": "^1.0.0",
+    "pmmp/pocketmine-mp": "^5.0.0"
+  },
+  "autoload": {
+    "Hebbinkpro\\PocketMap\\": "src/Hebbinkpro/PocketMap"
+  }
+}

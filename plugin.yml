@@ -1,0 +1,18 @@
+name: PocketMap
+main: Hebbinkpro\PocketMap\PocketMap
+version: 0.0.1
+api: [5.0.0]
+load: STARTUP
+author: Hebbinkpro
+description: A dynamic world map for PocketMine-MP
+website: https://github.com/Hebbinkpro/PocketMap
+
+permissions:
+  pocketmap.cmd.reload:
+    description: Allows to reload the PocketMap config and web files
+    default: op
+
+commands:
+  reload:
+    description: Reloads the PocketMap config and web files
+    permission: pocketmap.cmd.reload
