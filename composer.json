@@ -1,10 +1,14 @@
 {
   "name": "hebbinkpro/pocketmap",
+  "description": "A dynamic web-based world map for PocketMine-MP servers.",
+  "license": "MIT",
   "require": {
-    "hebbinkpro/pmmp-webserver": "^1.0.0",
+    "hebbinkpro/pmmp-webserver": "^0.2.1",
     "pmmp/pocketmine-mp": "^5.0.0"
   },
   "autoload": {
-    "Hebbinkpro\\PocketMap\\": "src/Hebbinkpro/PocketMap"
+    "psr-4": {
+      "Hebbinkpro\\PocketMap\\": "src/Hebbinkpro/PocketMap"
+    }
   }
 }
