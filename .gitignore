@@ -1,0 +1,11 @@
+/resources/resource_packs/*/animation_controllers/
+/resources/resource_packs/*/animations/
+/resources/resource_packs/*/attachables/
+/resources/resource_packs/*/entity/
+/resources/resource_packs/*/fogs/
+/resources/resource_packs/*/models/
+/resources/resource_packs/*/particles/
+/resources/resource_packs/*/render_controllers/
+/resources/resource_packs/*/sounds/
+/resources/resource_packs/*/texts/
+/resources/resource_packs/*/ui/
