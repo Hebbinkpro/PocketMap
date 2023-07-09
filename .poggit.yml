@@ -5,4 +5,7 @@ branches:
 projects:
   PocketMap:
     path: ""
+    libs:
+      - src: Hebbinkpro/WebServer/WebServer
+        version: ^0.3.2
 ...
