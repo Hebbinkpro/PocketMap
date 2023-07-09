@@ -171,12 +171,11 @@ class PocketMap extends PluginBase implements Listener
     {
         $router = $this->webServer->getRouter();
 
-        $pages = $this->getDataFolder() . "web/pages/index.html";
         // main route
         $router->get("/", function (HttpRequest $req, HttpResponse $res, mixed ...$params) {
-            $res->sendFile($params[0]);
+            $res->sendFile($params[0]."web/pages/index.html");
             $res->end();
-        }, $pages);
+        }, $this->getDataFolder());
 
         // all static files used by web pages
         $web = $this->getDataFolder() . "web";
@@ -187,21 +186,22 @@ class PocketMap extends PluginBase implements Listener
 
     private function registerApiRoutes(): Router
     {
-        $router = new Router($this->webServer);
+        $router = new Router();
 
         $router->get("/", function (HttpRequest $req, HttpResponse $res) {
             $res->send("Hello World", "text/plain");
             $res->end();
         });
 
-        $worlds = array_diff(scandir($this->getDataFolder() . "renders"), [".", ".."]);
-
         $router->get("/regions", function (HttpRequest $req, HttpResponse $res, ...$params) {
+
+            $worlds = array_diff(scandir($params[0] . "renders"), [".", ".."]);
+
             $res->json([
-                "worlds" => array_values($params[0])
+                "worlds" => array_values($worlds)
             ]);
             $res->end();
-        }, $worlds);
+        }, $this->getDataFolder());
 
         // get image renders
         $router->getStatic("/render", $this->getDataFolder() . "renders");
