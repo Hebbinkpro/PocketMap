@@ -3,7 +3,7 @@
 A dynamic web-based world map for PocketMine-MP servers.
 
 ## How to install
-1. Download the newest version of the plugin from [the releases](https://github.com/Hebbinkpro/PocketMap/releases/tag/0.0.1)
+1. Download the newest version of the plugin from [Poggit CI](https://poggit.pmmp.io/ci/Hebbinkpro/PocketMap)
 2. Place the plugin in the plugins folder of your PocketMine-MP server
 3. Restart your server
 4. Go to `http://<server_ip>:3000` to see the map and load chunks to render new parts of the map.
