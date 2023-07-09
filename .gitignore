@@ -1,3 +1,4 @@
+/vendor/
 /resources/resource_packs/*/animation_controllers/
 /resources/resource_packs/*/animations/
 /resources/resource_packs/*/attachables/
@@ -9,4 +10,20 @@
 /resources/resource_packs/*/sounds/
 /resources/resource_packs/*/texts/
 /resources/resource_packs/*/ui/
-/vendor/
+/resources/resource_packs/*/sounds.json
+/resources/resource_packs/*/textures/items/
+/resources/resource_packs/*/textures/gui/
+/resources/resource_packs/*/textures/environment/
+/resources/resource_packs/*/textures/entity/
+/resources/resource_packs/*/textures/painting/
+/resources/resource_packs/*/textures/particle/
+/resources/resource_packs/*/textures/persona_thumbnails/
+/resources/resource_packs/*/textures/trims/
+/resources/resource_packs/*/textures/ui/
+/resources/resource_packs/*/textures/map/
+/resources/resource_packs/*/textures/misc/
+/resources/resource_packs/*/textures/models/
+/resources/resource_packs/*/textures/flame_atlas.png
+/resources/resource_packs/*/textures/flipbook_textures.json
+/resources/resource_packs/*/textures/forcefield_atlas.png
+/resources/resource_packs/*/textures/item_texture.json

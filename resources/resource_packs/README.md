@@ -2,6 +2,9 @@
 ## Vanilla Resource Packs
 PocketMap contains the resource pack of the latest (major) Minecraft Bedrock update, to make sure that all (new) textures can be used for generating the images. <br>
 The vanilla resource packs used in PocketMap are retrieved from the [official bedrock-samples repository](https://github.com/Mojang/bedrock-samples).
+### Latest Version
+**v1.20.0.1**
+
 
 ## Custom Resource Packs - _Not Supported_
 Custom resource packs are not yet supported, but this will be implemented in a future release of PocketMap. <br>
