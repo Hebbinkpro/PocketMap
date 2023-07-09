@@ -24,7 +24,8 @@ If you encounter any issues by using the plugin, please report them [here](https
 ## TO DO
 This is a list of all things that have to be added
 ### Configuration
-Add a configuration file
+- Add settings for rendering.
+- Add settings for resource packs.
 
 ### WebPage
 - Display online users (head and name)
