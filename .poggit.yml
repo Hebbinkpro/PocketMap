@@ -6,6 +6,6 @@ projects:
   PocketMap:
     path: ""
     libs:
-      - src: Hebbinkpro/WebServer/WebServer
+      - src: Hebbinkpro/pmmp-webserver/pmmp-webserver
         version: ^0.3.2
 ...
