@@ -1,0 +1,19 @@
+# Settings for the web server
+# The web server will be accessible at 'http://<address>:<port>/'.
+web-server:
+  # Address of the web server.
+  # Only change this when needed.
+  # Default: "127.0.0.1"
+  address: "127.0.0.1"
+  # Port of the web server.
+  # Set this to the port you want to use for the web server
+  # Default: 3000
+  port: 3000
+
+# Startup settings
+# These settings will influence the behaviour of PocketMap when the server starts.
+startup:
+  # Reload all web files on a server startup.
+  # This will reset all the web files back to the original files on each startup.
+  # default: false
+  reload-web-files: false

@@ -17,6 +17,7 @@ use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\event\Listener;
 use pocketmine\plugin\PluginBase;
+use pocketmine\utils\Config;
 use pocketmine\utils\Filesystem;
 use pocketmine\world\World;
 
@@ -25,8 +26,6 @@ class PocketMap extends PluginBase implements Listener
     public const RESOURCE_PACK_PATH = "resource_packs/";
     public const RESOURCE_PACK_NAME = "v1.20.0.1";
     public const TEXTURE_SIZE = 16;
-    //a bc
-
     public const RENDER_PATH = "renders/";
 
     private ResourcePack $resourcePack;
@@ -87,9 +86,9 @@ class PocketMap extends PluginBase implements Listener
     {
         switch ($command->getName()) {
             case "reload":
-                $this->getServer()->getLogger()->info("Reloading all config files...");
+                $this->getLogger()->info("Reloading all config files...");
                 $this->loadResources(true);
-                $this->getServer()->getLogger()->info("All config files are reloaded");
+                $this->getLogger()->info("All config files are reloaded");
                 break;
 
             default:
@@ -99,8 +98,14 @@ class PocketMap extends PluginBase implements Listener
         return true;
     }
 
-    private function loadResources(bool $reloadWebFiles = false): void
+    private function loadResources($reloadWebFiles = false): void
     {
+        // save the config file
+        $this->saveDefaultConfig();
+
+        // get startup settings
+        $startupSettings = $this->getConfig()->get("startup", ["reload-web-files" => false]);
+
         $plugin = $this->getFile() . "resources/";
         $data = $this->getDataFolder();
 
@@ -112,7 +117,7 @@ class PocketMap extends PluginBase implements Listener
         }
 
         // removes existing web files on startup
-        if ($reloadWebFiles) {
+        if ($startupSettings["reload-web-files"] || $reloadWebFiles) {
             // reload web files on startup
             Filesystem::recursiveUnlink($this->getDataFolder() . "web");
         }
@@ -143,7 +148,7 @@ class PocketMap extends PluginBase implements Listener
     protected function onEnable(): void
     {
         // load all resources
-        $this->loadResources(true);
+        $this->loadResources();
 
         // create the resource pack instance
         $this->resourcePack = new ResourcePack($this->getDataFolder() . self::RESOURCE_PACK_PATH . self::RESOURCE_PACK_NAME . "/", self::TEXTURE_SIZE);
@@ -151,9 +156,7 @@ class PocketMap extends PluginBase implements Listener
         WebServer::register($this);
 
         // create the web server
-        $this->webServer = new WebServer();
-        $this->registerRoutes();
-        $this->webServer->start();
+        $this->createWebServer();
 
         // start the render scheduler
         $this->renderScheduler = new RenderSchedulerTask($this);
@@ -167,8 +170,15 @@ class PocketMap extends PluginBase implements Listener
         $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
     }
 
-    private function registerRoutes(): void
+    private function createWebServer(): void
     {
+        $webSettings = $this->getConfig()->get("web-server", [
+            "address" => "127.0.0.1",
+            "port" => 3000
+        ]);
+
+        // create the web server
+        $this->webServer = new WebServer($webSettings["address"], $webSettings["port"]);
         $router = $this->webServer->getRouter();
 
         // main route
@@ -181,7 +191,11 @@ class PocketMap extends PluginBase implements Listener
         $web = $this->getDataFolder() . "web";
         $router->getStatic("/static", "$web/static");
 
+        // register the api router
         $router->route("/api/pocketmap", $this->registerApiRoutes());
+
+        // start the web server
+        $this->webServer->start();
     }
 
     private function registerApiRoutes(): Router
