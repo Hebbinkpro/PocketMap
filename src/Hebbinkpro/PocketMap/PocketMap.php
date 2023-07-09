@@ -2,8 +2,10 @@
 
 namespace Hebbinkpro\PocketMap;
 
+use Hebbinkpro\WebServer\http\HttpMethod;
 use Hebbinkpro\WebServer\http\HttpRequest;
 use Hebbinkpro\WebServer\http\HttpResponse;
+use Hebbinkpro\WebServer\route\Route;
 use Hebbinkpro\WebServer\route\Router;
 use Hebbinkpro\WebServer\WebServer;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
@@ -146,8 +148,10 @@ class PocketMap extends PluginBase implements Listener
         // create the resource pack instance
         $this->resourcePack = new ResourcePack($this->getDataFolder() . self::RESOURCE_PACK_PATH . self::RESOURCE_PACK_NAME . "/", self::TEXTURE_SIZE);
 
+        WebServer::register($this);
+
         // create the web server
-        $this->webServer = new WebServer($this);
+        $this->webServer = new WebServer();
         $this->registerRoutes();
         $this->webServer->start();
 
@@ -167,11 +171,12 @@ class PocketMap extends PluginBase implements Listener
     {
         $router = $this->webServer->getRouter();
 
+        $pages = $this->getDataFolder() . "web/pages/index.html";
         // main route
-        $router->get("/", function (HttpRequest $req, HttpResponse $res) {
-            $res->sendFile($this->getDataFolder() . "web/pages/index.html");
+        $router->get("/", function (HttpRequest $req, HttpResponse $res, mixed ...$params) {
+            $res->sendFile($params[0]);
             $res->end();
-        });
+        }, $pages);
 
         // all static files used by web pages
         $web = $this->getDataFolder() . "web";
@@ -189,15 +194,14 @@ class PocketMap extends PluginBase implements Listener
             $res->end();
         });
 
-        $router->get("/regions", function (HttpRequest $req, HttpResponse $res) {
+        $worlds = array_diff(scandir($this->getDataFolder() . "renders"), [".", ".."]);
 
-            $worlds = array_diff(scandir($this->getDataFolder() . "renders"), [".", ".."]);
-
+        $router->get("/regions", function (HttpRequest $req, HttpResponse $res, ...$params) {
             $res->json([
-                "worlds" => array_values($worlds)
+                "worlds" => array_values($params[0])
             ]);
             $res->end();
-        });
+        }, $worlds);
 
         // get image renders
         $router->getStatic("/render", $this->getDataFolder() . "renders");

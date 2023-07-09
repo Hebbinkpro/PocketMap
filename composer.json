@@ -3,7 +3,7 @@
   "description": "A dynamic web-based world map for PocketMine-MP servers.",
   "license": "MIT",
   "require": {
-    "hebbinkpro/pmmp-webserver": "^0.2.1",
+    "hebbinkpro/pmmp-webserver": "^0.3.0",
     "pmmp/pocketmine-mp": "^5.0.0"
   },
   "autoload": {
