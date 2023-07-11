@@ -13,6 +13,9 @@ use pocketmine\scheduler\Task;
 
 class RenderSchedulerTask extends Task
 {
+    /**
+     * Max amount of renders running simultaneously
+     */
     public const MAX_CURRENT_RENDERS = 5;
 
     private PluginBase $plugin;
@@ -85,25 +88,26 @@ class RenderSchedulerTask extends Task
         /**
          * @var string $path
          * @var RegionChunksLoader $loader
+         * @var int $renderMode
          */
-        foreach ($this->regionChunksLoaders as [$path, $loader]) {
+        foreach ($this->regionChunksLoaders as [$path, $loader, $renderMode]) {
             // is completely loaded
             if ($loader->run()) {
-                $this->startRenderTask($path, $loader->getRegionChunks());
+                $this->startRenderTask($path, $loader->getRegionChunks(), $renderMode);
                 continue;
             }
 
             // add to the not completed list
-            $notCompleted[] = [$path, $loader];
+            $notCompleted[] = [$path, $loader, $renderMode];
         }
 
         $this->regionChunksLoaders = $notCompleted;
     }
 
-    private function startRenderTask(string $path, RegionChunks $regionChunks)
+    private function startRenderTask(string $path, RegionChunks $regionChunks, int $renderMode)
     {
         // create a new async task
-        $task = new AsyncRegionRenderTask($path, $regionChunks);
+        $task = new AsyncRegionRenderTask($path, $regionChunks, $renderMode);
         $this->currentRegionRenders[] = $task;
 
         // submit the task to the async pool
@@ -140,14 +144,14 @@ class RenderSchedulerTask extends Task
                 // now we are going to use a region chunks loader
                 $world = $this->plugin->getServer()->getWorldManager()->getWorldByName($region->getWorldName());
                 $loader = new RegionChunksLoader($region, $world->getProvider());
-                $this->regionChunksLoaders[] = [$path, $loader];
+                $this->regionChunksLoaders[] = [$path, $loader, $region->getRenderMode()];
                 continue;
             }
 
             // get now the chunks of this region
             $regionChunks = RegionChunks::getCompleted($region, $this->plugin->getServer()->getWorldManager());
 
-            $this->startRenderTask($path, $regionChunks);
+            $this->startRenderTask($path, $regionChunks, $region->getRenderMode());
         }
     }
 

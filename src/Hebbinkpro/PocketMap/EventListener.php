@@ -54,7 +54,6 @@ class EventListener implements Listener
         $world = $e->getWorld();
         $cx = $e->getChunkX();
         $cz = $e->getChunkZ();
-        var_dump("Loading chunk: $cx,$cz");
 
         // get the world renderer
         $renderer = $this->plugin->getWorldRenderer($world->getFolderName());
@@ -67,8 +66,9 @@ class EventListener implements Listener
 
         // check if the maxed zoomed region has a render
         if (!$renderer->hasRender($maxZoomedRegion)) {
+            $chunk = $e->getChunk();
             // if it doesn't have a render, render all regions{
-            $this->plugin->getChunkUpdateTask()->addChunk($world, $cx, $cz);
+            $this->plugin->getChunkUpdateTask()->addChunk($world, $chunk, $cx, $cz);
         }
     }
 
@@ -83,8 +83,12 @@ class EventListener implements Listener
         $chunkX = floor($pos->getX() / 16);
         $chunkZ = floor($pos->getZ() / 16);
 
+        // get the chunk
+        $chunk = $world->getChunk($chunkX, $chunkZ);
+        if ($chunk === null) return;
+
         // add the chunk as updated to the update task
-        $this->plugin->getChunkUpdateTask()->addChunk($world, $chunkX, $chunkZ);
+        $this->plugin->getChunkUpdateTask()->addChunk($world, $chunk, $chunkX, $chunkZ);
     }
 
     public function onBlockBurn(BlockBurnEvent $e): void

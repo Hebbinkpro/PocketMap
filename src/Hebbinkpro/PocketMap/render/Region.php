@@ -3,6 +3,7 @@
 namespace Hebbinkpro\PocketMap\render;
 
 use Generator;
+use Hebbinkpro\PocketMap\task\AsyncRegionRenderTask;
 use Hebbinkpro\PocketMap\utils\ResourcePack;
 
 class Region
@@ -64,6 +65,22 @@ class Region
             $worldChunkX - ($this->regionX * $this->getTotalChunks()),
             $worldChunkZ - ($this->regionZ * $this->getTotalChunks())
         ];
+    }
+
+    /**
+     * Check if a chunk is inside the region.
+     * @param int $chunkX
+     * @param int $chunkZ
+     * @return bool
+     */
+    public function isChunkInRegion(int $chunkX, int $chunkZ): bool {
+        $minX = $this->regionX * $this->getTotalChunks();
+        $minZ = $this->regionZ * $this->getTotalChunks();
+        $maxX = ($this->regionX + 1) * $this->getTotalChunks();
+        $maxZ = ($this->regionZ + 1) * $this->getTotalChunks();
+
+        return $minX <= $chunkX && $chunkX < $maxX
+            && $minZ <= $chunkZ && $chunkZ < $maxZ;
     }
 
     /**
@@ -133,5 +150,9 @@ class Region
     public function getRegionZ(): int
     {
         return $this->regionZ;
+    }
+
+    public function getRenderMode(): int {
+        return AsyncRegionRenderTask::RENDER_MODE_FULL;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Hebbinkpro\PocketMap\render;
 
+use Hebbinkpro\PocketMap\task\AsyncRegionRenderTask;
 use Hebbinkpro\PocketMap\task\RenderSchedulerTask;
 use Hebbinkpro\PocketMap\utils\ResourcePack;
 use pocketmine\world\World;
@@ -90,7 +91,7 @@ class WorldRenderer
     public function startRegionRender(Region $region, bool $force = false): bool
     {
         if (!is_dir($this->renderPath . $region->getZoom())) mkdir($this->renderPath . $region->getZoom());
-        //$task = new AsyncRegionRenderTask($this->renderPath, $region);
+
         return $this->scheduler->scheduleRegionRender($this->renderPath, $region, $force);
     }
 
@@ -109,7 +110,17 @@ class WorldRenderer
         $totalChunks = self::ZOOM_LEVELS[$zoom];
         $rx = floor($chunkX / $totalChunks);
         $rz = floor($chunkZ / $totalChunks);
+
         return new Region($this->getWorld()->getFolderName(), $zoom, $rx, $rz, $this->rp);
+    }
+
+    public function getPartialRegion(int $zoom, int $chunkX, int $chunkZ): PartialRegion
+    {
+        $totalChunks = self::ZOOM_LEVELS[$zoom];
+        $rx = floor($chunkX / $totalChunks);
+        $rz = floor($chunkZ / $totalChunks);
+
+        return new PartialRegion($this->getWorld()->getFolderName(), $zoom, $rx, $rz, $this->rp);
     }
 
     /**
