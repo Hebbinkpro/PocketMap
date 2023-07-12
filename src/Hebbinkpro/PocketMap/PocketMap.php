@@ -28,6 +28,8 @@ class PocketMap extends PluginBase implements Listener
     public const TEXTURE_SIZE = 16;
     public const RENDER_PATH = "renders/";
 
+    private static string $tmpDataPath;
+
     private ResourcePack $resourcePack;
     private WebServer $webServer;
 
@@ -106,14 +108,14 @@ class PocketMap extends PluginBase implements Listener
         // get startup settings
         $startupSettings = $this->getConfig()->get("startup", ["reload-web-files" => false]);
 
-        $plugin = $this->getFile() . "resources/";
+        $pluginResources = $this->getFile() . "resources/";
         $data = $this->getDataFolder();
 
         // load the resource pack files
         $resourcePacks = "resource_packs/";
         $defaultPack = $resourcePacks . self::RESOURCE_PACK_NAME;
         if (!is_dir($data . $resourcePacks) || !is_dir($data . $defaultPack)) {
-            Filesystem::recursiveCopy($plugin . $resourcePacks, $data . $resourcePacks);
+            Filesystem::recursiveCopy($pluginResources . $resourcePacks, $data . $resourcePacks);
         }
 
         // removes existing web files on startup
@@ -125,7 +127,7 @@ class PocketMap extends PluginBase implements Listener
         // load the web server files
         $web = "web/";
         if (!is_dir($data . $web)) {
-            Filesystem::recursiveCopy($plugin . $web, $data . $web);
+            Filesystem::recursiveCopy($pluginResources . $web, $data . $web);
         }
 
         // create the renders folder
@@ -134,13 +136,29 @@ class PocketMap extends PluginBase implements Listener
             mkdir($data . $renders);
         }
 
+        // create the tmp folder for storing temp data
+
+        self::$tmpDataPath = $data."tmp/";
+        if (!is_dir(self::$tmpDataPath)) {
+            mkdir(self::$tmpDataPath);
+        }
+
+
+        // create the regions folder inside tmp
+        $tmpRegions = "regions/";
+        if (!is_dir(self::$tmpDataPath.$tmpRegions)) {
+            mkdir(self::$tmpDataPath.$tmpRegions);
+        }
+
+
         // create render folders for each world
         $worldFolders = scandir($this->getServer()->getDataPath() . "worlds/");
         foreach ($worldFolders as $worldName) {
-            // world exists but is not mapped
             if (!is_dir($data . $renders . $worldName)) {
-                // create the directory
                 mkdir($data . $renders . $worldName);
+            }
+            if (!is_dir(self::$tmpDataPath . $tmpRegions . $worldName)) {
+                mkdir(self::$tmpDataPath . $tmpRegions . $worldName);
             }
         }
     }
@@ -164,7 +182,7 @@ class PocketMap extends PluginBase implements Listener
 
         // start the chunk update task, this check every period if regions have to be updated
         $this->chunkUpdateTask = new ChunkUpdateTask($this);
-        $this->getScheduler()->scheduleRepeatingTask($this->chunkUpdateTask, 1000);
+        $this->getScheduler()->scheduleRepeatingTask($this->chunkUpdateTask, 100);
 
         // register the event listener
         $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
@@ -228,5 +246,9 @@ class PocketMap extends PluginBase implements Listener
     {
         // close the socket
         $this->webServer->close();
+    }
+
+    public static function getTmpDataPath(): string {
+        return self::$tmpDataPath;
     }
 }

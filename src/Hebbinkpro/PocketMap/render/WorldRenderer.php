@@ -95,6 +95,11 @@ class WorldRenderer
         return $this->scheduler->scheduleRegionRender($this->renderPath, $region, $force);
     }
 
+    /**
+     * @param int $chunkX
+     * @param int $chunkZ
+     * @return Region[]
+     */
     public function getAllRegionsFromChunk(int $chunkX, int $chunkZ): array
     {
         $regions = [];

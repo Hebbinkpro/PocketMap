@@ -111,6 +111,9 @@ class AsyncRegionRenderTask extends AsyncTask
 
         // yield all chunks
         foreach (RegionChunks::yieldAllEncodedChunks($this->regionChunks) as [$cx, $cz, $chunk]) {
+            // save the chunk to the region data
+            $region->addChunkToRenderData($cx,$cz);
+
             // create the chunk image
             $chunkImg = TextureUtils::createTextureFromChunk($chunk, $rp, $imgPixelsPerBlock);
 

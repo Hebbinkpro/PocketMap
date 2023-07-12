@@ -61,11 +61,13 @@ class EventListener implements Listener
         // get all regions the chunk exists in
         $regions = $renderer->getAllRegionsFromChunk($cx, $cz);
 
-        // get the region with the largest zoom
-        $maxZoomedRegion = $regions[array_key_last($regions)];
 
-        // check if the maxed zoomed region has a render
-        if (!$renderer->hasRender($maxZoomedRegion)) {
+        foreach ($regions as $region) {
+            // chunk already rendered
+            if ($region->hasRenderDataChunk($cx, $cz)) continue;
+            $this->plugin->getLogger()->debug("Found a not rendered chunk: $cx,$cz in world: ".$world->getFolderName()." for zoom: ".$region->getZoom());
+
+            // chunk is not yet rendered
             $chunk = $e->getChunk();
             // if it doesn't have a render, render all regions{
             $this->plugin->getChunkUpdateTask()->addChunk($world, $chunk, $cx, $cz);
