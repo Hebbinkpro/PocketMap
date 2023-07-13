@@ -65,7 +65,7 @@ class EventListener implements Listener
         foreach ($regions as $region) {
             // chunk already rendered
             if ($region->hasRenderDataChunk($cx, $cz)) continue;
-            $this->plugin->getLogger()->debug("Found a not rendered chunk: $cx,$cz in world: ".$world->getFolderName()." for zoom: ".$region->getZoom());
+            $this->plugin->getLogger()->debug("Found a not rendered chunk: $cx,$cz in world: " . $world->getFolderName() . " for zoom: " . $region->getZoom());
 
             // chunk is not yet rendered
             $chunk = $e->getChunk();

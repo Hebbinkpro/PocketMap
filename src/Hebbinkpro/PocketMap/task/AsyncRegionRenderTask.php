@@ -67,23 +67,6 @@ class AsyncRegionRenderTask extends AsyncTask
     }
 
     /**
-     * Create a full render of the region
-     * @param Region $region
-     * @return void
-     */
-    private function renderFull(Region $region): void
-    {
-        // create base image
-        $regionImg = imagecreatetruecolor(WorldRenderer::RENDER_SIZE, WorldRenderer::RENDER_SIZE);
-
-        // draw the chunks on the image
-        $this->drawChunks($region, $regionImg);
-
-        // store the image
-        $this->storeRegionImage($regionImg);
-    }
-
-    /**
      * Use an existing image to render the given chunks on
      * @param Region $region
      * @return void
@@ -105,7 +88,25 @@ class AsyncRegionRenderTask extends AsyncTask
         $this->storeRegionImage($regionImg);
     }
 
-    private function drawChunks(Region $region, GdImage $image): void {
+    /**
+     * Create a full render of the region
+     * @param Region $region
+     * @return void
+     */
+    private function renderFull(Region $region): void
+    {
+        // create base image
+        $regionImg = imagecreatetruecolor(WorldRenderer::RENDER_SIZE, WorldRenderer::RENDER_SIZE);
+
+        // draw the chunks on the image
+        $this->drawChunks($region, $regionImg);
+
+        // store the image
+        $this->storeRegionImage($regionImg);
+    }
+
+    private function drawChunks(Region $region, GdImage $image): void
+    {
         $rp = $region->getResourcePack();
 
         $chunkSize = $region->getChunkPixelSize();
@@ -120,7 +121,7 @@ class AsyncRegionRenderTask extends AsyncTask
         // yield all chunks
         foreach (RegionChunks::yieldAllEncodedChunks($this->regionChunks) as [$cx, $cz, $chunk]) {
             // save the chunk to the region data
-            $region->addChunkToRenderData($cx,$cz);
+            $region->addChunkToRenderData($cx, $cz);
 
             // create the chunk image
             $chunkImg = TextureUtils::createChunkTexture($chunk, $rp, $totalBlocks, $imgPixelsPerBlock);
@@ -138,7 +139,8 @@ class AsyncRegionRenderTask extends AsyncTask
         }
     }
 
-    private function storeRegionImage(GdImage $image): void {
+    private function storeRegionImage(GdImage $image): void
+    {
 
         imagepng($image, $this->renderFile);
         imagedestroy($image);

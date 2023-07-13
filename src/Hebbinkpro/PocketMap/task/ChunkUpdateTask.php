@@ -2,10 +2,10 @@
 
 namespace Hebbinkpro\PocketMap\task;
 
+use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\render\PartialRegion;
 use Hebbinkpro\PocketMap\render\Region;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
-use Hebbinkpro\PocketMap\PocketMap;
 use pocketmine\scheduler\Task;
 use pocketmine\world\format\Chunk;
 use pocketmine\world\World;
@@ -68,6 +68,20 @@ class ChunkUpdateTask extends Task
     }
 
     /**
+     * Get a saved region by a similar region
+     * @param Region $region
+     * @return Region|null
+     */
+    public function getStoredRegion(Region $region): ?Region
+    {
+        foreach ($this->updatedRegions as $r) {
+            if ($region->equals($r)) return $r;
+        }
+
+        return null;
+    }
+
+    /**
      * Check if a region is already in the queue
      * @param Region $region
      * @return bool
@@ -79,19 +93,6 @@ class ChunkUpdateTask extends Task
         }
 
         return false;
-    }
-
-    /**
-     * Get a saved region by a similar region
-     * @param Region $region
-     * @return Region|null
-     */
-    public function getStoredRegion(Region $region): ?Region {
-        foreach ($this->updatedRegions as $r) {
-            if ($region->equals($r)) return $r;
-        }
-
-        return null;
     }
 
     public function onRun(): void

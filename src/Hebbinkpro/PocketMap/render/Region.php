@@ -2,6 +2,7 @@
 
 namespace Hebbinkpro\PocketMap\render;
 
+use Exception;
 use Generator;
 use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\task\AsyncRegionRenderTask;
@@ -24,7 +25,7 @@ class Region
         $this->regionX = $regionX;
         $this->regionZ = $regionZ;
         $this->rp = $rp;
-        $this->tmpFile = PocketMap::getTmpDataPath()."regions/$this->worldName/$this->zoom,$this->regionX,$this->regionZ.json";
+        $this->tmpFile = PocketMap::getTmpDataPath() . "regions/$this->worldName/$this->zoom,$this->regionX,$this->regionZ.json";
     }
 
     /**
@@ -68,22 +69,6 @@ class Region
             $worldChunkX - ($this->regionX * $this->getTotalChunks()),
             $worldChunkZ - ($this->regionZ * $this->getTotalChunks())
         ];
-    }
-
-    /**
-     * Check if a chunk is inside the region.
-     * @param int $chunkX
-     * @param int $chunkZ
-     * @return bool
-     */
-    public function isChunkInRegion(int $chunkX, int $chunkZ): bool {
-        $minX = $this->regionX * $this->getTotalChunks();
-        $minZ = $this->regionZ * $this->getTotalChunks();
-        $maxX = ($this->regionX + 1) * $this->getTotalChunks();
-        $maxZ = ($this->regionZ + 1) * $this->getTotalChunks();
-
-        return $minX <= $chunkX && $chunkX < $maxX
-            && $minZ <= $chunkZ && $chunkZ < $maxZ;
     }
 
     /**
@@ -150,32 +135,13 @@ class Region
         return $this->regionZ;
     }
 
-    public function getRenderMode(): int {
+    public function getRenderMode(): int
+    {
         return AsyncRegionRenderTask::RENDER_MODE_FULL;
     }
 
-    /**
-     * @return array{completed: bool, chunks?: int[][]}|null
-     */
-    public function getRenderData(): ?array {
-        try {
-            $fileData = file_get_contents($this->tmpFile);
-        } catch (\Exception $e) {
-            return null;
-        }
-
-        $data = json_decode($fileData, true);
-        if (!$data) return null;
-        return $data;
-    }
-
-    public function isRenderDataComplete(): bool {
-        $data = $this->getRenderData();
-        if ($data === null) return false;
-        return $data["completed"] ?? false;
-    }
-
-    public function addChunkToRenderData(int $chunkX, int $chunkZ): void {
+    public function addChunkToRenderData(int $chunkX, int $chunkZ): void
+    {
         // cannot add chunk
         if ($this->isRenderDataComplete() || !$this->isChunkInRegion($chunkX, $chunkZ)) return;
 
@@ -213,7 +179,48 @@ class Region
         file_put_contents($this->tmpFile, json_encode($data));
     }
 
-    public function hasRenderDataChunk(int $chunkX, int $chunkZ): bool {
+    public function isRenderDataComplete(): bool
+    {
+        $data = $this->getRenderData();
+        if ($data === null) return false;
+        return $data["completed"] ?? false;
+    }
+
+    /**
+     * @return array{completed: bool, chunks?: int[][]}|null
+     */
+    public function getRenderData(): ?array
+    {
+        try {
+            $fileData = file_get_contents($this->tmpFile);
+        } catch (Exception $e) {
+            return null;
+        }
+
+        $data = json_decode($fileData, true);
+        if (!$data) return null;
+        return $data;
+    }
+
+    /**
+     * Check if a chunk is inside the region.
+     * @param int $chunkX
+     * @param int $chunkZ
+     * @return bool
+     */
+    public function isChunkInRegion(int $chunkX, int $chunkZ): bool
+    {
+        $minX = $this->regionX * $this->getTotalChunks();
+        $minZ = $this->regionZ * $this->getTotalChunks();
+        $maxX = ($this->regionX + 1) * $this->getTotalChunks();
+        $maxZ = ($this->regionZ + 1) * $this->getTotalChunks();
+
+        return $minX <= $chunkX && $chunkX < $maxX
+            && $minZ <= $chunkZ && $chunkZ < $maxZ;
+    }
+
+    public function hasRenderDataChunk(int $chunkX, int $chunkZ): bool
+    {
         if (!$this->isChunkInRegion($chunkX, $chunkZ)) {
             return false;
         }

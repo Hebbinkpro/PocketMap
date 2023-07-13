@@ -2,22 +2,18 @@
 
 namespace Hebbinkpro\PocketMap;
 
-use Hebbinkpro\WebServer\http\HttpMethod;
-use Hebbinkpro\WebServer\http\HttpRequest;
-use Hebbinkpro\WebServer\http\HttpResponse;
-use Hebbinkpro\WebServer\route\Route;
-use Hebbinkpro\WebServer\route\Router;
-use Hebbinkpro\WebServer\WebServer;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
-use Hebbinkpro\PocketMap\task\AsyncLevelDBTask;
 use Hebbinkpro\PocketMap\task\ChunkUpdateTask;
 use Hebbinkpro\PocketMap\task\RenderSchedulerTask;
 use Hebbinkpro\PocketMap\utils\ResourcePack;
+use Hebbinkpro\WebServer\http\HttpRequest;
+use Hebbinkpro\WebServer\http\HttpResponse;
+use Hebbinkpro\WebServer\route\Router;
+use Hebbinkpro\WebServer\WebServer;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\event\Listener;
 use pocketmine\plugin\PluginBase;
-use pocketmine\utils\Config;
 use pocketmine\utils\Filesystem;
 use pocketmine\world\World;
 
@@ -38,6 +34,11 @@ class PocketMap extends PluginBase implements Listener
 
     /** @var WorldRenderer[] */
     private array $worldRenderers = [];
+
+    public static function getTmpDataPath(): string
+    {
+        return self::$tmpDataPath;
+    }
 
     public function getWorldRenderer(World|string $world): ?WorldRenderer
     {
@@ -138,7 +139,7 @@ class PocketMap extends PluginBase implements Listener
 
         // create the tmp folder for storing temp data
 
-        self::$tmpDataPath = $data."tmp/";
+        self::$tmpDataPath = $data . "tmp/";
         if (!is_dir(self::$tmpDataPath)) {
             mkdir(self::$tmpDataPath);
         }
@@ -146,8 +147,8 @@ class PocketMap extends PluginBase implements Listener
 
         // create the regions folder inside tmp
         $tmpRegions = "regions/";
-        if (!is_dir(self::$tmpDataPath.$tmpRegions)) {
-            mkdir(self::$tmpDataPath.$tmpRegions);
+        if (!is_dir(self::$tmpDataPath . $tmpRegions)) {
+            mkdir(self::$tmpDataPath . $tmpRegions);
         }
 
 
@@ -201,7 +202,7 @@ class PocketMap extends PluginBase implements Listener
 
         // main route
         $router->get("/", function (HttpRequest $req, HttpResponse $res, mixed ...$params) {
-            $res->sendFile($params[0]."web/pages/index.html");
+            $res->sendFile($params[0] . "web/pages/index.html");
             $res->end();
         }, $this->getDataFolder());
 
@@ -241,14 +242,9 @@ class PocketMap extends PluginBase implements Listener
         return $router;
     }
 
-
     protected function onDisable(): void
     {
         // close the socket
         $this->webServer->close();
-    }
-
-    public static function getTmpDataPath(): string {
-        return self::$tmpDataPath;
     }
 }

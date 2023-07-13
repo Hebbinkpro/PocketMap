@@ -25,7 +25,8 @@ class PartialRegion extends Region
      * @param int $chunkZ
      * @return void
      */
-    public function addChunk(Chunk $chunk, int $chunkX, int $chunkZ): void {
+    public function addChunk(Chunk $chunk, int $chunkX, int $chunkZ): void
+    {
         // not inside the region
         if (!$this->isChunkInRegion($chunkX, $chunkZ)) return;
 
@@ -39,7 +40,8 @@ class PartialRegion extends Region
      * @param int $chunkZ
      * @return void
      */
-    public function removeChunk(int $chunkX, int $chunkZ): void {
+    public function removeChunk(int $chunkX, int $chunkZ): void
+    {
         // not inside the region
         if (!$this->isChunkInRegion($chunkX, $chunkZ)) return;
 
@@ -54,9 +56,9 @@ class PartialRegion extends Region
     public function getChunks(): Generator|array
     {
         // loop through all items inside the chunk list and yield the x and z position.
-        foreach ($this->chunks as $x=> $zChunks) {
-            foreach ($zChunks as $z=>$chunk) {
-                yield [$x,$z];
+        foreach ($this->chunks as $x => $zChunks) {
+            foreach ($zChunks as $z => $chunk) {
+                yield [$x, $z];
             }
         }
     }

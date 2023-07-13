@@ -23,7 +23,8 @@ class TextureUtils
      * @param int $pixels the amount of pixels
      * @return int the amount of blocks that fits in the pixels
      */
-    public static function getTotalBlocks(int $pixels): int {
+    public static function getTotalBlocks(int $pixels): int
+    {
         $maxBlocks = 16;
 
         // only when the amount of pixels is smaller than 16 we will decrease the amount of visible blocks.
@@ -40,8 +41,9 @@ class TextureUtils
      * @param int $blocks the total amount of blocks
      * @return int the amount of pixels each block will occupy floored
      */
-    public static function getPixelsPerBlock(int $totalPixels, int $blocks): int {
-        return floor(max($totalPixels/$blocks, 1));
+    public static function getPixelsPerBlock(int $totalPixels, int $blocks): int
+    {
+        return floor(max($totalPixels / $blocks, 1));
     }
 
     public static function createChunkTexture(Chunk $chunk, ResourcePack $rp, int $totalBlocks, int $pixelsPerBlock): GdImage
@@ -60,11 +62,11 @@ class TextureUtils
 
         // amount of blocks between two blocks to render
         // this is to prevent rendering of only the upper left corner for rendering when <16 pixels are available for a chunk
-        $diff = floor(16/$totalBlocks);
+        $diff = floor(16 / $totalBlocks);
 
         // loop through all block indices that can be rendered
-        for ($bdxI = 0; $bdxI < $totalBlocks; $bdxI ++) {
-            for ($bdzI = 0; $bdzI < $totalBlocks; $bdzI ++) {
+        for ($bdxI = 0; $bdxI < $totalBlocks; $bdxI++) {
+            for ($bdzI = 0; $bdzI < $totalBlocks; $bdzI++) {
                 // get the real x and z positions from the indices
                 $bdx = $bdxI * $diff;
                 $bdz = $bdzI * $diff;
