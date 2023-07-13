@@ -18,20 +18,57 @@ class TextureUtils
 {
     private static array $blockTextureMap = [];
 
-    public static function createTextureFromChunk(Chunk $chunk, ResourcePack $rp, int $pixelsPerBlock): GdImage
+    /**
+     * Get the total amount of visible blocks that can be shown on the given amount of pixels
+     * @param int $pixels the amount of pixels
+     * @return int the amount of blocks that fits in the pixels
+     */
+    public static function getTotalBlocks(int $pixels): int {
+        $maxBlocks = 16;
+
+        // only when the amount of pixels is smaller than 16 we will decrease the amount of visible blocks.
+        if ($pixels < $maxBlocks) {
+            $maxBlocks = $pixels;
+        }
+
+        return $maxBlocks;
+    }
+
+    /**
+     * Get the pixel size of each block
+     * @param int $totalPixels the total amount of pixels
+     * @param int $blocks the total amount of blocks
+     * @return int the amount of pixels each block will occupy floored
+     */
+    public static function getPixelsPerBlock(int $totalPixels, int $blocks): int {
+        return floor(max($totalPixels/$blocks, 1));
+    }
+
+    public static function createChunkTexture(Chunk $chunk, ResourcePack $rp, int $totalBlocks, int $pixelsPerBlock): GdImage
     {
-
-        $textureSize = $pixelsPerBlock * 16;
-        $texture = imagecreatetruecolor($textureSize, $textureSize);
-
         $invalidBlocks = [
             BlockTypeIds::FERN,
             BlockTypeIds::TALL_GRASS,
             BlockTypeIds::DOUBLE_TALLGRASS
         ];
 
-        for ($bdx = 0; $bdx < 16; $bdx++) {
-            for ($bdz = 0; $bdz < 16; $bdz++) {
+        //$totalBlocks = self::getTotalBlocks($maxTextureSize);
+        //$pixelsPerBlock = self::getPixelsPerBlock($maxTextureSize, $totalBlocks);
+        $textureSize = $totalBlocks * $pixelsPerBlock;
+
+        $texture = imagecreatetruecolor($textureSize, $textureSize);
+
+        // amount of blocks between two blocks to render
+        // this is to prevent rendering of only the upper left corner for rendering when <16 pixels are available for a chunk
+        $diff = floor(16/$totalBlocks);
+
+        // loop through all block indices that can be rendered
+        for ($bdxI = 0; $bdxI < $totalBlocks; $bdxI ++) {
+            for ($bdzI = 0; $bdzI < $totalBlocks; $bdzI ++) {
+                // get the real x and z positions from the indices
+                $bdx = $bdxI * $diff;
+                $bdz = $bdzI * $diff;
+
                 $y = $chunk->getHighestBlockAt($bdx, $bdz);
                 $blockStateId = $chunk->getBlockStateId($bdx, $y, $bdz);
                 $block = BlockStateParser::getBlockFromStateId($blockStateId);
@@ -46,8 +83,9 @@ class TextureUtils
                 $biome = BiomeRegistry::getInstance()->getBiome($biomeId);
                 $blockTexture = self::createCompressedBlockTexture($block, $biome, $rp, $pixelsPerBlock);
 
-                $tx = $bdx * $pixelsPerBlock;
-                $ty = $bdz * $pixelsPerBlock;
+                $tx = $bdxI * $pixelsPerBlock;
+                $ty = $bdzI * $pixelsPerBlock;
+
                 imagecopy($texture, $blockTexture, $tx, $ty, 0, 0, $pixelsPerBlock, $pixelsPerBlock);
             }
         }

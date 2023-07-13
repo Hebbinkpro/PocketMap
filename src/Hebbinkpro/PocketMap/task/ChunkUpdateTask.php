@@ -48,6 +48,8 @@ class ChunkUpdateTask extends Task
      * Adds a partial region to the queue
      * @param PartialRegion $region
      * @param Chunk $chunk
+     * @param int $chunkX
+     * @param int $chunkZ
      * @return void
      */
     public function addPartialRegion(PartialRegion $region, Chunk $chunk, int $chunkX, int $chunkZ): void

@@ -2,6 +2,7 @@
 
 namespace Hebbinkpro\PocketMap\task;
 
+use Exception;
 use GdImage;
 use Hebbinkpro\PocketMap\render\Region;
 use Hebbinkpro\PocketMap\render\RegionChunks;
@@ -44,11 +45,16 @@ class AsyncRegionRenderTask extends AsyncTask
     }
 
 
+    /**
+     * @throws Exception
+     */
     public function onRun(): void
     {
         // decode the region
         /** @var Region $region */
         $region = unserialize($this->region);
+
+        if ($region->getTotalChunks() > WorldRenderer::RENDER_SIZE) throw new Exception("Region contains more chunks than allowed!");
 
         // partial render
         if ($this->renderMode == self::RENDER_MODE_PARTIAL) {
@@ -104,10 +110,12 @@ class AsyncRegionRenderTask extends AsyncTask
 
         $chunkSize = $region->getChunkPixelSize();
 
-        // size of img in pixels, it's hard to generate pixels smaller then 1
-        $imgPixelsPerBlock = max($region->getPixelsPerBlock(), 1);
-        // size of a chunk with the imgPixelSize
-        $imgChunkSize = 16 * $imgPixelsPerBlock;
+        // amount of visible full blocks inside the render
+        $totalBlocks = TextureUtils::getTotalBlocks($chunkSize);
+        // the size of pixels of each visible block
+        $imgPixelsPerBlock = TextureUtils::getPixelsPerBlock($chunkSize, $totalBlocks);
+        // the total size of the chunk image
+        $imgChunkSize = $totalBlocks * $imgPixelsPerBlock;
 
         // yield all chunks
         foreach (RegionChunks::yieldAllEncodedChunks($this->regionChunks) as [$cx, $cz, $chunk]) {
@@ -115,7 +123,7 @@ class AsyncRegionRenderTask extends AsyncTask
             $region->addChunkToRenderData($cx,$cz);
 
             // create the chunk image
-            $chunkImg = TextureUtils::createTextureFromChunk($chunk, $rp, $imgPixelsPerBlock);
+            $chunkImg = TextureUtils::createChunkTexture($chunk, $rp, $totalBlocks, $imgPixelsPerBlock);
 
             [$rcx, $rcz] = $region->getRegionChunkCoords($cx, $cz);
 

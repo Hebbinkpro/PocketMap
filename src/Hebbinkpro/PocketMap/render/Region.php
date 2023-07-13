@@ -100,11 +100,6 @@ class Region
         ];
     }
 
-    public function getPixelsPerBlock(): int
-    {
-        return WorldRenderer::getPixelsPerBlock($this->zoom, $this->rp);
-    }
-
     public function getChunkPixelSize(): int
     {
         return floor(WorldRenderer::RENDER_SIZE / $this->getTotalChunks());
@@ -220,7 +215,6 @@ class Region
 
     public function hasRenderDataChunk(int $chunkX, int $chunkZ): bool {
         if (!$this->isChunkInRegion($chunkX, $chunkZ)) {
-            var_dump("Stupid not in region: $chunkX,$chunkZ");
             return false;
         }
         if ($this->isRenderDataComplete()) return true;

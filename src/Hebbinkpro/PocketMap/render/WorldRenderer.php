@@ -45,18 +45,6 @@ class WorldRenderer
         $this->scheduler = $scheduler;
     }
 
-    public static function getPixelsPerBlock(int $zoom, ResourcePack $rp): int
-    {
-        $totalChunks = self::ZOOM_LEVELS[$zoom];
-
-        // minimum possible amount of blocks in a render without up-scaling
-        $minBlockPerRender = self::RENDER_SIZE / $rp->getTextureSize();
-        // minimum possible amount of chunks in a render without up-scaling
-        $minChunksPerRender = $minBlockPerRender / 16;
-
-        return floor($rp->getTextureSize() * ($minChunksPerRender / $totalChunks));
-    }
-
     public function startFullWorldRender(): void
     {
         $this->scheduler->scheduleFullWorldRender($this);
