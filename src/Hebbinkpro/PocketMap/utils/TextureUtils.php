@@ -192,9 +192,10 @@ class TextureUtils
 
         // get the terrain data
         $terrainTextures = $rp->getTerrainTextures()["texture_data"];
-        $terrainData = $terrainTextures[$textureName];
-        // terrain texture does not exist
-        if (!$terrainData) return null;
+
+        // get the terrain data of the given texture
+        // if the block does not exist in the terrain_texture.json file for some reason, give the expected exture
+        $terrainData = $terrainTextures[$textureName] ?? ["textures"=>"textures/blocks/$textureName"];
         $textures = $terrainData["textures"];
 
         // the texture is just a straight forward texture path
