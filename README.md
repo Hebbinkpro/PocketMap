@@ -32,7 +32,7 @@ This is a list of all things that have to be added
 - Multiple worlds support
 
 ### Renderer
-- Make full world renders more efficient (not using all the servers resources so that it is still playable)
+- Make full world renders more efficient
 - Render not full blocks (torches, fences, etc)
 - Render opaque block under transparent blocks (leaves, glass, etc)
 - Display blocks under the water surface (Block has the water texture overtop)
