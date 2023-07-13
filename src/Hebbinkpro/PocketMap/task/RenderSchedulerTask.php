@@ -120,7 +120,7 @@ class RenderSchedulerTask extends Task
         // check if the current renders are completed
         foreach ($this->currentRegionRenders as $i => $render) {
             // render has ended
-            if ($render->isFinished() || $render->isCrashed()) {
+            if ($render->isFinished()) {
                 $completed[] = $i;
             }
         }
