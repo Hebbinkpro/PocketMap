@@ -5,7 +5,6 @@ namespace Hebbinkpro\PocketMap\task;
 use Hebbinkpro\PocketMap\render\Region;
 use Hebbinkpro\PocketMap\render\RegionChunks;
 use Hebbinkpro\PocketMap\render\RegionChunksLoader;
-use Hebbinkpro\PocketMap\render\WorldRenderer;
 use Hebbinkpro\PocketMap\utils\ColorMapParser;
 use Hebbinkpro\PocketMap\utils\TextureUtils;
 use pocketmine\plugin\PluginBase;
@@ -14,26 +13,20 @@ use pocketmine\scheduler\Task;
 class RenderSchedulerTask extends Task
 {
     /**
-     * Max amount of renders running simultaneously
+     * Max amount of async renders running simultaneously
      */
     public const MAX_CURRENT_RENDERS = 5;
 
     private PluginBase $plugin;
 
-    /** @var array<Region, AsyncRegionRenderTask> */
+    /** @var AsyncRegionRenderTask[] */
     private array $currentRegionRenders;
 
-    /** @var array{0: string, 1: RegionChunksLoader}[] */
+    /** @var array{path: string, loader: RegionChunksLoader, mode: int}[] */
     private array $regionChunksLoaders;
 
-    /** @var array{0: string, 1: Region}[] */
+    /** @var array{path: string, region: Region}[] */
     private array $regionRenderQueue;
-
-    /**
-     * List containing all worlds including all their zoom levels that have to be rendered.
-     * @var array{renderer: WorldRenderer, levels: int[]}[]
-     */
-    private array $fullWorldRenderQueue;
 
     public function __construct(PluginBase $plugin)
     {
@@ -41,56 +34,65 @@ class RenderSchedulerTask extends Task
         $this->currentRegionRenders = [];
         $this->regionChunksLoaders = [];
         $this->regionRenderQueue = [];
-        $this->fullWorldRenderQueue = [];
     }
 
+    /**
+     * Add a region render to teh scheduler
+     * @param string $path the path the render is placed in
+     * @param Region $region the region to render
+     * @param bool $force if the render has to be loaded immediately
+     * @return bool if the region is scheduled, if false, you have to manually schedule it again!
+     */
     public function scheduleRegionRender(string $path, Region $region, bool $force = false): bool
     {
         // when the action is not forced, don't add the region
         if (!$force && count($this->regionRenderQueue) > self::MAX_CURRENT_RENDERS * 5) return false;
-        $this->regionRenderQueue[] = [$path, $region];
+
+        // add the path and region to the queue
+        $this->regionRenderQueue[] = [
+            "path" => $path,
+            "region" => $region
+        ];
 
         return true;
     }
 
-    public function scheduleFullWorldRender(WorldRenderer $worldRenderer, array $zoomLevels = [])
-    {
-        if (empty($zoomLevels)) $zoomLevels = array_keys(WorldRenderer::ZOOM_LEVELS);
-
-        $this->plugin->getLogger()->notice("Starting full world render of world: " . $worldRenderer->getWorld()->getFolderName());
-        $this->plugin->getLogger()->warning("It is possible to notice a drop in server performance during a full world render.");
-
-        $this->fullWorldRenderQueue[$worldRenderer->getWorld()->getFolderName()] = [
-            "renderer" => $worldRenderer,
-            "levels" => $zoomLevels
-        ];
-    }
-
     /**
-     * @inheritDoc
+     * Run the render scheduler.
+     * 1. Run the region chunk loaders
+     * 2. Run the region renders
+     * 3. ONLY WHEN THE QUEUE IS EMPTY: clear the cache
      */
     public function onRun(): void
     {
+        // run all the chunk loaders
         $this->runRegionChunksLoaders();
+        // run the region renders
         $this->runRegionRenders();
-        $this->runFullWorldRenders();
 
-        // clear the texture cache if the queue is empty
+        // there are no tasks scheduled
         if (empty($this->currentRegionRenders)) {
+            // clear the cache to free up some memory
             $this->clearCache();
         }
     }
 
+    /**
+     * Run the region chunk loaders
+     * @return void
+     */
     private function runRegionChunksLoaders(): void
     {
         $notCompleted = [];
 
-        /**
-         * @var string $path
-         * @var RegionChunksLoader $loader
-         * @var int $renderMode
-         */
-        foreach ($this->regionChunksLoaders as [$path, $loader, $renderMode]) {
+        foreach ($this->regionChunksLoaders as $rcl) {
+            /** @var string $path */
+            $path = $rcl["path"];
+            /** @var RegionChunksLoader $loader */
+            $loader = $rcl["loader"];
+            /** @var int $renderMode */
+            $renderMode = $rcl["mode"];
+
             // is completely loaded
             if ($loader->run()) {
                 $this->startRenderTask($path, $loader->getRegionChunks(), $renderMode);
@@ -98,13 +100,20 @@ class RenderSchedulerTask extends Task
             }
 
             // add to the not completed list
-            $notCompleted[] = [$path, $loader, $renderMode];
+            $notCompleted[] = $rcl;
         }
 
         $this->regionChunksLoaders = $notCompleted;
     }
 
-    private function startRenderTask(string $path, RegionChunks $regionChunks, int $renderMode)
+    /**
+     * Start a new async region render
+     * @param string $path the path the render will be placed in
+     * @param RegionChunks $regionChunks the chunks inside the region
+     * @param int $renderMode the render behaviour
+     * @return void
+     */
+    private function startRenderTask(string $path, RegionChunks $regionChunks, int $renderMode): void
     {
         // create a new async task
         $task = new AsyncRegionRenderTask($path, $regionChunks, $renderMode);
@@ -114,6 +123,12 @@ class RenderSchedulerTask extends Task
         $this->plugin->getServer()->getAsyncPool()->submitTask($task);
     }
 
+    /**
+     * Manager of all running region render.
+     * - Removes finished renders
+     * - Starts new renders when possible
+     * @return void
+     */
     private function runRegionRenders(): void
     {
         $completed = [];
@@ -132,19 +147,20 @@ class RenderSchedulerTask extends Task
 
         // add new renders until the cap is reached or no new renders are available
         while ($this->getCurrentRendersCount() < self::MAX_CURRENT_RENDERS && count($this->regionRenderQueue) > 0) {
-
-            /**
-             * @var string $path
-             * @var Region $region
-             */
-            [$path, $region] = array_shift($this->regionRenderQueue);
+            $rr = array_shift($this->regionRenderQueue);
+            $path = $rr["path"];
+            $region = $rr["region"];
 
             // amount of chunks in render is higher than max load limit
             if (pow($region->getTotalChunks(), 2) > RegionChunksLoader::MAX_CHUNKS_PER_RUN) {
                 // now we are going to use a region chunks loader
                 $world = $this->plugin->getServer()->getWorldManager()->getWorldByName($region->getWorldName());
                 $loader = new RegionChunksLoader($region, $world->getProvider());
-                $this->regionChunksLoaders[] = [$path, $loader, $region->getRenderMode()];
+                $this->regionChunksLoaders[] = [
+                    "path" => $path,
+                    "loader" => $loader,
+                    "mode" => $region->getRenderMode()
+                ];
                 continue;
             }
 
@@ -155,47 +171,22 @@ class RenderSchedulerTask extends Task
         }
     }
 
+    /**
+     * Get the amount of renders that is currently running
+     * @return int
+     */
     public function getCurrentRendersCount(): int
     {
         return count($this->currentRegionRenders) + count($this->regionChunksLoaders);
     }
 
-    private function runFullWorldRenders(): void
-    {
-        // no worlds to render, or the queue is full
-        if (empty($this->fullWorldRenderQueue) || count($this->regionRenderQueue) > self::MAX_CURRENT_RENDERS) return;
-
-        /** @var string $worldName */
-        $worldName = array_key_first($this->fullWorldRenderQueue);
-        /** @var WorldRenderer $renderer */
-        $renderer = $this->fullWorldRenderQueue[$worldName]["renderer"];
-        /** @var int $zoomLevel */
-        $zoomLevel = $this->fullWorldRenderQueue[$worldName]["levels"][0];
-
-        $this->plugin->getLogger()->debug("Starting full world render of world: $worldName, with zoom: $zoomLevel");
-
-        // start the render for the current zoom level
-        $renderer->startZoomRender($zoomLevel);
-        array_shift($this->fullWorldRenderQueue[$worldName]["levels"]);
-
-        // all zoom levels are rendered
-        if (empty($this->fullWorldRenderQueue[$worldName]["levels"])) {
-            unset($this->fullWorldRenderQueue[$worldName]);
-        }
-    }
-
+    /**
+     * Clear the cache of the ColorMap parser and TextureUtils to make some memory free
+     * @return void
+     */
     public function clearCache(): void
     {
         ColorMapParser::clearCache();
         TextureUtils::clearCache();
-    }
-
-    /**
-     * Get a list of all worlds that are currently rendering
-     * @return string[]
-     */
-    public function getFullWorldRenders(): array
-    {
-        return array_keys($this->fullWorldRenderQueue);
     }
 }

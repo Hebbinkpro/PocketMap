@@ -20,6 +20,7 @@ class ResourcePack
     }
 
     /**
+     * Get the path
      * @return string
      */
     public function getPath(): string
@@ -28,6 +29,7 @@ class ResourcePack
     }
 
     /**
+     * Get the texture size
      * @return int
      */
     public function getTextureSize(): int
@@ -36,6 +38,7 @@ class ResourcePack
     }
 
     /**
+     * Get the resource pack manifest inside the manifest.json file
      * @return array
      */
     public function getManifest(): array
@@ -44,6 +47,7 @@ class ResourcePack
     }
 
     /**
+     * Get the blocks inside the blocks.json file
      * @return array
      */
     public function getBlocks(): array
@@ -52,6 +56,7 @@ class ResourcePack
     }
 
     /**
+     * Get the terrain textures inside the texture/terrain_texture.json file
      * @return array
      */
     public function getTerrainTextures(): array

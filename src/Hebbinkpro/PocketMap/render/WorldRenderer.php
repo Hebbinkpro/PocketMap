@@ -2,6 +2,7 @@
 
 namespace Hebbinkpro\PocketMap\render;
 
+use Hebbinkpro\PocketMap\task\ChunkRenderTask;
 use Hebbinkpro\PocketMap\task\RenderSchedulerTask;
 use Hebbinkpro\PocketMap\utils\ResourcePack;
 use pocketmine\world\World;
@@ -35,46 +36,32 @@ class WorldRenderer
     private ResourcePack $rp;
     private string $renderPath;
     private RenderSchedulerTask $scheduler;
+    private ChunkRenderTask $chunkRenderer;
 
-    public function __construct(World $world, ResourcePack $rp, string $renderPath, RenderSchedulerTask $scheduler)
+    public function __construct(World $world, ResourcePack $rp, string $renderPath, RenderSchedulerTask $scheduler, ChunkRenderTask $chunkRenderer)
     {
         $this->world = $world;
         $this->rp = $rp;
         $this->renderPath = $renderPath;
         $this->scheduler = $scheduler;
-    }
-
-    public function startFullWorldRender(): void
-    {
-        $this->scheduler->scheduleFullWorldRender($this);
+        $this->chunkRenderer = $chunkRenderer;
     }
 
     /**
-     * @param int $zoom
+     * Start a complete render of the world
      * @return void
      */
-    public function startZoomRender(int $zoom): void
+    public function startFullWorldRender(): void
     {
-        $totalChunks = self::ZOOM_LEVELS[$zoom];
-
-        $loadedRegions = [];
-
-        foreach ($this->world->getProvider()->getAllChunks() as $coords => $chunkData) {
-            [$cx, $cz] = $coords;
-
-            // region coords
-            $rx = floor($cx / $totalChunks);
-            $rz = floor($cz / $totalChunks);
-
-            // already did this region
-            if (in_array([$rx, $rz], $loadedRegions)) continue;
-
-            $region = new Region($this->world->getFolderName(), $zoom, $rx, $rz, $this->rp);
-            $this->startRegionRender($region, true);
-            $loadedRegions[] = [$rx, $rz];
-        }
+        $this->chunkRenderer->addChunks($this, $this->world->getProvider()->getAllChunks());
     }
 
+    /**
+     * Schedule a render of the given region
+     * @param Region $region
+     * @param bool $force
+     * @return bool
+     */
     public function startRegionRender(Region $region, bool $force = false): bool
     {
         if (!is_dir($this->renderPath . $region->getZoom())) mkdir($this->renderPath . $region->getZoom());
@@ -83,6 +70,7 @@ class WorldRenderer
     }
 
     /**
+     * Get all regions a chunk is in
      * @param int $chunkX
      * @param int $chunkZ
      * @return Region[]
@@ -97,6 +85,13 @@ class WorldRenderer
         return $regions;
     }
 
+    /**
+     * Get a region from a chunk
+     * @param int $zoom
+     * @param int $chunkX
+     * @param int $chunkZ
+     * @return Region
+     */
     public function getRegionFromChunk(int $zoom, int $chunkX, int $chunkZ): Region
     {
         $totalChunks = self::ZOOM_LEVELS[$zoom];
@@ -107,6 +102,7 @@ class WorldRenderer
     }
 
     /**
+     * Get the world
      * @return World
      */
     public function getWorld(): World
@@ -114,6 +110,13 @@ class WorldRenderer
         return $this->world;
     }
 
+    /**
+     * Get a partial region from a chunk
+     * @param int $zoom
+     * @param int $chunkX
+     * @param int $chunkZ
+     * @return PartialRegion
+     */
     public function getPartialRegion(int $zoom, int $chunkX, int $chunkZ): PartialRegion
     {
         $totalChunks = self::ZOOM_LEVELS[$zoom];
@@ -123,23 +126,30 @@ class WorldRenderer
         return new PartialRegion($this->getWorld()->getFolderName(), $zoom, $rx, $rz, $this->rp);
     }
 
+    /**
+     * Check if there exists a render of the given region
+     * @param Region $region
+     * @return bool
+     */
     public function hasRender(Region $region): bool
     {
         $zoom = $region->getZoom();
-        $rx = $region->getRegionX();
-        $rz = $region->getRegionZ();
+        $rx = $region->getX();
+        $rz = $region->getZ();
         return is_file($this->renderPath . "$zoom/$rx,$rz.png");
     }
 
     /**
+     * Get the resource pack
      * @return ResourcePack
      */
-    public function getRp(): ResourcePack
+    public function getResourcePack(): ResourcePack
     {
         return $this->rp;
     }
 
     /**
+     * Get the render path of this world
      * @return string
      */
     public function getRenderPath(): string

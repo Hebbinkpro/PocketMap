@@ -15,18 +15,10 @@ use pocketmine\world\WorldManager;
  */
 class RegionChunks
 {
-    /**
-     * @var Chunk[][]
-     */
-    private static array $chunkCache = [];
-
     private Region $region;
-
     /** @var Chunk[][] */
     private array $chunks;
-
     private bool $completed;
-
 
     private function __construct(Region $region, array $chunks = [], bool $completed = false)
     {
@@ -69,6 +61,7 @@ class RegionChunks
     }
 
     /**
+     * Get all the loaded chunks
      * @return array
      */
     public function getChunks(): array
@@ -105,6 +98,7 @@ class RegionChunks
     }
 
     /**
+     * Get if the chunks list is completed
      * @return bool
      */
     public function isCompleted(): bool
@@ -113,6 +107,7 @@ class RegionChunks
     }
 
     /**
+     * Get the region of the chunks
      * @return Region
      */
     public function getRegion(): Region

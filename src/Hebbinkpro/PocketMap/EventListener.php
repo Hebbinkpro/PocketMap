@@ -2,6 +2,7 @@
 
 namespace Hebbinkpro\PocketMap;
 
+use Hebbinkpro\PocketMap\render\WorldRenderer;
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\block\BlockBurnEvent;
 use pocketmine\event\block\BlockFormEvent;
@@ -38,6 +39,8 @@ class EventListener implements Listener
         if (count(scandir($renderer->getRenderPath())) <= 2) {
             // the renders folder is empty
             // load the full world
+            $this->plugin->getLogger()->notice("Starting full world render of world: " . $renderer->getWorld()->getFolderName());
+            $this->plugin->getLogger()->warning("It is possible to notice a drop in server performance during a full world render.");
             $renderer->startFullWorldRender();
         }
     }
@@ -57,20 +60,20 @@ class EventListener implements Listener
 
         // get the world renderer
         $renderer = $this->plugin->getWorldRenderer($world->getFolderName());
+        if ($renderer === null) {
+            $this->plugin->getLogger()->debug("Renderer of world: {$world->getFoldername()} not found!");
+            return;
+        }
 
-        // get all regions the chunk exists in
-        $regions = $renderer->getAllRegionsFromChunk($cx, $cz);
+        // get the largest zoom (most chunks) this chunk is in
+        // if it's missing in there, its missing everywhere
+        $maxZoom = array_key_first(WorldRenderer::ZOOM_LEVELS);
+        $region = $renderer->getRegionFromChunk($maxZoom, $cx, $cz);
 
-
-        foreach ($regions as $region) {
-            // chunk already rendered
-            if ($region->hasRenderDataChunk($cx, $cz)) continue;
-            $this->plugin->getLogger()->debug("Found a not rendered chunk: $cx,$cz in world: " . $world->getFolderName() . " for zoom: " . $region->getZoom());
-
-            // chunk is not yet rendered
-            $chunk = $e->getChunk();
-            // if it doesn't have a render, render all regions{
-            $this->plugin->getChunkUpdateTask()->addChunk($world, $chunk, $cx, $cz);
+        // chunk is not yet rendered
+        if (!$region->isChunkInRenderData($cx, $cz)) {
+            $this->plugin->getLogger()->debug("Found a not rendered chunk: $cx,$cz in world: " . $world->getFolderName());
+            $this->plugin->getChunkRenderer()->addChunk($renderer, $cx, $cz);
         }
     }
 
@@ -87,10 +90,12 @@ class EventListener implements Listener
 
         // get the chunk
         $chunk = $world->getChunk($chunkX, $chunkZ);
-        if ($chunk === null) return;
+        $renderer = $this->plugin->getWorldRenderer($world->getFolderName());
+        if ($chunk === null || $renderer === null) return;
+
 
         // add the chunk as updated to the update task
-        $this->plugin->getChunkUpdateTask()->addChunk($world, $chunk, $chunkX, $chunkZ);
+        $this->plugin->getChunkRenderer()->addChunk($renderer, $chunkX, $chunkZ);
     }
 
     public function onBlockBurn(BlockBurnEvent $e): void

@@ -5,11 +5,13 @@ namespace Hebbinkpro\PocketMap\render;
 use Generator;
 use Hebbinkpro\PocketMap\task\AsyncRegionRenderTask;
 use Hebbinkpro\PocketMap\utils\ResourcePack;
-use pocketmine\world\format\Chunk;
 
+/**
+ * A normal Region, but with a generator looping through set chunks instead of all chunks that are in the region.
+ */
 class PartialRegion extends Region
 {
-    /** @var Chunk[] */
+    /** @var int[][] */
     private array $chunks;
 
     public function __construct(string $worldName, int $zoom, int $regionX, int $regionZ, ResourcePack $rp)
@@ -20,18 +22,19 @@ class PartialRegion extends Region
 
     /**
      * Add a chunk to the chunks list
-     * @param Chunk $chunk
      * @param int $chunkX
      * @param int $chunkZ
      * @return void
      */
-    public function addChunk(Chunk $chunk, int $chunkX, int $chunkZ): void
+    public function addChunk(int $chunkX, int $chunkZ): void
     {
         // not inside the region
         if (!$this->isChunkInRegion($chunkX, $chunkZ)) return;
 
-        if (!array_key_exists($chunkX, $this->chunks)) $this->chunks[$chunkX] = [];
-        $this->chunks[$chunkX][$chunkZ] = $chunk;
+        $pos = [$chunkX, $chunkZ];
+        if (!in_array($pos, $this->chunks)) {
+            $this->chunks[] = [$chunkX, $chunkZ];
+        }
     }
 
     /**
@@ -42,11 +45,11 @@ class PartialRegion extends Region
      */
     public function removeChunk(int $chunkX, int $chunkZ): void
     {
-        // not inside the region
-        if (!$this->isChunkInRegion($chunkX, $chunkZ)) return;
+        $pos = [$chunkX, $chunkZ];
+        if (!in_array($pos, $this->chunks)) return;
 
-        if (!array_key_exists($chunkX, $this->chunks)) return;
-        unset($this->chunks[$chunkX][$chunkZ]);
+        $key = array_search($pos, $this->chunks);
+        array_splice($this->chunks, $key, 1);
     }
 
     /**
@@ -56,10 +59,8 @@ class PartialRegion extends Region
     public function getChunks(): Generator|array
     {
         // loop through all items inside the chunk list and yield the x and z position.
-        foreach ($this->chunks as $x => $zChunks) {
-            foreach ($zChunks as $z => $chunk) {
-                yield [$x, $z];
-            }
+        foreach ($this->chunks as $pos) {
+            yield $pos;
         }
     }
 

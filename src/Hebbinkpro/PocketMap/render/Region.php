@@ -12,8 +12,8 @@ class Region
 {
     private string $worldName;
     private int $zoom;
-    private int $regionX;
-    private int $regionZ;
+    private int $x;
+    private int $z;
     private ResourcePack $rp;
     private string $tmpFile;
 
@@ -22,10 +22,47 @@ class Region
     {
         $this->worldName = $worldName;
         $this->zoom = $zoom;
-        $this->regionX = $regionX;
-        $this->regionZ = $regionZ;
+        $this->x = $regionX;
+        $this->z = $regionZ;
         $this->rp = $rp;
-        $this->tmpFile = PocketMap::getTmpDataPath() . "regions/$this->worldName/$this->zoom,$this->regionX,$this->regionZ.json";
+
+        $largestRegion = $this->getLargestZoomRegion();
+        $this->tmpFile = PocketMap::getTmpDataPath() . "regions/$this->worldName/{$largestRegion["x"]},{$largestRegion["z"]}.json";
+    }
+
+    /**
+     * Get the info from the region with the highest zoom level this region is in
+     * @return array{zoom: int, chunks: int, x: int, z: int} the zoom, amount of chunks, x pos and z pos of the region
+     */
+    public function getLargestZoomRegion(): array
+    {
+        $zoom = array_key_first(WorldRenderer::ZOOM_LEVELS);
+        $chunks = WorldRenderer::ZOOM_LEVELS[$zoom];
+
+        $x = $this->x;
+        $z = $this->z;
+
+        if ($this->zoom > $zoom) {
+            $diff = $chunks / $this->getTotalChunks();
+
+            $x = floor($x / $diff);
+            $z = floor($z / $diff);
+        }
+        return [
+            "zoom" => $zoom,
+            "chunks" => $chunks,
+            "x" => $x,
+            "z" => $z
+        ];
+    }
+
+    /**
+     * Get the total amount of chunks inside the region
+     * @return int
+     */
+    public function getTotalChunks(): int
+    {
+        return WorldRenderer::ZOOM_LEVELS[$this->zoom];
     }
 
     /**
@@ -34,8 +71,8 @@ class Region
      */
     public function getChunks(): Generator|array
     {
-        $minX = $this->regionX * $this->getTotalChunks();
-        $minZ = $this->regionZ * $this->getTotalChunks();
+        $minX = $this->x * $this->getTotalChunks();
+        $minZ = $this->z * $this->getTotalChunks();
 
         for ($x = $minX; $x < $minX + $this->getTotalChunks(); $x++) {
             for ($z = $minZ; $z < $minZ + $this->getTotalChunks(); $z++) {
@@ -44,12 +81,8 @@ class Region
         }
     }
 
-    public function getTotalChunks(): int
-    {
-        return WorldRenderer::ZOOM_LEVELS[$this->zoom];
-    }
-
     /**
+     * Get the resource pack used for rendering the region
      * @return ResourcePack
      */
     public function getResourcePack(): ResourcePack
@@ -66,8 +99,8 @@ class Region
     public function getRegionChunkCoords(int $worldChunkX, int $worldChunkZ): array
     {
         return [
-            $worldChunkX - ($this->regionX * $this->getTotalChunks()),
-            $worldChunkZ - ($this->regionZ * $this->getTotalChunks())
+            $worldChunkX - ($this->x * $this->getTotalChunks()),
+            $worldChunkZ - ($this->z * $this->getTotalChunks())
         ];
     }
 
@@ -80,11 +113,15 @@ class Region
     public function getWorldChunkCoords(int $regionChunkX, int $regionChunkZ): array
     {
         return [
-            $this->regionX * $this->getTotalChunks() + $regionChunkX,
-            $this->regionZ * $this->getTotalChunks() + $regionChunkZ
+            $this->x * $this->getTotalChunks() + $regionChunkX,
+            $this->z * $this->getTotalChunks() + $regionChunkZ
         ];
     }
 
+    /**
+     * Get the pixel size of a chunk inside a render of this region
+     * @return int
+     */
     public function getChunkPixelSize(): int
     {
         return floor(WorldRenderer::RENDER_SIZE / $this->getTotalChunks());
@@ -99,11 +136,12 @@ class Region
     {
         return $region->getWorldName() === $this->worldName &&
             $region->getZoom() == $this->zoom &&
-            $region->getRegionX() == $this->regionX &&
-            $region->getRegionZ() == $this->regionZ;
+            $region->getX() == $this->x &&
+            $region->getZ() == $this->z;
     }
 
     /**
+     * Get the world name of the region
      * @return string
      */
     public function getWorldName(): string
@@ -112,6 +150,7 @@ class Region
     }
 
     /**
+     * Get the zoom level of the region
      * @return int
      */
     public function getZoom(): int
@@ -120,26 +159,38 @@ class Region
     }
 
     /**
+     * Get the X position of the region
      * @return int
      */
-    public function getRegionX(): int
+    public function getX(): int
     {
-        return $this->regionX;
+        return $this->x;
     }
 
     /**
+     * Get the Z position of the region
      * @return int
      */
-    public function getRegionZ(): int
+    public function getZ(): int
     {
-        return $this->regionZ;
+        return $this->z;
     }
 
+    /**
+     * Get the render mode
+     * @return int
+     */
     public function getRenderMode(): int
     {
         return AsyncRegionRenderTask::RENDER_MODE_FULL;
     }
 
+    /**
+     * Add a chunk to the list in the render data of the render with the highest zoom level
+     * @param int $chunkX the x pos of the chunk
+     * @param int $chunkZ the z pos of the chunk
+     * @return void
+     */
     public function addChunkToRenderData(int $chunkX, int $chunkZ): void
     {
         // cannot add chunk
@@ -154,22 +205,22 @@ class Region
             ];
         }
 
-        $storedChunks = $data["chunks"];
+        $storedChunks = $data["chunks"] ?? [];
 
         // x pos does not yet exist
-        if (!array_key_exists($chunkX, $storedChunks)) $storedChunks[$chunkX] = [];
+        if (!array_key_exists("$chunkX", $storedChunks)) $storedChunks["$chunkX"] = [];
 
         // chunk already stored
-        if (in_array($chunkZ, $storedChunks[$chunkX])) return;
+        if (in_array($chunkZ, $storedChunks["$chunkX"])) return;
 
-        $storedChunks[$chunkX][] = $chunkZ;
+        $storedChunks["$chunkX"][] = $chunkZ;
 
         // the region is completed
         if (sizeof($storedChunks) >= $this->getTotalChunks()) {
             // mark region as completed
             $data["completed"] = true;
             // remove the redundant data
-            unset($data["chunks"]);
+            $data["chunks"] = [];
         } else {
             // set the new chunks
             $data["chunks"] = $storedChunks;
@@ -179,6 +230,10 @@ class Region
         file_put_contents($this->tmpFile, json_encode($data));
     }
 
+    /**
+     * Get if the render data if complete
+     * @return bool
+     */
     public function isRenderDataComplete(): bool
     {
         $data = $this->getRenderData();
@@ -187,6 +242,7 @@ class Region
     }
 
     /**
+     * Get the render data of the region
      * @return array{completed: bool, chunks?: int[][]}|null
      */
     public function getRenderData(): ?array
@@ -210,16 +266,22 @@ class Region
      */
     public function isChunkInRegion(int $chunkX, int $chunkZ): bool
     {
-        $minX = $this->regionX * $this->getTotalChunks();
-        $minZ = $this->regionZ * $this->getTotalChunks();
-        $maxX = ($this->regionX + 1) * $this->getTotalChunks();
-        $maxZ = ($this->regionZ + 1) * $this->getTotalChunks();
+        $minX = $this->x * $this->getTotalChunks();
+        $minZ = $this->z * $this->getTotalChunks();
+        $maxX = ($this->x + 1) * $this->getTotalChunks();
+        $maxZ = ($this->z + 1) * $this->getTotalChunks();
 
         return $minX <= $chunkX && $chunkX < $maxX
             && $minZ <= $chunkZ && $chunkZ < $maxZ;
     }
 
-    public function hasRenderDataChunk(int $chunkX, int $chunkZ): bool
+    /**
+     * Get if the given chunk is inside the render data
+     * @param int $chunkX the x pos of the chunk
+     * @param int $chunkZ the z pos of the chunk
+     * @return bool if the chunk is inside the render data
+     */
+    public function isChunkInRenderData(int $chunkX, int $chunkZ): bool
     {
         if (!$this->isChunkInRegion($chunkX, $chunkZ)) {
             return false;
@@ -230,6 +292,7 @@ class Region
 
         if (!array_key_exists("chunks", $data)) return false;
         if (!array_key_exists($chunkX, $data["chunks"])) return false;
-        return in_array($chunkZ, $data["chunks"][$chunkX]);
+        return in_array($chunkZ, $data["chunks"]["$chunkX"]);
     }
+
 }

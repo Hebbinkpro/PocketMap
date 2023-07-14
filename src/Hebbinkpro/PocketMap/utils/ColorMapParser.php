@@ -24,6 +24,13 @@ final class ColorMapParser
 
     private static array $colorMap = [];
 
+    /**
+     * Get the color of the given block in the Biome using the resource pack
+     * @param Block $block the block to get the color of
+     * @param Biome $biome the biome the block is in
+     * @param ResourcePack $rp the resource pack to use
+     * @return int the color of the block, or -1 when it is an invalid block
+     */
     public static function getColorFromBlock(Block $block, Biome $biome, ResourcePack $rp): int
     {
         if (!array_key_exists($rp->getPath(), self::$colorMap)) {
@@ -51,6 +58,12 @@ final class ColorMapParser
         return $color;
     }
 
+    /**
+     * Get the water color in a given biome using the resource pack
+     * @param Biome $biome the biome
+     * @param ResourcePack $rp the resource pack
+     * @return int the color of the water
+     */
     public static function getWaterColor(Biome $biome, ResourcePack $rp): int
     {
         $biomes = json_decode(file_get_contents($rp->getPath() . self::BIOMES_CLIENT), true)["biomes"];
@@ -60,6 +73,11 @@ final class ColorMapParser
         return hexdec(str_replace("#", "", $color));
     }
 
+    /**
+     * Get the name of the given biome
+     * @param Biome $biome the biome
+     * @return string the name of the biome
+     */
     public static function getBiomeName(Biome $biome): string
     {
         $reflector = new ReflectionClass(BiomeIds::class);
@@ -67,11 +85,24 @@ final class ColorMapParser
         return strtolower(array_search($biome->getId(), $reflector->getConstants()) ?? "ocean");
     }
 
+    /**
+     * Get the color from the color map using a biome
+     * @param Biome $biome the biome
+     * @param string $texture the path of the color map
+     * @return int the color
+     */
     public static function getColorFromMapFromBiome(Biome $biome, string $texture): int
     {
         return self::getColorFromMap($biome->getTemperature(), $biome->getRainfall(), $texture);
     }
 
+    /**
+     * Get the color from the color map
+     * @param float $temp the temperature
+     * @param float $rain the rainfall
+     * @param string $texture the path of the color map
+     * @return int the color
+     */
     public static function getColorFromMap(float $temp, float $rain, string $texture): int
     {
         // make the value between 0 and 1 if it isn't already
@@ -89,14 +120,17 @@ final class ColorMapParser
         } else $color = imagecolorat($img, $x, $y);
 
         // if no color was found, create a transparent pixel
-        if (!$color)
-
-
-            imagedestroy($img);
+        if (!$color) imagedestroy($img);
 
         return $color;
     }
 
+    /**
+     * Get the grass color in the given biome
+     * @param Biome $biome the biome
+     * @param ResourcePack $rp the resource pack
+     * @return int the grass color
+     */
     public static function getGrassColor(Biome $biome, ResourcePack $rp): int
     {
         $texture = $rp->getPath() . self::COLOR_MAP_GRASS;
@@ -127,6 +161,12 @@ final class ColorMapParser
         return self::getColorFromMap($temp, $rain, $texture);
     }
 
+    /**
+     * Get the average between two colors
+     * @param int $color1 the first color
+     * @param int $color2 the second color
+     * @return int the average color
+     */
     public static function average(int $color1, int $color2): int
     {
         $placeholder = imagecreatetruecolor(1, 1);
@@ -145,6 +185,12 @@ final class ColorMapParser
         return $average;
     }
 
+    /**
+     * Get the foliage color inside a biome
+     * @param Biome $biome the biome
+     * @param ResourcePack $rp the resource pack
+     * @return int the foliage color
+     */
     public static function getFoliageColor(Biome $biome, ResourcePack $rp): int
     {
         $texture = $rp->getPath() . self::COLOR_MAP_FOLIAGE;
@@ -175,6 +221,10 @@ final class ColorMapParser
         return self::getColorFromMap($temp, $rain, $texture);
     }
 
+    /**
+     * Clear the color map cache
+     * @return void
+     */
     public static function clearCache(): void
     {
 

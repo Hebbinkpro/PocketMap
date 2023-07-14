@@ -2,7 +2,6 @@
 
 namespace Hebbinkpro\PocketMap\task;
 
-use Exception;
 use GdImage;
 use Hebbinkpro\PocketMap\render\Region;
 use Hebbinkpro\PocketMap\render\RegionChunks;
@@ -39,22 +38,22 @@ class AsyncRegionRenderTask extends AsyncTask
 
         // get the name of the file
         $zoom = $region->getZoom();
-        $rx = $region->getRegionX();
-        $rz = $region->getRegionZ();
+        $rx = $region->getX();
+        $rz = $region->getZ();
         $this->renderFile = $renderPath . "$zoom/$rx,$rz.png";
     }
 
 
     /**
-     * @throws Exception
+     * Run the correct render mode behaviour.
+     * - RENDER_MODE_PARTIAL: renderPartial
+     * - RENDER_MODE_FULL: renderFull
      */
     public function onRun(): void
     {
         // decode the region
         /** @var Region $region */
         $region = unserialize($this->region);
-
-        if ($region->getTotalChunks() > WorldRenderer::RENDER_SIZE) throw new Exception("Region contains more chunks than allowed!");
 
         // partial render
         if ($this->renderMode == self::RENDER_MODE_PARTIAL) {
@@ -67,7 +66,8 @@ class AsyncRegionRenderTask extends AsyncTask
     }
 
     /**
-     * Use an existing image to render the given chunks on
+     * Use an existing image to render the given chunks on.
+     * If there doesn't exist an image, full render is used.
      * @param Region $region
      * @return void
      */
@@ -105,6 +105,12 @@ class AsyncRegionRenderTask extends AsyncTask
         $this->storeRegionImage($regionImg);
     }
 
+    /**
+     * Draw the chunks of the given region on the given image
+     * @param Region $region the region
+     * @param GdImage $image the image to draw the chunks on
+     * @return void
+     */
     private function drawChunks(Region $region, GdImage $image): void
     {
         $rp = $region->getResourcePack();
@@ -139,10 +145,16 @@ class AsyncRegionRenderTask extends AsyncTask
         }
     }
 
+    /**
+     * Store a given image on the renderFile path
+     * @param GdImage $image the image to store
+     * @return void
+     */
     private function storeRegionImage(GdImage $image): void
     {
-
+        // create a png from the image and save it to the file
         imagepng($image, $this->renderFile);
+        // destroy the image from the memory
         imagedestroy($image);
     }
 }

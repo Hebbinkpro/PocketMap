@@ -2,8 +2,9 @@
 
 namespace Hebbinkpro\PocketMap;
 
+use Exception;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
-use Hebbinkpro\PocketMap\task\ChunkUpdateTask;
+use Hebbinkpro\PocketMap\task\ChunkRenderTask;
 use Hebbinkpro\PocketMap\task\RenderSchedulerTask;
 use Hebbinkpro\PocketMap\utils\ResourcePack;
 use Hebbinkpro\WebServer\http\HttpRequest;
@@ -30,16 +31,25 @@ class PocketMap extends PluginBase implements Listener
     private WebServer $webServer;
 
     private RenderSchedulerTask $renderScheduler;
-    private ChunkUpdateTask $chunkUpdateTask;
+    private ChunkRenderTask $chunkRenderer;
 
     /** @var WorldRenderer[] */
     private array $worldRenderers = [];
 
+    /**
+     * Get the Tmp data path
+     * @return string
+     */
     public static function getTmpDataPath(): string
     {
         return self::$tmpDataPath;
     }
 
+    /**
+     * Get a world renderer by its world or the name of the world
+     * @param World|string $world The world or the name of the world
+     * @return WorldRenderer|null the WorldRenderer or null when it wasn't found
+     */
     public function getWorldRenderer(World|string $world): ?WorldRenderer
     {
         if (is_string($world)) $worldName = $world;
@@ -48,15 +58,21 @@ class PocketMap extends PluginBase implements Listener
         return $this->worldRenderers[$worldName] ?? null;
     }
 
+    /**
+     * Create a world renderer for a given world
+     * @param World $world
+     * @return WorldRenderer
+     */
     public function createWorldRenderer(World $world): WorldRenderer
     {
         $path = $this->getDataFolder() . PocketMap::RENDER_PATH . $world->getFolderName() . "/";
-        $renderer = new WorldRenderer($world, $this->getResourcePack(), $path, $this->getRenderScheduler());
+        $renderer = new WorldRenderer($world, $this->getResourcePack(), $path, $this->getRenderScheduler(), $this->chunkRenderer);
         $this->worldRenderers[$world->getFolderName()] = $renderer;
         return $renderer;
     }
 
     /**
+     * Get the resource pack
      * @return ResourcePack
      */
     public function getResourcePack(): ResourcePack
@@ -65,6 +81,7 @@ class PocketMap extends PluginBase implements Listener
     }
 
     /**
+     * Get the render scheduler
      * @return RenderSchedulerTask
      */
     public function getRenderScheduler(): RenderSchedulerTask
@@ -72,17 +89,23 @@ class PocketMap extends PluginBase implements Listener
         return $this->renderScheduler;
     }
 
-    public function removeWorldRenderer(World $world): void
+    /**
+     * Get the chunk renderer
+     * @return ChunkRenderTask
+     */
+    public function getChunkRenderer(): ChunkRenderTask
     {
-        unset($this->worldRenderers[$world->getFolderName()]);
+        return $this->chunkRenderer;
     }
 
     /**
-     * @return ChunkUpdateTask
+     * Remove a world renderer
+     * @param World $world
+     * @return void
      */
-    public function getChunkUpdateTask(): ChunkUpdateTask
+    public function removeWorldRenderer(World $world): void
     {
-        return $this->chunkUpdateTask;
+        unset($this->worldRenderers[$world->getFolderName()]);
     }
 
     public function onCommand(CommandSender $sender, Command $command, string $label, array $args): bool
@@ -101,7 +124,12 @@ class PocketMap extends PluginBase implements Listener
         return true;
     }
 
-    private function loadResources($reloadWebFiles = false): void
+    /**
+     * Load all resources in the plugin data folder
+     * @param bool $reloadWebFiles if the web files should be replaced by the files inside the resources folder
+     * @return void
+     */
+    private function loadResources(bool $reloadWebFiles = false): void
     {
         // save the config file
         $this->saveDefaultConfig();
@@ -164,6 +192,9 @@ class PocketMap extends PluginBase implements Listener
         }
     }
 
+    /**
+     * @throws Exception
+     */
     protected function onEnable(): void
     {
         // load all resources
@@ -182,13 +213,17 @@ class PocketMap extends PluginBase implements Listener
         $this->getScheduler()->scheduleRepeatingTask($this->renderScheduler, 1);
 
         // start the chunk update task, this check every period if regions have to be updated
-        $this->chunkUpdateTask = new ChunkUpdateTask($this);
-        $this->getScheduler()->scheduleRepeatingTask($this->chunkUpdateTask, 100);
+        $this->chunkRenderer = new ChunkRenderTask($this);
+        $this->getScheduler()->scheduleRepeatingTask($this->chunkRenderer, 1);
 
         // register the event listener
         $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
     }
 
+    /**
+     * Create the web server and set the routes
+     * @throws Exception
+     */
     private function createWebServer(): void
     {
         $webSettings = $this->getConfig()->get("web-server", [
@@ -217,6 +252,10 @@ class PocketMap extends PluginBase implements Listener
         $this->webServer->start();
     }
 
+    /**
+     * Register all API routes to the web server
+     * @throws Exception
+     */
     private function registerApiRoutes(): Router
     {
         $router = new Router();

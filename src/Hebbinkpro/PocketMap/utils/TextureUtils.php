@@ -46,6 +46,14 @@ class TextureUtils
         return floor(max($totalPixels / $blocks, 1));
     }
 
+    /**
+     * Create the texture of the given chunk
+     * @param Chunk $chunk the chunk
+     * @param ResourcePack $rp the resource pack
+     * @param int $totalBlocks the amount of blocks visible in the texture
+     * @param int $pixelsPerBlock the amount of pixels of each block
+     * @return GdImage the texture image of the chunk
+     */
     public static function createChunkTexture(Chunk $chunk, ResourcePack $rp, int $totalBlocks, int $pixelsPerBlock): GdImage
     {
         $invalidBlocks = [
@@ -95,6 +103,14 @@ class TextureUtils
         return $texture;
     }
 
+    /**
+     * Create a block texture compressed to the given size
+     * @param Block $block the block
+     * @param Biome $biome the biome the block is in
+     * @param ResourcePack $rp the resource pack
+     * @param int $newSize the new size of the block texture
+     * @return GdImage the block texture compressed to the $newSize
+     */
     public static function createCompressedBlockTexture(Block $block, Biome $biome, ResourcePack $rp, int $newSize): GdImage
     {
         $img = self::createBlockTexture($block, $biome, $rp);
@@ -110,7 +126,7 @@ class TextureUtils
      * @param Block $block
      * @param Biome $biome
      * @param ResourcePack $rp
-     * @return GdImage
+     * @return GdImage the texture of the block
      */
     public static function createBlockTexture(Block $block, Biome $biome, ResourcePack $rp): GdImage
     {
@@ -195,7 +211,7 @@ class TextureUtils
 
         // get the terrain data of the given texture
         // if the block does not exist in the terrain_texture.json file for some reason, give the expected exture
-        $terrainData = $terrainTextures[$textureName] ?? ["textures"=>"textures/blocks/$textureName"];
+        $terrainData = $terrainTextures[$textureName] ?? ["textures" => "textures/blocks/$textureName"];
         $textures = $terrainData["textures"];
 
         // the texture is just a straight forward texture path
@@ -220,6 +236,14 @@ class TextureUtils
         return $rp->getPath() . $textures[$dataValue];
     }
 
+    /**
+     * Apply a color map to the given block texture
+     * @param GdImage $texture the texture to apply the color map on
+     * @param Block $block the block of the texture
+     * @param Biome $biome the biome the block is in
+     * @param ResourcePack $rp the resource pack
+     * @return void
+     */
     public static function applyColorMap(GdImage $texture, Block $block, Biome $biome, ResourcePack $rp): void
     {
         // get the color from the cache
@@ -228,10 +252,17 @@ class TextureUtils
         // the given block is not mapped
         if ($colorMap < 0) return;
 
-        self::overlay($texture, $colorMap, 128, $rp->getTextureSize());
+        self::overlay($texture, $colorMap, $rp->getTextureSize());
     }
 
-    public static function overlay(GdImage $image, int $overlay, int $a, int $size): void
+    /**
+     * Apply an overlay to the image
+     * @param GdImage $image the image
+     * @param int $overlay the color of the overlay
+     * @param int $size the size (in pixels) of the image
+     * @return void
+     */
+    public static function overlay(GdImage $image, int $overlay, int $size): void
     {
         $co = imagecolorsforindex($image, $overlay);
 
@@ -257,6 +288,15 @@ class TextureUtils
 
     }
 
+    /**
+     * Get a compressed image
+     * @param GdImage $src the image to compress
+     * @param int $srcWidth the width of the image
+     * @param int $srcHeight teh height of the image
+     * @param int $newWidth the new width of the image
+     * @param int $newHeight the new height of the image
+     * @return GdImage the compressed image with the new weight and height
+     */
     public static function getCompressedImage(GdImage $src, int $srcWidth, int $srcHeight, int $newWidth, int $newHeight): GdImage
     {
         $compressedImg = imagecreatetruecolor($newWidth, $newHeight);
@@ -265,6 +305,10 @@ class TextureUtils
         return $compressedImg;
     }
 
+    /**
+     * Clear the texture cache
+     * @return void
+     */
     public static function clearCache(): void
     {
         // destroy all stored images
