@@ -3,6 +3,7 @@
 namespace Hebbinkpro\PocketMap;
 
 use Exception;
+use Hebbinkpro\PocketMap\utils\ConfigManager;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
 use Hebbinkpro\PocketMap\task\ChunkRenderTask;
 use Hebbinkpro\PocketMap\task\RenderSchedulerTask;
@@ -20,11 +21,14 @@ use pocketmine\world\World;
 
 class PocketMap extends PluginBase implements Listener
 {
+    public const CONFIG_VERSION = 1.0;
+
     public const RESOURCE_PACK_PATH = "resource_packs/";
     public const RESOURCE_PACK_NAME = "v1.20.0.1";
     public const TEXTURE_SIZE = 16;
     public const RENDER_PATH = "renders/";
 
+    private static ConfigManager $configManager;
     private static string $tmpDataPath;
 
     private ResourcePack $resourcePack;
@@ -35,6 +39,10 @@ class PocketMap extends PluginBase implements Listener
 
     /** @var WorldRenderer[] */
     private array $worldRenderers = [];
+
+    public static function getConfigManger(): ConfigManager {
+        return self::$configManager;
+    }
 
     /**
      * Get the Tmp data path
@@ -134,8 +142,28 @@ class PocketMap extends PluginBase implements Listener
         // save the config file
         $this->saveDefaultConfig();
 
+        $config = $this->getConfig();
+        $version = $config->get("version", -1.0);
+        if ($version != self::CONFIG_VERSION) {
+            $this->getLogger()->notice("The current version of PocketMap is using another config version.");
+            $this->getLogger()->info("You can find your old config in 'config_v$version.yml'");
+            $this->getLogger()->warning("Replacing 'config.yml v$version' with 'config.yml v".self::CONFIG_VERSION."'");
+
+            // clone all contents from config.yml inside the backup config
+            file_put_contents($this->getDataFolder()."config_v$version.yml",
+                file_get_contents($this->getDataFolder()."config.yml"));
+
+            // save the new config
+            $this->saveResource("config.yml", true);
+            // update the config to use it in the config manager
+            $config = $this->getConfig();
+        }
+
+        // construct the config manager
+        self::$configManager = ConfigManager::fromConfig($config);
+
         // get startup settings
-        $startupSettings = $this->getConfig()->get("startup", ["reload-web-files" => false]);
+        $startupSettings = self::$configManager->getManager("startup", true, ["reload-web-files" => false]);
 
         $pluginResources = $this->getFile() . "resources/";
         $data = $this->getDataFolder();
@@ -148,7 +176,7 @@ class PocketMap extends PluginBase implements Listener
         }
 
         // removes existing web files on startup
-        if ($startupSettings["reload-web-files"] || $reloadWebFiles) {
+        if ($startupSettings->getBool("reload-web-files") || $reloadWebFiles) {
             // reload web files on startup
             Filesystem::recursiveUnlink($this->getDataFolder() . "web");
         }
@@ -210,11 +238,13 @@ class PocketMap extends PluginBase implements Listener
 
         // start the render scheduler
         $this->renderScheduler = new RenderSchedulerTask($this);
-        $this->getScheduler()->scheduleRepeatingTask($this->renderScheduler, 1);
+        $this->getScheduler()->scheduleRepeatingTask($this->renderScheduler, self::$configManager->getInt("renderer.scheduler.run-period", 1));
+
+        var_dump(self::$configManager->getInt("renderer.scheduler.run-period", 1));
 
         // start the chunk update task, this check every period if regions have to be updated
         $this->chunkRenderer = new ChunkRenderTask($this);
-        $this->getScheduler()->scheduleRepeatingTask($this->chunkRenderer, 1);
+        $this->getScheduler()->scheduleRepeatingTask($this->chunkRenderer, self::$configManager->getInt("renderer.chunk-renderer.run-period", 1));
 
         // register the event listener
         $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
@@ -226,13 +256,10 @@ class PocketMap extends PluginBase implements Listener
      */
     private function createWebServer(): void
     {
-        $webSettings = $this->getConfig()->get("web-server", [
-            "address" => "127.0.0.1",
-            "port" => 3000
-        ]);
+        $webSettings = self::$configManager->getManager("web-server", true, ["address"=>"127.0.0.1","port"=>3000]);
 
         // create the web server
-        $this->webServer = new WebServer($webSettings["address"], $webSettings["port"]);
+        $this->webServer = new WebServer($webSettings->getString("address", "127.0.0.1"), $webSettings->getInt("port", 3000));
         $router = $this->webServer->getRouter();
 
         // main route

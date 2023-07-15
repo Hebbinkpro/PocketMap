@@ -13,7 +13,6 @@ class ChunkRenderTask extends Task
 {
     public const CACHE_FILE = "regions/render.txt";
 
-    public const COOLDOWN_TIME = 60;
 
     private PocketMap $pocketMap;
 
@@ -27,6 +26,9 @@ class ChunkRenderTask extends Task
 
     private array $cooldown;
 
+    private int $cooldownTime;
+    private bool $enableCache;
+
     public function __construct(PocketMap $pocketMap)
     {
         $this->pocketMap = $pocketMap;
@@ -34,7 +36,11 @@ class ChunkRenderTask extends Task
         $this->cooldown = [];
         $this->chunkGenerators = [];
 
-        $this->readFromCache();
+        $this->cooldownTime = PocketMap::getConfigManger()->getInt("renderer.chunk-renderer.region-cooldown", 60);
+        $this->enableCache = PocketMap::getConfigManger()->getBool("renderer.chunk-renderer.region-cache", true);
+
+
+        if ($this->enableCache) $this->readFromCache();
     }
 
     /**
@@ -141,7 +147,7 @@ class ChunkRenderTask extends Task
     {
         $finished = [];
 
-        $maxLoad = 10;
+        $maxLoad = PocketMap::getConfigManger()->getInt("renderer.chunk-renderer.generator-yield", 10);
         $loaded = 0;
 
         foreach ($this->chunkGenerators as $worldName => $worldChunks) {
@@ -236,7 +242,7 @@ class ChunkRenderTask extends Task
 
         // loop through all cool-downs and remove the one's that are expired
         foreach ($this->cooldown as [$r, $time]) {
-            if (time() - $time < self::COOLDOWN_TIME) {
+            if (time() - $time < $this->cooldownTime) {
                 $onCooldown[] = [$r, $time];
             }
         }

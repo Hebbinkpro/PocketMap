@@ -6,6 +6,7 @@ use GdImage;
 use Hebbinkpro\PocketMap\render\Region;
 use Hebbinkpro\PocketMap\render\RegionChunks;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
+use Hebbinkpro\PocketMap\utils\ColorMapParser;
 use Hebbinkpro\PocketMap\utils\TextureUtils;
 use pocketmine\scheduler\AsyncTask;
 
@@ -143,6 +144,8 @@ class AsyncRegionRenderTask extends AsyncTask
             imagecopyresized($image, $chunkImg, $dx, $dz, 0, 0, $chunkSize, $chunkSize, $imgChunkSize, $imgChunkSize);
             imagedestroy($chunkImg);
         }
+
+        $this->clearCache();
     }
 
     /**
@@ -156,5 +159,15 @@ class AsyncRegionRenderTask extends AsyncTask
         imagepng($image, $this->renderFile);
         // destroy the image from the memory
         imagedestroy($image);
+    }
+
+    /**
+     * Clear the cache of the ColorMap parser and TextureUtils to make some memory free
+     * @return void
+     */
+    public function clearCache(): void
+    {
+        ColorMapParser::clearCache();
+        TextureUtils::clearCache();
     }
 }

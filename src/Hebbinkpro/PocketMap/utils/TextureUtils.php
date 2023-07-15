@@ -305,6 +305,10 @@ class TextureUtils
         return $compressedImg;
     }
 
+    public static function debug(string $name) {
+        var_dump($name.": ".count(self::$blockTextureMap));
+    }
+
     /**
      * Clear the texture cache
      * @return void

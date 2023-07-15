@@ -1,3 +1,21 @@
+# the config.yml version DO NOT CHANGE
+version: 1.0
+
+renderer:
+  chunk-loader:
+    chunks-per-run: 128
+
+  chunk-renderer:
+    run-period: 1
+    region-cooldown: 60
+    region-cache: true
+    generator-yield: 10
+
+  scheduler:
+    run-period: 1
+    async-renders: 5
+
+
 # Settings for the web server
 # The web server will be accessible at 'http://<address>:<port>/'.
 web-server:

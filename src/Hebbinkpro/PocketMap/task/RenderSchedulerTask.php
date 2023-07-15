@@ -2,6 +2,7 @@
 
 namespace Hebbinkpro\PocketMap\task;
 
+use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\render\Region;
 use Hebbinkpro\PocketMap\render\RegionChunks;
 use Hebbinkpro\PocketMap\render\RegionChunksLoader;
@@ -12,11 +13,6 @@ use pocketmine\scheduler\Task;
 
 class RenderSchedulerTask extends Task
 {
-    /**
-     * Max amount of async renders running simultaneously
-     */
-    public const MAX_CURRENT_RENDERS = 5;
-
     private PluginBase $plugin;
 
     /** @var AsyncRegionRenderTask[] */
@@ -28,12 +24,20 @@ class RenderSchedulerTask extends Task
     /** @var array{path: string, region: Region}[] */
     private array $regionRenderQueue;
 
+    private int $maxCurrentRenders;
+    private int $maxQueueSize;
+    private int $maxChunksPerRun;
+
     public function __construct(PluginBase $plugin)
     {
         $this->plugin = $plugin;
         $this->currentRegionRenders = [];
         $this->regionChunksLoaders = [];
         $this->regionRenderQueue = [];
+
+        $this->maxCurrentRenders = PocketMap::getConfigManger()->getInt("renderer.scheduler.renders", 5);
+        $this->maxQueueSize = PocketMap::getConfigManger()->getInt("renderer.scheduler.queue-size", 25);
+        $this->maxChunksPerRun = PocketMap::getConfigManger()->getInt("renderer.chunk-loader.chunks-per-run", 128);
     }
 
     /**
@@ -46,7 +50,7 @@ class RenderSchedulerTask extends Task
     public function scheduleRegionRender(string $path, Region $region, bool $force = false): bool
     {
         // when the action is not forced, don't add the region
-        if (!$force && count($this->regionRenderQueue) > self::MAX_CURRENT_RENDERS * 5) return false;
+        if (!$force && count($this->regionRenderQueue) > $this->maxQueueSize) return false;
 
         // add the path and region to the queue
         $this->regionRenderQueue[] = [
@@ -69,12 +73,6 @@ class RenderSchedulerTask extends Task
         $this->runRegionChunksLoaders();
         // run the region renders
         $this->runRegionRenders();
-
-        // there are no tasks scheduled
-        if (empty($this->currentRegionRenders)) {
-            // clear the cache to free up some memory
-            $this->clearCache();
-        }
     }
 
     /**
@@ -146,13 +144,13 @@ class RenderSchedulerTask extends Task
         }
 
         // add new renders until the cap is reached or no new renders are available
-        while ($this->getCurrentRendersCount() < self::MAX_CURRENT_RENDERS && count($this->regionRenderQueue) > 0) {
+        while ($this->getCurrentRendersCount() < $this->maxCurrentRenders && count($this->regionRenderQueue) > 0) {
             $rr = array_shift($this->regionRenderQueue);
             $path = $rr["path"];
             $region = $rr["region"];
 
             // amount of chunks in render is higher than max load limit
-            if (pow($region->getTotalChunks(), 2) > RegionChunksLoader::MAX_CHUNKS_PER_RUN) {
+            if (pow($region->getTotalChunks(), 2) > $this->maxChunksPerRun) {
                 // now we are going to use a region chunks loader
                 $world = $this->plugin->getServer()->getWorldManager()->getWorldByName($region->getWorldName());
                 $loader = new RegionChunksLoader($region, $world->getProvider());
@@ -178,15 +176,5 @@ class RenderSchedulerTask extends Task
     public function getCurrentRendersCount(): int
     {
         return count($this->currentRegionRenders) + count($this->regionChunksLoaders);
-    }
-
-    /**
-     * Clear the cache of the ColorMap parser and TextureUtils to make some memory free
-     * @return void
-     */
-    public function clearCache(): void
-    {
-        ColorMapParser::clearCache();
-        TextureUtils::clearCache();
     }
 }

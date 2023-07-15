@@ -3,17 +3,18 @@
 namespace Hebbinkpro\PocketMap\render;
 
 use Generator;
+use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\utils\ChunkUtils;
 use pocketmine\world\format\io\WritableWorldProvider;
 
 class RegionChunksLoader
 {
-    public const MAX_CHUNKS_PER_RUN = 128;
-
     private WritableWorldProvider $provider;
     private RegionChunks $regionChunks;
     private Generator|array $chunkCoords;
     private bool $finished;
+
+    private int $maxChunksPerRun;
 
     public function __construct(Region $region, WritableWorldProvider $provider)
     {
@@ -21,6 +22,8 @@ class RegionChunksLoader
         $this->regionChunks = RegionChunks::getEmpty($region);
         $this->chunkCoords = $region->getChunks();
         $this->finished = false;
+
+        $this->maxChunksPerRun = PocketMap::getConfigManger()->getInt("renderer.chunk-loader.chunks-per-run", 128);
     }
 
     /**
@@ -49,7 +52,7 @@ class RegionChunksLoader
             $this->chunkCoords->next();
 
             // the max amount of chunks in this run is reached
-            if (++$i >= self::MAX_CHUNKS_PER_RUN) break;
+            if (++$i >= $this->maxChunksPerRun) break;
         }
 
         $this->finished = !$this->chunkCoords->valid();
