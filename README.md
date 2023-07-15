@@ -19,7 +19,7 @@ A dynamic web-based world map for PocketMine-MP servers.
 - Leaflet.js uses the different zoom-levels so that you can zoom in and out on the map without any issue.
 
 ## Issues
-If you encounter any issues by using the plugin, please report them [here](https://github.com/Hebbinkpro/pmmp-webserver/issues)!
+If you encounter issues with the web server, please report them [here](https://github.com/Hebbinkpro/pmmp-webserver/issues, for any other issues with this plugin please report them [here](https://github.com/Hebbinkpro/pocketmap/issues)!
 
 ## TO DO
 This is a list of all things that have to be added
