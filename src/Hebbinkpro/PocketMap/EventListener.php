@@ -112,10 +112,11 @@ class EventListener implements Listener
         $renderer = $this->plugin->getWorldRenderer($world->getFolderName());
         if ($chunk === null || $renderer === null) return;
 
+        if ($this->hasChunkCooldown($chunkX, $chunkZ)) return;
 
-        if ($this->hasChunkCooldown($chunkX, $chunkZ))
         // add the chunk as updated to the update task
         $this->plugin->getChunkRenderer()->addChunk($renderer, $chunkX, $chunkZ);
+        $this->setChunkCooldown($chunkX, $chunkZ);
     }
 
     public function onBlockBurn(BlockBurnEvent $e): void
@@ -140,7 +141,7 @@ class EventListener implements Listener
 
     public function onBlockPlace(BlockPlaceEvent $e): void
     {
-        $this->blockUpdate($e->getBlockAgainst()->getPosition());
+        $this->blockUpdate($e->getPlayer()->getPosition());
     }
 
     public function onBlockSpread(BlockSpreadEvent $e): void
