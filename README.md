@@ -2,6 +2,14 @@
 
 A dynamic web-based world map for PocketMine-MP servers.
 
+## New in version 0.2.0
+The 0.2.0 update brings a lot of rendering improvements which results in better server performance while rendering and faster renders.
+- Add a configuration options for rendering
+- Add `ConfigManager` for managing all config options
+- Improve full world rendering
+- Improve rendering of new chunks
+- Improve rendering of updated chunks
+
 ## How to install
 1. Download the newest version of the plugin from [Poggit CI](https://poggit.pmmp.io/ci/Hebbinkpro/PocketMap)
 2. Place the plugin in the plugins folder of your PocketMine-MP server
