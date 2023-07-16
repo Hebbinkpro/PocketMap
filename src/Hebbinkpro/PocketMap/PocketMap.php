@@ -238,13 +238,11 @@ class PocketMap extends PluginBase implements Listener
 
         // start the render scheduler
         $this->renderScheduler = new RenderSchedulerTask($this);
-        $this->getScheduler()->scheduleRepeatingTask($this->renderScheduler, self::$configManager->getInt("renderer.scheduler.run-period", 1));
-
-        var_dump(self::$configManager->getInt("renderer.scheduler.run-period", 1));
+        $this->getScheduler()->scheduleRepeatingTask($this->renderScheduler, self::$configManager->getInt("renderer.scheduler.run-period", 5));
 
         // start the chunk update task, this check every period if regions have to be updated
         $this->chunkRenderer = new ChunkRenderTask($this);
-        $this->getScheduler()->scheduleRepeatingTask($this->chunkRenderer, self::$configManager->getInt("renderer.chunk-renderer.run-period", 1));
+        $this->getScheduler()->scheduleRepeatingTask($this->chunkRenderer, self::$configManager->getInt("renderer.chunk-renderer.run-period", 10));
 
         // register the event listener
         $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);

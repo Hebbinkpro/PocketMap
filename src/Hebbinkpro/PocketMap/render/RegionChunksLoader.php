@@ -13,6 +13,7 @@ class RegionChunksLoader
     private RegionChunks $regionChunks;
     private Generator|array $chunkCoords;
     private bool $finished;
+    private array $notLoadedChunks;
 
     private int $maxChunksPerRun;
 
@@ -22,6 +23,7 @@ class RegionChunksLoader
         $this->regionChunks = RegionChunks::getEmpty($region);
         $this->chunkCoords = $region->getChunks();
         $this->finished = false;
+        $this->notLoadedChunks = [];
 
         $this->maxChunksPerRun = PocketMap::getConfigManger()->getInt("renderer.chunk-loader.chunks-per-run", 128);
     }
@@ -48,6 +50,9 @@ class RegionChunksLoader
             if ($chunkData !== null) {
                 if (!array_key_exists($x, $chunks)) $chunks[$x] = [];
                 $chunks[$x][$z] = ChunkUtils::getChunkFromData($chunkData->getData());
+            } else {
+                // the chunk data of this chunk didn't exist
+                $this->notLoadedChunks[] = [$x,$z];
             }
             $this->chunkCoords->next();
 
@@ -77,5 +82,13 @@ class RegionChunksLoader
     public function getRegionChunks(): RegionChunks
     {
         return $this->regionChunks;
+    }
+
+    /**
+     * Get all chunks that are not loaded
+     * @return array
+     */
+    public function getNotLoadedChunks(): array {
+        return $this->notLoadedChunks;
     }
 }

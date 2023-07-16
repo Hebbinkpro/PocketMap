@@ -17,28 +17,22 @@ class ChunkRenderTask extends Task
     private PocketMap $pocketMap;
 
     /** @var Region[] */
-    private array $updatedRegions;
+    private array $queuedRegions;
 
     /**
      * @var array{renderer: WorldRenderer, chunks: Generator}[]
      */
     private array $chunkGenerators;
 
-    private array $cooldown;
-
-    private int $cooldownTime;
     private bool $enableCache;
 
     public function __construct(PocketMap $pocketMap)
     {
         $this->pocketMap = $pocketMap;
-        $this->updatedRegions = [];
-        $this->cooldown = [];
+        $this->queuedRegions = [];
         $this->chunkGenerators = [];
 
-        $this->cooldownTime = PocketMap::getConfigManger()->getInt("renderer.chunk-renderer.region-cooldown", 60);
         $this->enableCache = PocketMap::getConfigManger()->getBool("renderer.chunk-renderer.region-cache", true);
-
 
         if ($this->enableCache) $this->readFromCache();
     }
@@ -54,8 +48,8 @@ class ChunkRenderTask extends Task
         if (!file_exists($cacheFile)) return;
 
         $data = file_get_contents($cacheFile);
-        $this->updatedRegions = unserialize($data);
-        $this->pocketMap->getLogger()->debug("Restored " . count($this->updatedRegions) . " regions from the cache");
+        $this->queuedRegions = unserialize($data);
+        $this->pocketMap->getLogger()->debug("Restored " . count($this->queuedRegions) . " regions from the cache");
     }
 
     /**
@@ -80,11 +74,7 @@ class ChunkRenderTask extends Task
      */
     public function isAdded(Region $region): bool
     {
-        foreach ($this->updatedRegions as $r) {
-            if ($region->equals($r)) return true;
-        }
-
-        return false;
+        return array_key_exists("$region", $this->queuedRegions);
     }
 
     /**
@@ -99,15 +89,10 @@ class ChunkRenderTask extends Task
         // add the chunks from the added iterator lists
         $this->loadChunksFromGenerators();
 
-        // update the cool-downs
-        $this->updateCooldown();
-
         $started = [];
 
         // start render for all queued chunks
-        foreach ($this->updatedRegions as $i => $region) {
-            // region is still on cooldown
-            if ($this->hasCooldown($region)) continue;
+        foreach ($this->queuedRegions as $name => $region) {
 
             // get the world renderer
             $renderer = $this->pocketMap->getWorldRenderer($region->getWorldName());
@@ -121,21 +106,21 @@ class ChunkRenderTask extends Task
                 break;
             }
 
-            $this->pocketMap->getLogger()->debug("Started render of region: " . $region->getZoom() . "/" . $region->getX() . "," . $region->getZ());
-            // add region to the cooldown list
-            $this->cooldown[] = [$region, time()];
-            $started[] = $i;
+            $this->pocketMap->getLogger()->debug("[Chunk Render] Added render of region: $region to the scheduler");
+            $started[] = $name;
 
         }
 
         // remove all the started regions
-        foreach ($started as $i) {
-            unset($this->updatedRegions[$i]);
+        foreach ($started as $name) {
+            unset($this->queuedRegions[$name]);
         }
 
-        // update the cache
-        $cacheFile = PocketMap::getTmpDataPath() . self::CACHE_FILE;
-        file_put_contents($cacheFile, serialize($this->updatedRegions));
+        if ($this->enableCache) {
+            // update the cache
+            $cacheFile = PocketMap::getTmpDataPath() . self::CACHE_FILE;
+            file_put_contents($cacheFile, serialize($this->queuedRegions));
+        }
     }
 
     /**
@@ -206,61 +191,26 @@ class ChunkRenderTask extends Task
     public function addPartialRegion(PartialRegion $region, int $chunkX, int $chunkZ): void
     {
 
-        $storedRegion = $this->getStoredRegion($region);
+        $queuedRegion = $this->getQueuedRegion($region);
         // the region is already stored
-        if ($storedRegion === null) {
-            $storedRegion = $region;
-            $this->pocketMap->getLogger()->debug("[ChunkUpdate] Added region to the queue: " . $region->getX() . "," . $region->getZ() . ", zoom: " . $region->getZoom() . ", world: " . $region->getWorldName());
-            $this->updatedRegions[] = $region;
+        if ($queuedRegion === null) {
+            $queuedRegion = $region;
+            $this->pocketMap->getLogger()->debug("[Chunk Render] Added region to the queue: $region, world: " . $region->getWorldName());
+            $this->queuedRegions["$region"] = $region;
         }
+        $this->pocketMap->getLogger()->debug("[Chunk Render] Added chunk: $chunkX,$chunkZ, to region: $queuedRegion");
 
         // add the chunk to the stored region
-        $storedRegion->addChunk($chunkX, $chunkZ);
+        $queuedRegion->addChunk($chunkX, $chunkZ);
     }
 
     /**
-     * Get a saved region by a similar region
+     * Get a queued region by a similar region
      * @param Region $region
      * @return Region|null
      */
-    public function getStoredRegion(Region $region): ?Region
+    public function getQueuedRegion(Region $region): ?Region
     {
-        foreach ($this->updatedRegions as $r) {
-            if ($region->equals($r)) return $r;
-        }
-
-        return null;
-    }
-
-    /**
-     * Check if the cool-downs still hold
-     * @return void
-     */
-    private function updateCooldown(): void
-    {
-        $onCooldown = [];
-
-        // loop through all cool-downs and remove the one's that are expired
-        foreach ($this->cooldown as [$r, $time]) {
-            if (time() - $time < $this->cooldownTime) {
-                $onCooldown[] = [$r, $time];
-            }
-        }
-
-        $this->cooldown = $onCooldown;
-    }
-
-    /**
-     * Get if a region has a cool-down
-     * @param Region $region
-     * @return bool if the region has a cool down
-     */
-    public function hasCooldown(Region $region): bool
-    {
-        foreach ($this->cooldown as [$r, $time]) {
-            if ($region->equals($r)) return true;
-        }
-
-        return false;
+        return $this->queuedRegions["$region"] ?? null;
     }
 }

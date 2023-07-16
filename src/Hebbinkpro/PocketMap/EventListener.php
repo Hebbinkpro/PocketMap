@@ -3,6 +3,7 @@
 namespace Hebbinkpro\PocketMap;
 
 use Hebbinkpro\PocketMap\render\WorldRenderer;
+use Hebbinkpro\PocketMap\utils\ChunkUtils;
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\block\BlockBurnEvent;
 use pocketmine\event\block\BlockFormEvent;
@@ -14,7 +15,9 @@ use pocketmine\event\block\BlockTeleportEvent;
 use pocketmine\event\block\LeavesDecayEvent;
 use pocketmine\event\block\StructureGrowEvent;
 use pocketmine\event\Listener;
+use pocketmine\event\player\PlayerPostChunkSendEvent;
 use pocketmine\event\world\ChunkLoadEvent;
+use pocketmine\event\world\ChunkPopulateEvent;
 use pocketmine\event\world\WorldLoadEvent;
 use pocketmine\event\world\WorldUnloadEvent;
 use pocketmine\world\Position;
@@ -23,10 +26,14 @@ use pocketmine\world\Position;
 class EventListener implements Listener
 {
     private PocketMap $plugin;
+    private int $chunkCooldownTime;
+    private array $chunkCooldown;
 
     public function __construct(PocketMap $plugin)
     {
         $this->plugin = $plugin;
+        $this->chunkCooldown = [];
+        $this->chunkCooldownTime = PocketMap::getConfigManger()->getInt("renderer.chunk-renderer.chunk-cooldown", 60);
     }
 
     public function onWorldLoad(WorldLoadEvent $e): void
@@ -72,6 +79,15 @@ class EventListener implements Listener
 
         // chunk is not yet rendered
         if (!$region->isChunkInRenderData($cx, $cz)) {
+            // it's a new chunk
+            if ($e->isNewChunk()) {
+                $chunk = $e->getChunk();
+                $chunkData = ChunkUtils::getChunkData($world, $cx, $cz, $chunk);
+                // save the chunk, otherwise the RegionChunksLoader cannot read the chunk data
+                // this will cause the renderer to generate a black chunk in your beautiful map :(
+                $world->getProvider()->saveChunk($cx, $cz, $chunkData, $chunk->getTerrainDirtyFlags());
+            }
+
             $this->plugin->getLogger()->debug("Found a not rendered chunk: $cx,$cz in world: " . $world->getFolderName());
             $this->plugin->getChunkRenderer()->addChunk($renderer, $cx, $cz);
         }
@@ -84,6 +100,9 @@ class EventListener implements Listener
 
     private function blockUpdate(Position $pos): void
     {
+        // just update the region cool-downs to make sure the list is up-to-date
+        $this->updateChunkCooldown();
+
         $world = $pos->getWorld();
         $chunkX = floor($pos->getX() / 16);
         $chunkZ = floor($pos->getZ() / 16);
@@ -94,6 +113,7 @@ class EventListener implements Listener
         if ($chunk === null || $renderer === null) return;
 
 
+        if ($this->hasChunkCooldown($chunkX, $chunkZ))
         // add the chunk as updated to the update task
         $this->plugin->getChunkRenderer()->addChunk($renderer, $chunkX, $chunkZ);
     }
@@ -141,5 +161,48 @@ class EventListener implements Listener
     public function onStructureGrow(StructureGrowEvent $e): void
     {
         $this->blockUpdate($e->getBlock()->getPosition());
+    }
+
+    /**
+     * Check if the cool-downs still hold
+     * @return void
+     */
+    private function updateChunkCooldown(): void
+    {
+        $onCooldown = [];
+
+        // loop through all cool-downs and remove the one's that are expired
+        foreach ($this->chunkCooldown as [$r, $time]) {
+            if (time() - $time < $this->chunkCooldownTime) {
+                $onCooldown[] = [$r, $time];
+            }
+        }
+
+        $this->chunkCooldown = $onCooldown;
+    }
+
+    /**
+     * Get if a region has a cool-down
+     * @param int $chunkX x pos of the chunk
+     * @param int $chunkZ z pos of the chunk
+     * @return bool if the region has a cool down
+     */
+    public function hasChunkCooldown(int $chunkX, int $chunkZ): bool
+    {
+        foreach ($this->chunkCooldown as [$c, $time]) {
+            if ($c === [$chunkX,$chunkZ]) return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Give a chunk a cooldown
+     * @param int $chunkX x pos of the chunk
+     * @param int $chunkZ z pos of the chunk
+     * @return void
+     */
+    public function setChunkCooldown(int $chunkX, int $chunkZ): void {
+        $this->chunkCooldown[] = [[$chunkX,$chunkZ], time()];
     }
 }

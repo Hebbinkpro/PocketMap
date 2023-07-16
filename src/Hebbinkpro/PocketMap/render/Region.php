@@ -6,6 +6,7 @@ use Exception;
 use Generator;
 use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\task\AsyncRegionRenderTask;
+use Hebbinkpro\PocketMap\utils\ArrayUtils;
 use Hebbinkpro\PocketMap\utils\ResourcePack;
 
 class Region
@@ -187,47 +188,40 @@ class Region
 
     /**
      * Add a chunk to the list in the render data of the render with the highest zoom level
-     * @param int $chunkX the x pos of the chunk
-     * @param int $chunkZ the z pos of the chunk
+     * @param int[][] $chunks
      * @return void
+     * @throws Exception
      */
-    public function addChunkToRenderData(int $chunkX, int $chunkZ): void
+    public function addChunksToRenderData(array $chunks): void
     {
         // cannot add chunk
-        if ($this->isRenderDataComplete() || !$this->isChunkInRegion($chunkX, $chunkZ)) return;
+        if ($this->isRenderDataComplete()) return;
 
-        // get the data
-        $data = $this->getRenderData();
-        if ($data === null) {
-            $data = [
-                "completed" => false,
-                "chunks" => []
-            ];
+        $renderData = $this->loadRenderData();
+
+        foreach ($chunks as [$cx,$cz]) {
+            if (!$this->isChunkInRegion($cx, $cz)) continue;
+
+            if (!array_key_exists("$cx", $renderData["chunks"])) $renderData["chunks"]["$cx"] = [];
+
+            if (!in_array($cz, $renderData["chunks"]["$cx"])) {
+                $renderData["chunks"]["$cx"][] = $cz;
+            }
+
         }
 
-        $storedChunks = $data["chunks"] ?? [];
-
-        // x pos does not yet exist
-        if (!array_key_exists("$chunkX", $storedChunks)) $storedChunks["$chunkX"] = [];
-
-        // chunk already stored
-        if (in_array($chunkZ, $storedChunks["$chunkX"])) return;
-
-        $storedChunks["$chunkX"][] = $chunkZ;
+        $largestRegion = $this->getLargestZoomRegion();
+        $totalChunks = $largestRegion["chunks"];
 
         // the region is completed
-        if (sizeof($storedChunks) >= $this->getTotalChunks()) {
+        if ($this->getChunksInRenderData($renderData) >= pow($totalChunks, 2)) {
             // mark region as completed
-            $data["completed"] = true;
+            $renderData["completed"] = true;
             // remove the redundant data
-            $data["chunks"] = [];
-        } else {
-            // set the new chunks
-            $data["chunks"] = $storedChunks;
+            $renderData["chunks"] = [];
         }
 
-        // store the data
-        file_put_contents($this->tmpFile, json_encode($data));
+        file_put_contents($this->tmpFile, json_encode($renderData));
     }
 
     /**
@@ -236,27 +230,32 @@ class Region
      */
     public function isRenderDataComplete(): bool
     {
-        $data = $this->getRenderData();
-        if ($data === null) return false;
+        $data = $this->loadRenderData();
         return $data["completed"] ?? false;
     }
 
-    /**
-     * Get the render data of the region
-     * @return array{completed: bool, chunks?: int[][]}|null
-     */
-    public function getRenderData(): ?array
-    {
-        try {
-            $fileData = file_get_contents($this->tmpFile);
-        } catch (Exception $e) {
-            return null;
+    public function getChunksInRenderData(array $renderData): int {
+        $amount = 0;
+
+        foreach ($renderData["chunks"] as $x=>$chunks) {
+            $amount += count($renderData["chunks"]["$x"]);
         }
 
-        $data = json_decode($fileData, true);
-        if (!$data) return null;
+        return $amount;
+    }
+
+    private function loadRenderData(): array {
+        try {
+            $fileData = file_get_contents($this->tmpFile);
+            $data = json_decode($fileData, true);
+            if (!$data) $data = ["completed" => false, "chunks" => []];
+        } catch (Exception $e) {
+            $data = ["completed" => false, "chunks" => []];
+        }
+
         return $data;
     }
+
 
     /**
      * Check if a chunk is inside the region.
@@ -288,11 +287,14 @@ class Region
         }
         if ($this->isRenderDataComplete()) return true;
 
-        $data = $this->getRenderData() ?? [];
+        $data = $this->loadRenderData() ?? [];
 
         if (!array_key_exists("chunks", $data)) return false;
         if (!array_key_exists($chunkX, $data["chunks"])) return false;
         return in_array($chunkZ, $data["chunks"]["$chunkX"]);
     }
 
+    public function __toString(): string {
+        return $this->getZoom()."/".$this->getX().",".$this->getZ();
+    }
 }

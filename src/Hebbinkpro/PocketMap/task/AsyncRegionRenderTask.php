@@ -125,10 +125,11 @@ class AsyncRegionRenderTask extends AsyncTask
         // the total size of the chunk image
         $imgChunkSize = $totalBlocks * $imgPixelsPerBlock;
 
+        $chunks = [];
         // yield all chunks
         foreach (RegionChunks::yieldAllEncodedChunks($this->regionChunks) as [$cx, $cz, $chunk]) {
             // save the chunk to the region data
-            $region->addChunkToRenderData($cx, $cz);
+            $chunks[] = [$cx, $cz];
 
             // create the chunk image
             $chunkImg = TextureUtils::createChunkTexture($chunk, $rp, $totalBlocks, $imgPixelsPerBlock);
@@ -145,7 +146,22 @@ class AsyncRegionRenderTask extends AsyncTask
             imagedestroy($chunkImg);
         }
 
+        $this->setResult(serialize($chunks));
+
+        // clear the image cache
         $this->clearCache();
+    }
+
+    public function onCompletion(): void
+    {
+        /** @var Region $region */
+        $region = unserialize($this->region);
+
+        // save the updated render data
+        $region->addChunksToRenderData(unserialize($this->getResult()));
+
+        // mark the render as finished
+        RenderSchedulerTask::finishedRender($region);
     }
 
     /**

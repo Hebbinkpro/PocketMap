@@ -3,11 +3,13 @@
 namespace Hebbinkpro\PocketMap\task;
 
 use Hebbinkpro\PocketMap\PocketMap;
+use Hebbinkpro\PocketMap\render\PartialRegion;
 use Hebbinkpro\PocketMap\render\Region;
 use Hebbinkpro\PocketMap\render\RegionChunks;
 use Hebbinkpro\PocketMap\render\RegionChunksLoader;
 use Hebbinkpro\PocketMap\utils\ColorMapParser;
 use Hebbinkpro\PocketMap\utils\TextureUtils;
+use Logger;
 use pocketmine\plugin\PluginBase;
 use pocketmine\scheduler\Task;
 
@@ -28,6 +30,9 @@ class RenderSchedulerTask extends Task
     private int $maxQueueSize;
     private int $maxChunksPerRun;
 
+    private static array $currentRenders = [];
+    private static Logger $logger;
+
     public function __construct(PluginBase $plugin)
     {
         $this->plugin = $plugin;
@@ -38,6 +43,8 @@ class RenderSchedulerTask extends Task
         $this->maxCurrentRenders = PocketMap::getConfigManger()->getInt("renderer.scheduler.renders", 5);
         $this->maxQueueSize = PocketMap::getConfigManger()->getInt("renderer.scheduler.queue-size", 25);
         $this->maxChunksPerRun = PocketMap::getConfigManger()->getInt("renderer.chunk-loader.chunks-per-run", 128);
+
+        self::$logger = $plugin->getLogger();
     }
 
     /**
@@ -49,8 +56,11 @@ class RenderSchedulerTask extends Task
      */
     public function scheduleRegionRender(string $path, Region $region, bool $force = false): bool
     {
-        // when the action is not forced, don't add the region
-        if (!$force && count($this->regionRenderQueue) > $this->maxQueueSize) return false;
+        // when the action is not forced or the region is already in the scheduler, don't add the region
+        if ((!$force && count($this->regionRenderQueue) > $this->maxQueueSize) ||
+            in_array("$region", self::$currentRenders)) return false;
+
+        self::$currentRenders[] = "$region";
 
         // add the path and region to the queue
         $this->regionRenderQueue[] = [
@@ -93,7 +103,22 @@ class RenderSchedulerTask extends Task
 
             // is completely loaded
             if ($loader->run()) {
-                $this->startRenderTask($path, $loader->getRegionChunks(), $renderMode);
+                $chunks = $loader->getRegionChunks();
+                $region = $chunks->getRegion();
+
+                // it's a partial region
+                if ($region instanceof PartialRegion) {
+                    // get all chunks that are not loaded
+                    $notLoadedChunks = $loader->getNotLoadedChunks();
+
+                    // remove all not loaded chunks from the list
+                    // otherwise, they will be marked as generated which will cause them to be black images
+                    foreach ($notLoadedChunks as [$x,$z]) {
+                        $region->removeChunk($x, $z);
+                    }
+                }
+
+                $this->startRenderTask($path, $chunks, $renderMode);
                 continue;
             }
 
@@ -119,6 +144,8 @@ class RenderSchedulerTask extends Task
 
         // submit the task to the async pool
         $this->plugin->getServer()->getAsyncPool()->submitTask($task);
+
+        self::$logger->debug("[Scheduler] Started render of region: ".$regionChunks->getRegion());
     }
 
     /**
@@ -176,5 +203,14 @@ class RenderSchedulerTask extends Task
     public function getCurrentRendersCount(): int
     {
         return count($this->currentRegionRenders) + count($this->regionChunksLoaders);
+    }
+
+    public static function finishedRender(Region $region): void {
+        if (!in_array("$region", self::$currentRenders)) return;
+        // remove the region from the list
+        $key = array_search("$region", self::$currentRenders);
+        array_splice(self::$currentRenders, $key, 1);
+
+        self::$logger->debug("[Scheduler] Finished render of region: $region");
     }
 }

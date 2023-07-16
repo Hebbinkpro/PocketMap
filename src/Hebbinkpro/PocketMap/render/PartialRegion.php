@@ -4,6 +4,7 @@ namespace Hebbinkpro\PocketMap\render;
 
 use Generator;
 use Hebbinkpro\PocketMap\task\AsyncRegionRenderTask;
+use Hebbinkpro\PocketMap\utils\ArrayUtils;
 use Hebbinkpro\PocketMap\utils\ResourcePack;
 
 /**
@@ -46,9 +47,9 @@ class PartialRegion extends Region
     public function removeChunk(int $chunkX, int $chunkZ): void
     {
         $pos = [$chunkX, $chunkZ];
-        if (!in_array($pos, $this->chunks)) return;
-
         $key = array_search($pos, $this->chunks);
+        if (!$key) return;
+
         array_splice($this->chunks, $key, 1);
     }
 
