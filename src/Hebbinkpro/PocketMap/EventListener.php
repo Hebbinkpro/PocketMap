@@ -15,9 +15,7 @@ use pocketmine\event\block\BlockTeleportEvent;
 use pocketmine\event\block\LeavesDecayEvent;
 use pocketmine\event\block\StructureGrowEvent;
 use pocketmine\event\Listener;
-use pocketmine\event\player\PlayerPostChunkSendEvent;
 use pocketmine\event\world\ChunkLoadEvent;
-use pocketmine\event\world\ChunkPopulateEvent;
 use pocketmine\event\world\WorldLoadEvent;
 use pocketmine\event\world\WorldUnloadEvent;
 use pocketmine\world\Position;
@@ -119,6 +117,50 @@ class EventListener implements Listener
         $this->setChunkCooldown($chunkX, $chunkZ);
     }
 
+    /**
+     * Check if the cool-downs still hold
+     * @return void
+     */
+    private function updateChunkCooldown(): void
+    {
+        $onCooldown = [];
+
+        // loop through all cool-downs and remove the one's that are expired
+        foreach ($this->chunkCooldown as [$r, $time]) {
+            if (time() - $time < $this->chunkCooldownTime) {
+                $onCooldown[] = [$r, $time];
+            }
+        }
+
+        $this->chunkCooldown = $onCooldown;
+    }
+
+    /**
+     * Get if a region has a cool-down
+     * @param int $chunkX x pos of the chunk
+     * @param int $chunkZ z pos of the chunk
+     * @return bool if the region has a cool down
+     */
+    public function hasChunkCooldown(int $chunkX, int $chunkZ): bool
+    {
+        foreach ($this->chunkCooldown as [$c, $time]) {
+            if ($c === [$chunkX, $chunkZ]) return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Give a chunk a cooldown
+     * @param int $chunkX x pos of the chunk
+     * @param int $chunkZ z pos of the chunk
+     * @return void
+     */
+    public function setChunkCooldown(int $chunkX, int $chunkZ): void
+    {
+        $this->chunkCooldown[] = [[$chunkX, $chunkZ], time()];
+    }
+
     public function onBlockBurn(BlockBurnEvent $e): void
     {
         $this->blockUpdate($e->getBlock()->getPosition());
@@ -162,48 +204,5 @@ class EventListener implements Listener
     public function onStructureGrow(StructureGrowEvent $e): void
     {
         $this->blockUpdate($e->getBlock()->getPosition());
-    }
-
-    /**
-     * Check if the cool-downs still hold
-     * @return void
-     */
-    private function updateChunkCooldown(): void
-    {
-        $onCooldown = [];
-
-        // loop through all cool-downs and remove the one's that are expired
-        foreach ($this->chunkCooldown as [$r, $time]) {
-            if (time() - $time < $this->chunkCooldownTime) {
-                $onCooldown[] = [$r, $time];
-            }
-        }
-
-        $this->chunkCooldown = $onCooldown;
-    }
-
-    /**
-     * Get if a region has a cool-down
-     * @param int $chunkX x pos of the chunk
-     * @param int $chunkZ z pos of the chunk
-     * @return bool if the region has a cool down
-     */
-    public function hasChunkCooldown(int $chunkX, int $chunkZ): bool
-    {
-        foreach ($this->chunkCooldown as [$c, $time]) {
-            if ($c === [$chunkX,$chunkZ]) return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Give a chunk a cooldown
-     * @param int $chunkX x pos of the chunk
-     * @param int $chunkZ z pos of the chunk
-     * @return void
-     */
-    public function setChunkCooldown(int $chunkX, int $chunkZ): void {
-        $this->chunkCooldown[] = [[$chunkX,$chunkZ], time()];
     }
 }

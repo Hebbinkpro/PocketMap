@@ -4,7 +4,6 @@ namespace Hebbinkpro\PocketMap\render;
 
 use Generator;
 use Hebbinkpro\PocketMap\task\AsyncRegionRenderTask;
-use Hebbinkpro\PocketMap\utils\ArrayUtils;
 use Hebbinkpro\PocketMap\utils\ResourcePack;
 
 /**

@@ -4,7 +4,7 @@ const map = L.map("map", {
 });
 
 // set the map bounds to the lowest and highest possible values
-const bounds = [[Number.MIN_SAFE_INTEGER,Number.MIN_SAFE_INTEGER], [Number.MAX_SAFE_INTEGER,Number.MAX_SAFE_INTEGER]];
+const bounds = [[Number.MIN_SAFE_INTEGER, Number.MIN_SAFE_INTEGER], [Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER]];
 map.fitBounds(bounds);
 
 const mapLayer = L.tileLayer("/api/pocketmap/render/world/{z}/{x},{y}.png", {

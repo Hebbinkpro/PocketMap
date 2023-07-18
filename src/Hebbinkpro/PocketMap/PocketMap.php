@@ -3,10 +3,10 @@
 namespace Hebbinkpro\PocketMap;
 
 use Exception;
-use Hebbinkpro\PocketMap\utils\ConfigManager;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
 use Hebbinkpro\PocketMap\task\ChunkRenderTask;
 use Hebbinkpro\PocketMap\task\RenderSchedulerTask;
+use Hebbinkpro\PocketMap\utils\ConfigManager;
 use Hebbinkpro\PocketMap\utils\ResourcePack;
 use Hebbinkpro\WebServer\http\HttpRequest;
 use Hebbinkpro\WebServer\http\HttpResponse;
@@ -40,7 +40,8 @@ class PocketMap extends PluginBase implements Listener
     /** @var WorldRenderer[] */
     private array $worldRenderers = [];
 
-    public static function getConfigManger(): ConfigManager {
+    public static function getConfigManger(): ConfigManager
+    {
         return self::$configManager;
     }
 
@@ -147,11 +148,11 @@ class PocketMap extends PluginBase implements Listener
         if ($version != self::CONFIG_VERSION) {
             $this->getLogger()->notice("The current version of PocketMap is using another config version.");
             $this->getLogger()->info("You can find your old config in 'config_v$version.yml'");
-            $this->getLogger()->warning("Replacing 'config.yml v$version' with 'config.yml v".self::CONFIG_VERSION."'");
+            $this->getLogger()->warning("Replacing 'config.yml v$version' with 'config.yml v" . self::CONFIG_VERSION . "'");
 
             // clone all contents from config.yml inside the backup config
-            file_put_contents($this->getDataFolder()."config_v$version.yml",
-                file_get_contents($this->getDataFolder()."config.yml"));
+            file_put_contents($this->getDataFolder() . "config_v$version.yml",
+                file_get_contents($this->getDataFolder() . "config.yml"));
 
             // save the new config
             $this->saveResource("config.yml", true);
@@ -254,7 +255,7 @@ class PocketMap extends PluginBase implements Listener
      */
     private function createWebServer(): void
     {
-        $webSettings = self::$configManager->getManager("web-server", true, ["address"=>"127.0.0.1","port"=>3000]);
+        $webSettings = self::$configManager->getManager("web-server", true, ["address" => "127.0.0.1", "port" => 3000]);
 
         // create the web server
         $this->webServer = new WebServer($webSettings->getString("address", "127.0.0.1"), $webSettings->getInt("port", 3000));

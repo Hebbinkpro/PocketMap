@@ -152,16 +152,14 @@ class AsyncRegionRenderTask extends AsyncTask
         $this->clearCache();
     }
 
-    public function onCompletion(): void
+    /**
+     * Clear the cache of the ColorMap parser and TextureUtils to make some memory free
+     * @return void
+     */
+    public function clearCache(): void
     {
-        /** @var Region $region */
-        $region = unserialize($this->region);
-
-        // save the updated render data
-        $region->addChunksToRenderData(unserialize($this->getResult()));
-
-        // mark the render as finished
-        RenderSchedulerTask::finishedRender($region);
+        ColorMapParser::clearCache();
+        TextureUtils::clearCache();
     }
 
     /**
@@ -177,13 +175,15 @@ class AsyncRegionRenderTask extends AsyncTask
         imagedestroy($image);
     }
 
-    /**
-     * Clear the cache of the ColorMap parser and TextureUtils to make some memory free
-     * @return void
-     */
-    public function clearCache(): void
+    public function onCompletion(): void
     {
-        ColorMapParser::clearCache();
-        TextureUtils::clearCache();
+        /** @var Region $region */
+        $region = unserialize($this->region);
+
+        // save the updated render data
+        $region->addChunksToRenderData(unserialize($this->getResult()));
+
+        // mark the render as finished
+        RenderSchedulerTask::finishedRender($region);
     }
 }

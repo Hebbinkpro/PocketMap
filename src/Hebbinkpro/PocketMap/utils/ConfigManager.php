@@ -14,7 +14,8 @@ class ConfigManager
     private array $managers;
 
 
-    private function __construct(Config|ConfigManager $config, bool $autoSave = false, array $configData = [], ?string $name = null) {
+    private function __construct(Config|ConfigManager $config, bool $autoSave = false, array $configData = [], ?string $name = null)
+    {
         if ($config instanceof Config) $configData = $config->getAll();
 
         $this->config = $config;
@@ -30,14 +31,16 @@ class ConfigManager
      * @param bool $autoSave if the data should immediately be saved to the config file
      * @return ConfigManager the config manager
      */
-    public static function fromConfig(Config $config, bool $autoSave = false): ConfigManager {
+    public static function fromConfig(Config $config, bool $autoSave = false): ConfigManager
+    {
         return new ConfigManager($config, $autoSave);
     }
 
     /**
      * @throws JsonException
      */
-    public function save(): void {
+    public function save(): void
+    {
         if ($this->config instanceof Config) {
             // set all values to the array of our configData
             $this->config->setAll($this->toArray());
@@ -51,32 +54,9 @@ class ConfigManager
         $this->config->setValue($this->name, $this->toArray());
     }
 
-    /**
-     * Get a value from the config
-     * @param string $name the name of the value
-     * @param mixed $default the default value when the value does not exist
-     * @return mixed the value or the default value
-     */
-    public function getValue(string $name, mixed $default = null): mixed {
-
-        $nameParts = explode(".", $name);
-
-        // get the value
-        if (count($nameParts) == 1) {
-            return $this->configData[$nameParts[0]] ?? $default;
-        }
-
-        try {
-            // find the manager
-            $mngr = $this->getManager(array_shift($nameParts));
-            // the manager does not exist, return null
-            if ($mngr === null) return $default;
-
-            // find the value inside this manager
-            return $mngr->getValue(implode(".", $nameParts));
-        } catch (JsonException $e) {
-            return $default;
-        }
+    public function toArray(): array
+    {
+        return $this->configData;
     }
 
     /**
@@ -86,7 +66,8 @@ class ConfigManager
      * @return void
      * @throws JsonException
      */
-    public function setValue(string $name, mixed $value): void {
+    public function setValue(string $name, mixed $value): void
+    {
         $nameParts = explode(".", $name);
         // when size is 0, we found the correct one
         if (count($nameParts) == 1) {
@@ -107,7 +88,8 @@ class ConfigManager
      * @param array $default the default values when a new manager is created
      * @return ConfigManager|null the config manager or null when it doesn't exist.
      */
-    public function getManager(string $name, bool $create = false, array $default = []): ?ConfigManager {
+    public function getManager(string $name, bool $create = false, array $default = []): ?ConfigManager
+    {
         if (in_array($name, $this->managers)) return $this->managers[$name];
 
         $nameParts = explode(".", $name);
@@ -142,13 +124,32 @@ class ConfigManager
     }
 
     /**
-     * Get a string value
-     * @param string $name
-     * @param string $default
-     * @return string
+     * Get a value from the config
+     * @param string $name the name of the value
+     * @param mixed $default the default value when the value does not exist
+     * @return mixed the value or the default value
      */
-    public function getString(string $name, string $default = ""): string {
-        return strval($this->getValue($name, $default));
+    public function getValue(string $name, mixed $default = null): mixed
+    {
+
+        $nameParts = explode(".", $name);
+
+        // get the value
+        if (count($nameParts) == 1) {
+            return $this->configData[$nameParts[0]] ?? $default;
+        }
+
+        try {
+            // find the manager
+            $mngr = $this->getManager(array_shift($nameParts));
+            // the manager does not exist, return null
+            if ($mngr === null) return $default;
+
+            // find the value inside this manager
+            return $mngr->getValue(implode(".", $nameParts));
+        } catch (JsonException $e) {
+            return $default;
+        }
     }
 
     /**
@@ -157,7 +158,8 @@ class ConfigManager
      * @param int $default
      * @return int
      */
-    public function getInt(string $name, int $default = 0): int {
+    public function getInt(string $name, int $default = 0): int
+    {
         return intval($this->getValue($name, $default));
     }
 
@@ -167,7 +169,8 @@ class ConfigManager
      * @param bool $default
      * @return bool
      */
-    public function getBool(string $name, bool $default = false): bool {
+    public function getBool(string $name, bool $default = false): bool
+    {
         return boolval($this->getValue($name, $default));
     }
 
@@ -177,7 +180,8 @@ class ConfigManager
      * @param float $default
      * @return float
      */
-    public function getFloat(string $name, float $default = 0.0): float {
+    public function getFloat(string $name, float $default = 0.0): float
+    {
         return floatval($this->getValue($name, $default));
     }
 
@@ -187,7 +191,8 @@ class ConfigManager
      * @param array $default
      * @return array
      */
-    public function getArray(string $name, array $default = []): array {
+    public function getArray(string $name, array $default = []): array
+    {
         $value = $this->getValue($name, $default);
         if (!is_array($value)) return $default;
         return $value;
@@ -200,8 +205,20 @@ class ConfigManager
      * @param bool $associative
      * @return mixed
      */
-    public function getJsonEncodedValue(string $name, bool $associative = true): mixed {
+    public function getJsonEncodedValue(string $name, bool $associative = true): mixed
+    {
         return json_decode($this->getString($name), $associative);
+    }
+
+    /**
+     * Get a string value
+     * @param string $name
+     * @param string $default
+     * @return string
+     */
+    public function getString(string $name, string $default = ""): string
+    {
+        return strval($this->getValue($name, $default));
     }
 
     /**
@@ -210,12 +227,9 @@ class ConfigManager
      * @param string $name
      * @return mixed
      */
-    public function getSerializedValue(string $name): mixed {
+    public function getSerializedValue(string $name): mixed
+    {
         return unserialize($this->getString($name));
-    }
-
-    public function toArray(): array {
-        return $this->configData;
     }
 
 

@@ -52,7 +52,7 @@ class RegionChunksLoader
                 $chunks[$x][$z] = ChunkUtils::getChunkFromData($chunkData->getData());
             } else {
                 // the chunk data of this chunk didn't exist
-                $this->notLoadedChunks[] = [$x,$z];
+                $this->notLoadedChunks[] = [$x, $z];
             }
             $this->chunkCoords->next();
 
@@ -88,7 +88,8 @@ class RegionChunksLoader
      * Get all chunks that are not loaded
      * @return array
      */
-    public function getNotLoadedChunks(): array {
+    public function getNotLoadedChunks(): array
+    {
         return $this->notLoadedChunks;
     }
 }

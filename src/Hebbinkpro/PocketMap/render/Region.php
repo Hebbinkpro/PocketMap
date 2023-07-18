@@ -6,7 +6,6 @@ use Exception;
 use Generator;
 use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\task\AsyncRegionRenderTask;
-use Hebbinkpro\PocketMap\utils\ArrayUtils;
 use Hebbinkpro\PocketMap\utils\ResourcePack;
 
 class Region
@@ -199,7 +198,7 @@ class Region
 
         $renderData = $this->loadRenderData();
 
-        foreach ($chunks as [$cx,$cz]) {
+        foreach ($chunks as [$cx, $cz]) {
             if (!$this->isChunkInRegion($cx, $cz)) continue;
 
             if (!array_key_exists("$cx", $renderData["chunks"])) $renderData["chunks"]["$cx"] = [];
@@ -234,17 +233,8 @@ class Region
         return $data["completed"] ?? false;
     }
 
-    public function getChunksInRenderData(array $renderData): int {
-        $amount = 0;
-
-        foreach ($renderData["chunks"] as $x=>$chunks) {
-            $amount += count($renderData["chunks"]["$x"]);
-        }
-
-        return $amount;
-    }
-
-    private function loadRenderData(): array {
+    private function loadRenderData(): array
+    {
         try {
             $fileData = file_get_contents($this->tmpFile);
             $data = json_decode($fileData, true);
@@ -255,7 +245,6 @@ class Region
 
         return $data;
     }
-
 
     /**
      * Check if a chunk is inside the region.
@@ -272,6 +261,17 @@ class Region
 
         return $minX <= $chunkX && $chunkX < $maxX
             && $minZ <= $chunkZ && $chunkZ < $maxZ;
+    }
+
+    public function getChunksInRenderData(array $renderData): int
+    {
+        $amount = 0;
+
+        foreach ($renderData["chunks"] as $x => $chunks) {
+            $amount += count($renderData["chunks"]["$x"]);
+        }
+
+        return $amount;
     }
 
     /**
@@ -294,7 +294,8 @@ class Region
         return in_array($chunkZ, $data["chunks"]["$chunkX"]);
     }
 
-    public function __toString(): string {
-        return $this->getZoom()."/".$this->getX().",".$this->getZ();
+    public function __toString(): string
+    {
+        return $this->getZoom() . "/" . $this->getX() . "," . $this->getZ();
     }
 }

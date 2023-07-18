@@ -28,7 +28,8 @@ class ChunkUtils
      * @param Chunk $chunk the chunk
      * @return ChunkData the chunk data
      */
-    public static function getChunkData(World $world, int $chunkX, int $chunkZ, Chunk $chunk): ChunkData {
+    public static function getChunkData(World $world, int $chunkX, int $chunkZ, Chunk $chunk): ChunkData
+    {
         return new ChunkData(
             $chunk->getSubChunks(),
             $chunk->isPopulated(),
