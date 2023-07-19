@@ -21,7 +21,7 @@ use pocketmine\world\World;
 
 class PocketMap extends PluginBase implements Listener
 {
-    public const CONFIG_VERSION = 1.0;
+    public const CONFIG_VERSION = 1.1;
 
     public const RESOURCE_PACK_PATH = "resource_packs/";
     public const RESOURCE_PACK_NAME = "v1.20.0.1";
