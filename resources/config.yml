@@ -1,5 +1,5 @@
 # the config.yml version DO NOT CHANGE
-version: 1.0
+version: 1.1
 
 # Settings for the renderer
 renderer:
@@ -51,8 +51,8 @@ renderer:
 web-server:
   # Address of the web server.
   # Only change this when needed.
-  # Default: "127.0.0.1"
-  address: "127.0.0.1"
+  # Default: "0.0.0.0"
+  address: "0.0.0.0"
   # Port of the web server.
   # Set this to the port you want to use for the web server
   # Default: 3000
