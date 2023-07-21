@@ -1,5 +1,5 @@
 # the config.yml version DO NOT CHANGE
-version: 1.1
+version: 1.2
 
 # Settings for the renderer
 renderer:
@@ -57,6 +57,33 @@ web-server:
   # Set this to the port you want to use for the web server
   # Default: 3000
   port: 3000
+
+# Settings for the PocketMap API used for the website
+api:
+  # The interval in tick in which the API will be updated
+  update-period: 20
+
+  # List of worlds that are visible on the map.
+  # If an empty list is given, all worlds will be displayed
+  # Default: []
+  worlds: [ ]
+
+  # Settings for the visibility of players on the map
+  players:
+    # If players should be visible on the map
+    # Default: true
+    visible: true
+    # Make the y coordinate of the player visible via the API
+    # Default: false
+    show-y-coord: false
+    # List of worlds where players should always be hidden
+    # If show-players is true but the player is in one of these worlds, the player is not visible.
+    # Default: []
+    hide-worlds: [ ]
+    # List of players that will always be invisible on the map
+    # Default: []
+    hide-players: [ ]
+
 
 # Startup settings
 # These settings will influence the behaviour of PocketMap when the server starts.

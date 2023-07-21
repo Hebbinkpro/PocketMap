@@ -6,10 +6,13 @@ use Exception;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
 use Hebbinkpro\PocketMap\task\ChunkRenderTask;
 use Hebbinkpro\PocketMap\task\RenderSchedulerTask;
+use Hebbinkpro\PocketMap\task\UpdateApiTask;
 use Hebbinkpro\PocketMap\utils\ConfigManager;
 use Hebbinkpro\PocketMap\utils\ResourcePack;
+use Hebbinkpro\WebServer\exception\WebServerException;
 use Hebbinkpro\WebServer\http\HttpRequest;
 use Hebbinkpro\WebServer\http\HttpResponse;
+use Hebbinkpro\WebServer\libs\Laravel\SerializableClosure\Exceptions\PhpVersionNotSupportedException;
 use Hebbinkpro\WebServer\route\Router;
 use Hebbinkpro\WebServer\WebServer;
 use pocketmine\command\Command;
@@ -21,7 +24,7 @@ use pocketmine\world\World;
 
 class PocketMap extends PluginBase implements Listener
 {
-    public const CONFIG_VERSION = 1.1;
+    public const CONFIG_VERSION = 1.2;
 
     public const RESOURCE_PACK_PATH = "resource_packs/";
     public const RESOURCE_PACK_NAME = "v1.20.0.1";
@@ -208,7 +211,6 @@ class PocketMap extends PluginBase implements Listener
             mkdir(self::$tmpDataPath . $tmpRegions);
         }
 
-
         // create render folders for each world
         $worldFolders = scandir($this->getServer()->getDataPath() . "worlds/");
         foreach ($worldFolders as $worldName) {
@@ -219,11 +221,14 @@ class PocketMap extends PluginBase implements Listener
                 mkdir(self::$tmpDataPath . $tmpRegions . $worldName);
             }
         }
+
+        if (!is_dir(self::$tmpDataPath."api")) {
+            mkdir(self::$tmpDataPath."api");
+        }
     }
 
-    /**
-     * @throws Exception
-     */
+
+
     protected function onEnable(): void
     {
         // load all resources
@@ -234,8 +239,15 @@ class PocketMap extends PluginBase implements Listener
 
         WebServer::register($this);
 
-        // create the web server
-        $this->createWebServer();
+        try {
+            // create the web server
+            $this->createWebServer();
+        } catch (Exception $e) {
+            $this->getLogger()->alert("Could not start the web server.");
+            $this->getLogger()->error($e);
+            $this->getServer()->getPluginManager()->disablePlugin($this);
+            return;
+        }
 
         // start the render scheduler
         $this->renderScheduler = new RenderSchedulerTask($this);
@@ -245,13 +257,18 @@ class PocketMap extends PluginBase implements Listener
         $this->chunkRenderer = new ChunkRenderTask($this);
         $this->getScheduler()->scheduleRepeatingTask($this->chunkRenderer, self::$configManager->getInt("renderer.chunk-renderer.run-period", 10));
 
+        // start the api update task
+        $updateApiTask = new UpdateApiTask($this, self::$tmpDataPath."api/");
+        $this->getScheduler()->scheduleRepeatingTask($updateApiTask, self::$configManager->getInt("api.update-period", 20));
+
         // register the event listener
         $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
     }
 
     /**
      * Create the web server and set the routes
-     * @throws Exception
+     * @throws PhpVersionNotSupportedException
+     * @throws WebServerException
      */
     private function createWebServer(): void
     {
@@ -262,10 +279,7 @@ class PocketMap extends PluginBase implements Listener
         $router = $this->webServer->getRouter();
 
         // main route
-        $router->get("/", function (HttpRequest $req, HttpResponse $res, mixed ...$params) {
-            $res->sendFile($params[0] . "web/pages/index.html");
-            $res->end();
-        }, $this->getDataFolder());
+        $router->getFile("/", $this->getDataFolder()."web/pages/index.html");
 
         // all static files used by web pages
         $web = $this->getDataFolder() . "web";
@@ -280,7 +294,8 @@ class PocketMap extends PluginBase implements Listener
 
     /**
      * Register all API routes to the web server
-     * @throws Exception
+     * @throws PhpVersionNotSupportedException
+     * @throws WebServerException
      */
     private function registerApiRoutes(): Router
     {
@@ -291,15 +306,17 @@ class PocketMap extends PluginBase implements Listener
             $res->end();
         });
 
-        $router->get("/regions", function (HttpRequest $req, HttpResponse $res, ...$params) {
+        // get the worlds
 
-            $worlds = array_diff(scandir($params[0] . "renders"), [".", ".."]);
 
-            $res->json([
-                "worlds" => array_values($worlds)
-            ]);
-            $res->end();
-        }, $this->getDataFolder());
+        // get the world data
+        $router->getFile("/worlds", self::$tmpDataPath."api/worlds.json", "[]");
+
+        // get player data
+        $router->getFile("/players", self::$tmpDataPath."api/players.json", "[]");
+
+        // get the player heads
+        $router->getStatic("/players/skin", self::$tmpDataPath."api/skin");
 
         // get image renders
         $router->getStatic("/render", $this->getDataFolder() . "renders");
@@ -307,9 +324,10 @@ class PocketMap extends PluginBase implements Listener
         return $router;
     }
 
+
     protected function onDisable(): void
     {
         // close the socket
-        $this->webServer->close();
+        if ($this->webServer->isStarted()) $this->webServer->close();
     }
 }

@@ -8,4 +8,6 @@ projects:
     libs:
       - src: Hebbinkpro/pmmp-webserver/pmmp-webserver
         version: ^0.3.4
+      - src: HimbeersaftLP/LibSkin/LibSkin
+        version: ^2.0.1
 ...
