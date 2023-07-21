@@ -2,7 +2,7 @@
 
 A dynamic web-based world map for PocketMine-MP servers.
 
-## New in version 0.2.0
+## New in version 0.2.x
 
 The 0.2.0 update brings a lot of rendering improvements which results in better server performance while rendering and
 faster renders.
@@ -12,6 +12,9 @@ faster renders.
 - Improve full world rendering
 - Improve rendering of new chunks
 - Improve rendering of updated chunks
+
+### v0.2.2
+- Add player markers
 
 ## How to install
 
@@ -50,7 +53,7 @@ This is a list of all things that have to be added
 
 ### WebPage
 
-- Display online users (head and name)
+- Make online user images good-looking
 - Multiple worlds support
 
 ### Renderer
