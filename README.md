@@ -14,7 +14,12 @@ faster renders.
 - Improve rendering of updated chunks
 
 ### v0.2.2
-- Add player markers
+- Add player markers (experimental)
+
+### v0.2.3
+- Add support for colored blocks like wool
+- Fix issues with concrete and concrete powder
+- Update texture pack to v1.20.10.1
 
 ## How to install
 
