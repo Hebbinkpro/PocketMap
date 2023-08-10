@@ -2,9 +2,13 @@
 
 namespace Hebbinkpro\PocketMap\utils\block;
 
+use pocketmine\block\BaseBanner;
+use pocketmine\block\Bed;
 use pocketmine\block\Block;
 use pocketmine\block\Candle;
 use pocketmine\block\ChemistryTable;
+use pocketmine\block\Concrete;
+use pocketmine\block\ConcretePowder;
 use pocketmine\block\Crops;
 use pocketmine\block\Door;
 use pocketmine\block\DoublePlant;
@@ -17,13 +21,18 @@ use pocketmine\block\RedMushroomBlock;
 use pocketmine\block\Sapling;
 use pocketmine\block\Slab;
 use pocketmine\block\Torch;
+use pocketmine\block\utils\ColoredTrait;
+use pocketmine\block\utils\DyeColor;
 use pocketmine\block\Wall;
 use pocketmine\block\Wood;
 use pocketmine\block\WoodenDoor;
 use pocketmine\block\WoodenFence;
+use pocketmine\block\Wool;
+use pocketmine\color\Color;
 use pocketmine\data\bedrock\block\BlockStateNames as BSN;
 use pocketmine\data\bedrock\block\BlockStateStringValues as BSV;
 use pocketmine\data\bedrock\block\BlockTypeNames as BTN;
+use pocketmine\data\bedrock\DyeColorIdMap;
 
 /**
  * Class that maps all blocks to their data values in the bedrock code.
@@ -36,7 +45,7 @@ final class BlockDataValues
      * If the block does not exist in the list, the data value is always 0
      * @var int[][]
      */
-    public static array $dataValues = [
+    public const DATA_VALUES = [
         BTN::WOOD => [
             BSV::WOOD_TYPE_OAK => 0,
             BSV::WOOD_TYPE_SPRUCE => 1,
@@ -182,23 +191,39 @@ final class BlockDataValues
         $bsd = BlockStateParser::getBlockStateData($block);
         $name = $bsd->getName();
 
+        // block uses the ColoredTrait, so it's colored
+        if (in_array(ColoredTrait::class, class_uses($block))) {
+            // get the color of the block
+            /** @var DyeColor $color */
+            $color = $block->getColor();
+
+            // return the id of the color
+            return self::getColorDataValue($color);
+        }
+
+        // go through the switch to get the correct data values
         switch ($block::class) {
             case Planks::class:
             case WoodenDoor::class:
             case WoodenFence::class:
                 // get the wood type data value, if the wood type is not from the legacy kind, its just 0
-                return self::$dataValues[BTN::WOOD][$block->getWoodType()->name()] ?? 0;
+                return self::DATA_VALUES[BTN::WOOD][$block->getWoodType()->name()] ?? 0;
 
             case Wood::class:
+                // it's a wood block
                 if ($name === BTN::WOOD) {
-                    // it's wood, lots of shit in terrain_textures
-                    return self::$dataValues[BTN::WOOD][$block->getWoodType()->name()] * 2 + intval($block->isStripped());
+                    // textures are like: unstripped,stripped,unstripped,stripped,etc
+                    // so this beautiful formula gives you the right data value
+                    return self::DATA_VALUES[BTN::WOOD][$block->getWoodType()->name()] * 2 + intval($block->isStripped());
                 }
 
+                // it's a non stripped log
                 if (!$block->isStripped()) {
-                    // TODO remove this when the texture pack supports it
-                    return self::$dataValues[BTN::WOOD][$block->getWoodType()->name()] % 4;
+                    // this is the one where we have log and log2, in log there are only 4 entries, so that's why we use %4
+                    return self::DATA_VALUES[BTN::WOOD][$block->getWoodType()->name()] % 4;
                 }
+
+                // everything else
                 return 0;
 
 
@@ -206,21 +231,21 @@ final class BlockDataValues
                 return intval($block->isLit());
 
             case ChemistryTable::class:
-                return self::$dataValues[BTN::CHEMISTRY_TABLE][BlockStateParser::getStateValue($bsd, BSN::CHEMISTRY_TABLE_TYPE)];
+                return self::DATA_VALUES[BTN::CHEMISTRY_TABLE][BlockStateParser::getStateValue($bsd, BSN::CHEMISTRY_TABLE_TYPE)];
 
             case Crops::class:
                 return $block->getAge();
 
             case Torch::class:
-                return self::$dataValues[BTN::TORCH][BlockStateParser::getStateValue($bsd, BSN::COLOR_BIT)];
+                return self::DATA_VALUES[BTN::TORCH][BlockStateParser::getStateValue($bsd, BSN::COLOR_BIT)];
 
             case Door::class:
                 // iron door does not count towards wood but has a data value, so check if it's iron and else return 0
-                if ($bsd->getName() === BTN::IRON_DOOR) return count(self::$dataValues[BTN::WOOD]);
+                if ($bsd->getName() === BTN::IRON_DOOR) return count(self::DATA_VALUES[BTN::WOOD]);
                 return 0;
 
             case DoublePlant::class:
-                return self::$dataValues[BTN::DOUBLE_PLANT][BlockStateParser::getStateValue($bsd, BSN::DOUBLE_PLANT_TYPE)];
+                return self::DATA_VALUES[BTN::DOUBLE_PLANT][BlockStateParser::getStateValue($bsd, BSN::DOUBLE_PLANT_TYPE)];
 
             case Furnace::class:
                 return intval($block->isLit());
@@ -228,9 +253,9 @@ final class BlockDataValues
             case Leaves::class:
                 return match ($name) {
                     BTN::LEAVES =>
-                    self::$dataValues[BTN::LEAVES][BlockStateParser::getStateValue($bsd, BSN::OLD_LEAF_TYPE)],
+                    self::DATA_VALUES[BTN::LEAVES][BlockStateParser::getStateValue($bsd, BSN::OLD_LEAF_TYPE)],
                     BTN::LEAVES2 =>
-                    self::$dataValues[BTN::LEAVES2][BlockStateParser::getStateValue($bsd, BSN::NEW_LEAF_TYPE)],
+                    self::DATA_VALUES[BTN::LEAVES2][BlockStateParser::getStateValue($bsd, BSN::NEW_LEAF_TYPE)],
                     default => 0
                 };
 
@@ -240,50 +265,60 @@ final class BlockDataValues
             case Flower::class:
                 return match ($name) {
                     BTN::RED_FLOWER =>
-                    self::$dataValues[BTN::RED_FLOWER][BlockStateParser::getStateValue($bsd, BSN::FLOWER_TYPE)],
+                    self::DATA_VALUES[BTN::RED_FLOWER][BlockStateParser::getStateValue($bsd, BSN::FLOWER_TYPE)],
                     default => 0
                 };
 
             case Sapling::class:
-                return self::$dataValues[BTN::SAPLING][BlockStateParser::getStateValue($bsd, BSN::SAPLING_TYPE)];
+                return self::DATA_VALUES[BTN::SAPLING][BlockStateParser::getStateValue($bsd, BSN::SAPLING_TYPE)];
 
             case Slab::class:
                 return match ($name) {
                     BTN::WOODEN_SLAB, BTN::DOUBLE_WOODEN_SLAB =>
-                    self::$dataValues[BTN::WOOD][BlockStateParser::getStateValue($bsd, BSN::WOOD_TYPE)],
+                    self::DATA_VALUES[BTN::WOOD][BlockStateParser::getStateValue($bsd, BSN::WOOD_TYPE)],
                     BTN::STONE_BLOCK_SLAB, BTN::DOUBLE_STONE_BLOCK_SLAB =>
-                    self::$dataValues[BTN::STONE_BLOCK_SLAB][BlockStateParser::getStateValue($bsd, BSN::STONE_SLAB_TYPE)],
+                    self::DATA_VALUES[BTN::STONE_BLOCK_SLAB][BlockStateParser::getStateValue($bsd, BSN::STONE_SLAB_TYPE)],
                     BTN::STONE_BLOCK_SLAB2, BTN::DOUBLE_STONE_BLOCK_SLAB2 =>
-                    self::$dataValues[BTN::STONE_BLOCK_SLAB2][BlockStateParser::getStateValue($bsd, BSN::STONE_SLAB_TYPE_2)],
+                    self::DATA_VALUES[BTN::STONE_BLOCK_SLAB2][BlockStateParser::getStateValue($bsd, BSN::STONE_SLAB_TYPE_2)],
                     BTN::STONE_BLOCK_SLAB3, BTN::DOUBLE_STONE_BLOCK_SLAB3 =>
-                    self::$dataValues[BTN::STONE_BLOCK_SLAB3][BlockStateParser::getStateValue($bsd, BSN::STONE_SLAB_TYPE_3)],
+                    self::DATA_VALUES[BTN::STONE_BLOCK_SLAB3][BlockStateParser::getStateValue($bsd, BSN::STONE_SLAB_TYPE_3)],
                     BTN::STONE_BLOCK_SLAB4, BTN::DOUBLE_STONE_BLOCK_SLAB4 =>
-                    self::$dataValues[BTN::STONE_BLOCK_SLAB4][BlockStateParser::getStateValue($bsd, BSN::STONE_SLAB_TYPE_4)],
+                    self::DATA_VALUES[BTN::STONE_BLOCK_SLAB4][BlockStateParser::getStateValue($bsd, BSN::STONE_SLAB_TYPE_4)],
                     default => 0
                 };
 
             case Wall::class:
                 return match ($name) {
                     BTN::COBBLESTONE_WALL =>
-                    self::$dataValues[BTN::COBBLESTONE_WALL][BlockStateParser::getStateValue($bsd, BSN::WALL_BLOCK_TYPE)],
+                    self::DATA_VALUES[BTN::COBBLESTONE_WALL][BlockStateParser::getStateValue($bsd, BSN::WALL_BLOCK_TYPE)],
                     default => 0
                 };
 
             case Opaque::class:
                 return match ($name) {
                     BTN::QUARTZ_BLOCK =>
-                    self::$dataValues[BTN::QUARTZ_BLOCK][BlockStateParser::getStateValue($bsd, BSN::CHISEL_TYPE)],
+                    self::DATA_VALUES[BTN::QUARTZ_BLOCK][BlockStateParser::getStateValue($bsd, BSN::CHISEL_TYPE)],
                     BTN::SANDSTONE, BTN::RED_SANDSTONE =>
-                    self::$dataValues[BTN::SANDSTONE][BlockStateParser::getStateValue($bsd, BSN::SAND_STONE_TYPE)],
+                    self::DATA_VALUES[BTN::SANDSTONE][BlockStateParser::getStateValue($bsd, BSN::SAND_STONE_TYPE)],
                     BTN::STONE =>
-                    self::$dataValues[BTN::STONE][BlockStateParser::getStateValue($bsd, BSN::STONE_TYPE)],
+                    self::DATA_VALUES[BTN::STONE][BlockStateParser::getStateValue($bsd, BSN::STONE_TYPE)],
                     BTN::STONEBRICK =>
-                    self::$dataValues[BTN::STONEBRICK][BlockStateParser::getStateValue($bsd, BSN::STONE_BRICK_TYPE)],
+                    self::DATA_VALUES[BTN::STONEBRICK][BlockStateParser::getStateValue($bsd, BSN::STONE_BRICK_TYPE)],
                     default => 0
                 };
 
             default:
                 return 0;
         }
+    }
+
+    /**
+     * Get the color data value of a block (0-15)
+     * @param DyeColor $color the color to get the value of
+     * @return int the color id
+     */
+    public static function getColorDataValue(DyeColor $color): int {
+        return DyeColorIdMap::getInstance()->toId($color);
+
     }
 }

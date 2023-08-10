@@ -5,10 +5,10 @@ namespace Hebbinkpro\PocketMap\utils;
 use GdImage;
 use Hebbinkpro\PocketMap\utils\block\BlockDataValues;
 use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
-use Hebbinkpro\PocketMap\utils\block\old\OldBlockTypeNames;
+use Hebbinkpro\PocketMap\utils\block\old\OldBlockTypeNames as OBTN;
 use pocketmine\block\Block;
 use pocketmine\block\BlockTypeIds;
-use pocketmine\data\bedrock\block\BlockTypeNames;
+use pocketmine\data\bedrock\block\BlockTypeNames as BTN;
 use pocketmine\world\biome\Biome;
 use pocketmine\world\biome\BiomeRegistry;
 use pocketmine\world\format\Chunk;
@@ -183,19 +183,7 @@ class TextureUtils
     public static function getBlockTexture(Block $block, ResourcePack $rp): ?string
     {
         if ($block->getTypeId() == 0) return null;
-        $stateData = BlockStateParser::getBlockStateData($block);
-        // remove the 'minecraft:' prefix
-        // also replace '_block_' with '_' if it exists, otherwise stone slabs will not be handled correctly
-        // in the files it is stone_block_slab and in the texture files it is stone_slab
-
-        // TODO remove the match when the resource pack supports it
-        $name = str_replace(["minecraft:", "_block_"], ["", "_"], match ($stateData->getName()) {
-            BlockTypeNames::OAK_LOG, BlockTypeNames::BIRCH_LOG, BlockTypeNames::SPRUCE_LOG, BlockTypeNames::JUNGLE_LOG
-            => OldBlockTypeNames::LOG,
-            BlockTypeNames::ACACIA_LOG, BlockTypeNames::DARK_OAK_LOG
-            => OldBlockTypeNames::LOG2,
-            default => $stateData->getName()
-        });
+        $name = self::getBlockTextureName($block);
 
         // get the block data
         $blockData = $rp->getBlocks()[$name];
@@ -210,22 +198,29 @@ class TextureUtils
         $terrainTextures = $rp->getTerrainTextures()["texture_data"];
 
         // get the terrain data of the given texture
-        // if the block does not exist in the terrain_texture.json file for some reason, give the expected exture
+        // if the block does not exist in the terrain_texture.json file for some reason, give the expected texture
         $terrainData = $terrainTextures[$textureName] ?? ["textures" => "textures/blocks/$textureName"];
         $textures = $terrainData["textures"];
 
         // the texture is just a straight forward texture path
         if (is_string($textures)) return $rp->getPath() . $textures;
 
-        if (array_key_exists("path", $textures)) return $textures["path"] . $textures;
-
         // well done, you found a block without texture
         if (!is_array($textures) || empty($textures)) return null;
 
-        // only 1 entry
+        // texture contains image path and tint_color
+        if (is_array($textures[0])) {
+            // it doesn't have a path for some reason
+            if (!array_key_exists("path", $textures[0])) return null;
+            // return the path
+            return $rp->getPath() . $textures[0]["path"];
+        }
+
+        // only a single entry
         if (count($textures) == 1) return $rp->getPath() . $textures[0];
 
-        // remove 1 to match the array index
+        // get the data value of the block
+        // the data value determines which texture to use of a list of textures
         $dataValue = BlockDataValues::getDataValue($block);
 
         // unknown data value
@@ -325,5 +320,41 @@ class TextureUtils
         foreach ($rps as $rp) {
             unset(self::$blockTextureMap[$rp]);
         }
+    }
+
+    /**
+     * Get the texture name of a block.
+     * - In MOST cases, it's just the name with minecraft: removed, or _block_ replaced with _.
+     * - There are some exceptions in which that's not the case and this is fixed with the match.
+     * @param Block $block the name of the block
+     * @return string the texture name
+     */
+    public static function getBlockTextureName(Block $block): string {
+        $stateData = BlockStateParser::getBlockStateData($block);
+        $name = match ($stateData->getName()) {
+            // replace all (old) logs with log or log2, all new logs have their own name
+            BTN::OAK_LOG, BTN::BIRCH_LOG, BTN::SPRUCE_LOG, BTN::JUNGLE_LOG
+            => OBTN::LOG,
+            BTN::ACACIA_LOG, BTN::DARK_OAK_LOG
+            => OBTN::LOG2,
+
+            // replace all concrete types with minecraft:concrete,
+            // because concrete is the only block that doesn't have entries for single colors, but still uses the color indexes
+            BTN::WHITE_CONCRETE, BTN::ORANGE_CONCRETE, BTN::MAGENTA_CONCRETE, BTN::LIGHT_BLUE_CONCRETE,
+            BTN::YELLOW_CONCRETE, BTN::LIME_CONCRETE, BTN::PINK_CONCRETE, BTN::GRAY_CONCRETE,
+            BTN::LIGHT_GRAY_CONCRETE, BTN::CYAN_CONCRETE, BTN::PURPLE_CONCRETE, BTN::BLUE_CONCRETE,
+            BTN::BROWN_CONCRETE, BTN::GREEN_CONCRETE, BTN::RED_CONCRETE, BTN::BLACK_CONCRETE
+            => OBTN::CONCRETE,
+
+            // replace concrete_powder with concretePowder, but WHY minecraft it isn't that hard
+            BTN::CONCRETE_POWDER
+            => OBTN::CONCRETE_POWDER,
+
+            // just return the name
+            default => $stateData->getName()
+        };
+
+        // remove minecraft: and _block_ from the name
+        return str_replace(["minecraft:", "_block_"], ["", "_"], $name);
     }
 }
