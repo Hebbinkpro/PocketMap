@@ -151,13 +151,20 @@ class TextureUtils
 
         // texture does not exist in the cache, create it
 
+        // get the path of the texture
         $path = self::getBlockTexture($block, $rp);
+
+        // block doesn't exist in the resource pack
+        if ($path === null) {
+            // set the path to the fallback texture
+            $path = $rp->getFallbackTexturePath();
+        }
 
 
         if (is_file($path . ".png")) $img = imagecreatefrompng($path . ".png");
         else if (is_file($path . ".tga")) $img = imagecreatefromtga($path . ".tga");
         else {
-            // return empty image
+            // the path is null, return empty image
             $img = imagecreatetruecolor($rp->getTextureSize(), $rp->getTextureSize());
             imagecolorallocatealpha($img, 0, 0, 0, 127);
         }
@@ -176,13 +183,13 @@ class TextureUtils
 
     /**
      * Get the texture of a given block
-     * @param Block $block the block to get the texture of
+     * @param Block|null $block the block to get the texture of
      * @param ResourcePack $rp the path to the resource pack
-     * @return string|null the path to the texture
+     * @return string|null the path to the texture or null when not found
      */
-    public static function getBlockTexture(Block $block, ResourcePack $rp): ?string
+    public static function getBlockTexture(?Block $block, ResourcePack $rp): ?string
     {
-        if ($block->getTypeId() == 0) return null;
+        if ($block === null) return null;
         $name = self::getBlockTextureName($block);
 
         // get the block data

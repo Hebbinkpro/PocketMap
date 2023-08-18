@@ -18,13 +18,14 @@ use Hebbinkpro\WebServer\WebServer;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\event\Listener;
+use pocketmine\item\StringToItemParser;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\Filesystem;
 use pocketmine\world\World;
 
 class PocketMap extends PluginBase implements Listener
 {
-    public const CONFIG_VERSION = 1.2;
+    public const CONFIG_VERSION = 1.3;
 
     public const RESOURCE_PACK_PATH = "resource_packs/";
     public const RESOURCE_PACK_NAME = "v1.20.10.1";
@@ -227,15 +228,16 @@ class PocketMap extends PluginBase implements Listener
         }
     }
 
-
-
     protected function onEnable(): void
     {
         // load all resources
         $this->loadResources();
 
+        // get the fallback block
+        $fallbackBlockId = self::$configManager->getString("textures.fallback-block", "minecraft:bedrock");
+        $fallbackBlock = StringToItemParser::getInstance()->parse($fallbackBlockId)->getBlock();
         // create the resource pack instance
-        $this->resourcePack = new ResourcePack($this->getDataFolder() . self::RESOURCE_PACK_PATH . self::RESOURCE_PACK_NAME . "/", self::TEXTURE_SIZE);
+        $this->resourcePack = new ResourcePack($this->getDataFolder() . self::RESOURCE_PACK_PATH . self::RESOURCE_PACK_NAME . "/", self::TEXTURE_SIZE, $fallbackBlock);
 
         WebServer::register($this);
 
@@ -305,9 +307,6 @@ class PocketMap extends PluginBase implements Listener
             $res->send("Hello World", "text/plain");
             $res->end();
         });
-
-        // get the worlds
-
 
         // get the world data
         $router->getFile("/worlds", self::$tmpDataPath."api/worlds.json", "[]");
