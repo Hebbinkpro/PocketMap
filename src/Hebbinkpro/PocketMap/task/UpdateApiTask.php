@@ -37,9 +37,8 @@ class UpdateApiTask extends Task
 
         $worldData = [];
         foreach ($worlds as $name) {
-            if (!$this->isWorldVisible($name)) continue;
+            if (!$this->isWorldVisible($name) || !$wm->loadWorld($name)) continue;
 
-            $wm->loadWorld($name);
             $world = $wm->getWorldByName($name);
             $data = $world->getProvider()->getWorldData();
             $worldData[] = [
