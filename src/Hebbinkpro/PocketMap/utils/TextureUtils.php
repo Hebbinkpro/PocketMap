@@ -93,6 +93,17 @@ class TextureUtils
                 $biome = BiomeRegistry::getInstance()->getBiome($biomeId);
                 $blockTexture = self::createCompressedBlockTexture($block, $biome, $rp, $pixelsPerBlock);
 
+                if ($y % 2 != 0 && ($alpha = $rp->getHeightOverlayAlpha()) > 0) {
+                    $color = $rp->getHeightOverlayColor();
+                    $r = ($color >> 16) & 0xff;
+                    $g = ($color >> 8) & 0xff;
+                    $b = $color & 0xff;
+
+                    $heightOverlay = imagecreatetruecolor($pixelsPerBlock, $pixelsPerBlock);
+                    imagefill($heightOverlay, 0, 0, imagecolorallocatealpha($heightOverlay, $r, $g, $b, 127-$alpha));
+                    imagecopy($blockTexture, $heightOverlay, 0, 0, 0, 0, $pixelsPerBlock, $pixelsPerBlock);
+                }
+
                 $tx = $bdxI * $pixelsPerBlock;
                 $ty = $bdzI * $pixelsPerBlock;
 
