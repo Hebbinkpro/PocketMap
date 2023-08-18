@@ -21,7 +21,6 @@ class ResourcePack
         $this->blocks = json_decode(file_get_contents($path . "blocks.json"), true);
         $this->terrainTextures = json_decode(file_get_contents($path . "textures/terrain_texture.json"), true);
         $this->fallbackTexture = TextureUtils::getBlockTexture($fallbackBlock, $this);
-        var_dump($this->fallbackTexture);
     }
 
     /**
