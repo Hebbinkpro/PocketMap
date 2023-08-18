@@ -2,24 +2,8 @@
 
 A dynamic web-based world map for PocketMine-MP servers.
 
-## New in version 0.2.x
-
-The 0.2.0 update brings a lot of rendering improvements which results in better server performance while rendering and
-faster renders.
-
-- Add a configuration options for rendering
-- Add `ConfigManager` for managing all config options
-- Improve full world rendering
-- Improve rendering of new chunks
-- Improve rendering of updated chunks
-
-### v0.2.2
-- Add player markers (experimental)
-
-### v0.2.3
-- Add support for colored blocks like wool
-- Fix issues with concrete and concrete powder
-- Update texture pack to v1.20.10.1
+## What's new in v0.2.x?
+Go to the [changelogs](https://github.com/Hebbinkpro/PocketMap/blob/main/changelogs/v0.2.md)
 
 ## How to install
 
