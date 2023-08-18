@@ -20,12 +20,13 @@ use pocketmine\command\CommandSender;
 use pocketmine\event\Listener;
 use pocketmine\item\StringToItemParser;
 use pocketmine\plugin\PluginBase;
+use pocketmine\utils\Config;
 use pocketmine\utils\Filesystem;
 use pocketmine\world\World;
 
 class PocketMap extends PluginBase implements Listener
 {
-    public const CONFIG_VERSION = 1.3;
+    public const CONFIG_VERSION = 1.4;
 
     public const RESOURCE_PACK_PATH = "resource_packs/";
     public const RESOURCE_PACK_NAME = "v1.20.10.1";
@@ -161,7 +162,8 @@ class PocketMap extends PluginBase implements Listener
             // save the new config
             $this->saveResource("config.yml", true);
             // update the config to use it in the config manager
-            $config = $this->getConfig();
+            // don't use $this->getConfig(), because that will result in the OLD config
+            $config = new Config($this->getDataFolder()."config.yml");
         }
 
         // construct the config manager
@@ -233,11 +235,7 @@ class PocketMap extends PluginBase implements Listener
         // load all resources
         $this->loadResources();
 
-        // get the fallback block
-        $fallbackBlockId = self::$configManager->getString("textures.fallback-block", "minecraft:bedrock");
-        $fallbackBlock = StringToItemParser::getInstance()->parse($fallbackBlockId)->getBlock();
-        // create the resource pack instance
-        $this->resourcePack = new ResourcePack($this->getDataFolder() . self::RESOURCE_PACK_PATH . self::RESOURCE_PACK_NAME . "/", self::TEXTURE_SIZE, $fallbackBlock);
+        $this->loadResourcePack();
 
         WebServer::register($this);
 
@@ -265,6 +263,25 @@ class PocketMap extends PluginBase implements Listener
 
         // register the event listener
         $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
+    }
+
+    private function loadResourcePack(): void {
+        $textureSettings = self::$configManager->getManager("textures");
+
+        $path = $this->getDataFolder() . self::RESOURCE_PACK_PATH . self::RESOURCE_PACK_NAME . "/";
+
+        // get the fallback block
+        $fallbackBlockId = $textureSettings->getString("fallback-block", "minecraft:bedrock");
+        $fallbackBlock = StringToItemParser::getInstance()->parse($fallbackBlockId)->getBlock();
+
+        // get the height overlay data
+        $heightColor = $textureSettings->getInt("height-overlay.color", 0x000000);
+        $heightAlpha = $textureSettings->getInt("height-overlay.alpha", 3);
+
+        var_dump(dechex($heightColor).", $heightAlpha");
+
+        // create the resource pack instance
+        $this->resourcePack = new ResourcePack($path, self::TEXTURE_SIZE, $fallbackBlock, $heightColor, $heightAlpha);
     }
 
     /**

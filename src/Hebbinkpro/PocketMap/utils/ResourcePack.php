@@ -12,8 +12,10 @@ class ResourcePack
     private array $blocks;
     private array $terrainTextures;
     private ?string $fallbackTexture;
+    private int $heightColor;
+    private int $heightAlpha;
 
-    public function __construct(string $path, int $textureSize, ?Block $fallbackBlock)
+    public function __construct(string $path, int $textureSize, ?Block $fallbackBlock = null, int $heightColor = 0x000000, int $heightAlpha = 0)
     {
         $this->path = $path;
         $this->manifest = json_decode(file_get_contents($path . "manifest.json"), true);
@@ -21,6 +23,8 @@ class ResourcePack
         $this->blocks = json_decode(file_get_contents($path . "blocks.json"), true);
         $this->terrainTextures = json_decode(file_get_contents($path . "textures/terrain_texture.json"), true);
         $this->fallbackTexture = TextureUtils::getBlockTexture($fallbackBlock, $this);
+        $this->heightColor = $heightColor;
+        $this->heightAlpha = $heightAlpha;
     }
 
     /**
@@ -78,4 +82,19 @@ class ResourcePack
         return $this->fallbackTexture;
     }
 
+    /**
+     * @return int
+     */
+    public function getHeightOverlayColor(): int
+    {
+        return $this->heightColor;
+    }
+
+    /**
+     * @return int
+     */
+    public function getHeightOverlayAlpha(): int
+    {
+        return $this->heightAlpha;
+    }
 }

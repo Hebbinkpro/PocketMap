@@ -1,5 +1,5 @@
 # the config.yml version DO NOT CHANGE
-version: 1.3
+version: 1.4
 
 # Settings for the renderer
 renderer:
@@ -89,6 +89,18 @@ textures:
   # The fallback block texture for when a block is not recognized.
   # This texture will be used for e.g. custom blocks when not added to a resource pack.
   fallback-block: "minecraft:bedrock"
+
+  # Settings for texture height overlays
+  # The height overlay will add a color over textures of an odd y-level
+  height-overlay:
+    # Which color (in hexadecimal rgb) the overlay should have
+    # Default: 0x000000 (black)
+    color: 0x000000
+    # The alpha (transparency) value of the color
+    # The higher the alpha value the better the color is visible. A low value is recommended.
+    # Set to 0 if you want to disable the overlay.
+    # Default: 3 (min: 0, max: 127)
+    alpha: 3
 
 # Startup settings
 # These settings will influence the behaviour of PocketMap when the server starts.
