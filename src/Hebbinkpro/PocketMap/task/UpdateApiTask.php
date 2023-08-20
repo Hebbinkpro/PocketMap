@@ -14,6 +14,8 @@ use pocketmine\world\World;
 
 class UpdateApiTask extends Task
 {
+    public const HEAD_IMG_SIZE = 32;
+
     private PluginBase $plugin;
     private string $tmpFolder;
 
@@ -82,16 +84,16 @@ class UpdateApiTask extends Task
                     "name" => $player->getName(),
                     "uuid" => $player->getUniqueId(),
                     "skin" => $skin->getSkinId(),
-                    "skinSize" => LibSkin::SKIN_WIDTH_MAP[strlen($skin->getSkinData())],
+                    "skinSize" => self::HEAD_IMG_SIZE,
                     "pos" => [
-                        "x" => $pos->getX(),
-                        "z" => $pos->getZ()
+                        "x" => $pos->getFloorX(),
+                        "z" => $pos->getFloorZ()
                     ]
                 ];
 
-                if ($cfg->getBool("show-y-coordinate")) $data["pos"]["y"] = $pos->getY();
+                if ($cfg->getBool("show-y-coordinate")) $data["pos"]["y"] = $pos->getFloorY();
 
-                $playerData[$world][] = $data;
+                $playerData[$world]["{$player->getUniqueId()}"] = $data;
             }
         }
 
@@ -118,9 +120,9 @@ class UpdateApiTask extends Task
         $headSize = $size/8;
 
         // create the head img
-        $headImg = imagecreatetruecolor($headSize, $headSize);
+        $headImg = imagecreatetruecolor(self::HEAD_IMG_SIZE, self::HEAD_IMG_SIZE);
         // copy the head from the skin img to the head img
-        imagecopy($headImg, $skinImg, 0, 0, $headSize, $headSize, $headSize, $headSize);
+        imagecopyresampled($headImg, $skinImg, 0, 0, $headSize, $headSize, self::HEAD_IMG_SIZE, self::HEAD_IMG_SIZE, $headSize, $headSize);
 
         // save the head img
         imagepng($headImg, $skinFile);

@@ -53,7 +53,9 @@ map.addEventListener("mousemove", (e) => {
 
 // time in ms when the map should be updated
 let updateTime = 1000;
-update(updateTime)
+
+update(updateTime);
+
 async function update(updateTime) {
 
     // get all online players
@@ -61,8 +63,17 @@ async function update(updateTime) {
 
     // add markers for all online players
     for(let i in players) {
-        let player = players[i];
+        let player = players[i]
         updateMarker(player);
+    }
+
+    for(let uuid in MARKER_CACHE) {
+        // player with this uuid is online
+        if (players.hasOwnProperty(uuid)) continue;
+
+        // remove the marker from the map
+        map.removeLayer(MARKER_CACHE[uuid]);
+        delete MARKER_CACHE[uuid];
     }
 
     setTimeout(() => update(updateTime), updateTime)
@@ -70,15 +81,17 @@ async function update(updateTime) {
 
 function updateMarker(player) {
     let pos = player["pos"];
-    console.log(pos)
     let latLng = L.latLng(-pos.z, pos.x);
 
     if (MARKER_CACHE[player["uuid"]]) {
         MARKER_CACHE[player["uuid"]].setLatLng(latLng);
     } else {
         let icon = getIcon(player);
-        console.log(pos)
-        let marker = L.marker(latLng, {icon})
+        let marker = L.marker(latLng, {icon});
+        marker.bindTooltip(`${player["name"]}<br>${getCoordString(player)}`, {
+            permanent: false,
+            direction: "right"
+        });
 
         MARKER_CACHE[player["uuid"]] = marker;
         map.addLayer(marker);
@@ -94,7 +107,6 @@ function getIcon(player) {
     let skinId = player["skin"];
     let icon = ICON_CACHE[skinId] ?? null;
 
-
     if (icon !== null) return icon;
 
     let headUrl = API_URL+`players/skin/${player["skin"]}.png`;
@@ -108,4 +120,9 @@ function getIcon(player) {
     ICON_CACHE[skinId] = icon;
 
     return icon;
+}
+
+function getCoordString(player) {
+    let pos = player["pos"];
+    return `${pos["x"]}, ${pos["y"] ?? "64"}, ${pos["z"]}`;
 }
