@@ -20,6 +20,9 @@ use pocketmine\command\CommandSender;
 use pocketmine\event\Listener;
 use pocketmine\item\StringToItemParser;
 use pocketmine\plugin\PluginBase;
+use pocketmine\resourcepacks\ResourcePackException;
+use pocketmine\resourcepacks\ResourcePackManager;
+use pocketmine\resourcepacks\ZippedResourcePack;
 use pocketmine\utils\Config;
 use pocketmine\utils\Filesystem;
 use pocketmine\world\World;
@@ -235,7 +238,7 @@ class PocketMap extends PluginBase implements Listener
         // load all resources
         $this->loadResources();
 
-        $this->loadResourcePack();
+        $this->loadResourcePacks();
 
         WebServer::register($this);
 
@@ -265,10 +268,8 @@ class PocketMap extends PluginBase implements Listener
         $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
     }
 
-    private function loadResourcePack(): void {
+    private function loadResourcePacks(): void {
         $textureSettings = self::$configManager->getManager("textures");
-
-        $path = $this->getDataFolder() . self::RESOURCE_PACK_PATH . self::RESOURCE_PACK_NAME . "/";
 
         // get the fallback block
         $fallbackBlockId = $textureSettings->getString("fallback-block", "minecraft:bedrock");
@@ -278,10 +279,115 @@ class PocketMap extends PluginBase implements Listener
         $heightColor = $textureSettings->getInt("height-overlay.color", 0x000000);
         $heightAlpha = $textureSettings->getInt("height-overlay.alpha", 3);
 
-        var_dump(dechex($heightColor).", $heightAlpha");
+        $path = $this->getDataFolder() . self::RESOURCE_PACK_PATH . self::RESOURCE_PACK_NAME . "/";
 
         // create the resource pack instance
         $this->resourcePack = new ResourcePack($path, self::TEXTURE_SIZE, $fallbackBlock, $heightColor, $heightAlpha);
+
+        $tmpPath = self::$tmpDataPath."resource_packs";
+        if (!is_dir($tmpPath)) mkdir($tmpPath);
+
+        $lastLoaded = json_decode("$tmpPath/loaded_packs.json", true) ?? [];
+
+        $loaded = [];
+
+        $manager = $this->getServer()->getResourcePackManager();
+        $packs = $manager->getPackIdList();
+        foreach ($packs as $uuid) {
+            // get the zipped resource pack
+            $pack = $this->getServer()->getResourcePackManager()->getPackById($uuid);
+            if (!$pack instanceof ZippedResourcePack) continue;
+
+            $key = $manager->getPackEncryptionKey($uuid);
+
+            $info = [
+                "uuid" => $pack->getPackId(),
+                "version" => $pack->getPackVersion(),
+                "sha256" => utf8_encode($pack->getSha256())
+            ];
+
+            // this pack is already loaded in a previous startup
+            if (array_key_exists($uuid, $lastLoaded)) {
+                $lp = $lastLoaded[$uuid];
+
+                if ($lp["version"] === $info["version"] && $lp["sha256"] === $info["sha256"]) {
+                    var_dump("Pack already loaded");
+                    $loaded[$uuid] = $info;
+                    continue;
+                }
+            }
+
+            if ($this->loadResourcePack($pack, $key)) {
+                $loaded[$uuid] = $info;
+            }
+        }
+
+        file_put_contents("$tmpPath/loaded_packs.json", json_encode($loaded));
+    }
+
+    private function loadResourcePack(ZippedResourcePack $pack, string $key = null): bool {
+        // TODO: encrypted packs
+        if ($key !== null) return false;
+        $uuid = $pack->getPackId();
+
+        // open the zip archive
+        $archive = new \ZipArchive();
+        if(($openResult = $archive->open($pack->getPath())) !== true){
+            throw new ResourcePackException("Encountered ZipArchive error code $openResult while trying to open {$pack->getPath()}");
+        }
+
+        $tmpPath = self::$tmpDataPath."resource_packs/$uuid";
+        if (!is_dir($tmpPath)) mkdir("$tmpPath/textures/blocks", 0777, true);
+
+        $blocks = $archive->getFromName("manifest.json");
+        if ($blocks !== false) file_put_contents("$tmpPath/manifest.json", $blocks);
+        $blocks = $archive->getFromName("blocks.json");
+        if ($blocks !== false) file_put_contents("$tmpPath/blocks.json", $blocks);
+        $terrainTexture = $archive->getFromName("textures/terrain_texture.json");
+        if ($terrainTexture !== false) file_put_contents("$tmpPath/textures/terrain_texture.json", $terrainTexture);
+
+        $texturePaths = [];
+
+        // get all texture paths given in the terrain texture file
+        $terrainTextureData = json_decode($terrainTexture, true);
+        foreach ($terrainTextureData["texture_data"] as $block=>$blockData) {
+            $textures = $blockData["textures"];
+            if (is_string($textures)) $texturePaths[] = $textures;
+            else if (is_array($textures)) {
+                if (isset($textures["path"])) $texturePaths[] = $textures["path"];
+                else {
+                    foreach ($textures as $path) {
+                        $texturePaths[] = $path;
+                    }
+                }
+            }
+        }
+
+        // remove all .png/.tga file extensions from the path names
+        $texturePaths = str_replace([".png", ".tga"], "", $texturePaths);
+
+        // remove all duplicates (if they exist)
+        $texturePaths = array_unique($texturePaths);
+
+        // store all textures
+        foreach ($texturePaths as $path) {
+            $ext = "png";
+            $texture = $archive->getFromName("$path.png");
+
+            // it is possible that some textures use tga instead of png, but it's not that common
+            if ($texture === false) {
+                $ext = "tga";
+                $texture = $archive->getFromName("$path.tga");
+            }
+
+            if ($texture !== false) file_put_contents("$tmpPath/$path.$ext", $texture);
+            else $this->getLogger()->warning("Could not find texture with path '$path' in resource pack '$uuid'");
+        }
+
+        // close the archive
+        $archive->close();
+
+        return true;
     }
 
     /**
