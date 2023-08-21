@@ -83,8 +83,10 @@ class UpdateApiTask extends Task
                 $data = [
                     "name" => $player->getName(),
                     "uuid" => $player->getUniqueId(),
-                    "skin" => $skin->getSkinId(),
-                    "skinSize" => self::HEAD_IMG_SIZE,
+                    "skin" => [
+                        "id" => $skin->getSkinId(),
+                        "size" => self::HEAD_IMG_SIZE
+                    ],
                     "pos" => [
                         "x" => $pos->getFloorX(),
                         "z" => $pos->getFloorZ()

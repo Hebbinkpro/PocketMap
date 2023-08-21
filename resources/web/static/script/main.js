@@ -104,13 +104,13 @@ async function getOnlinePlayers() {
 }
 
 function getIcon(player) {
-    let skinId = player["skin"];
+    let skinId = player["skin"]["id"];
     let icon = ICON_CACHE[skinId] ?? null;
 
     if (icon !== null) return icon;
 
-    let headUrl = API_URL+`players/skin/${player["skin"]}.png`;
-    let skinSize = player["skinSize"];
+    let headUrl = API_URL+`players/skin/${skinId}.png`;
+    let skinSize = player["skin"]["size"];
 
     icon = L.icon({
         iconUrl: headUrl,
