@@ -80,6 +80,10 @@ class TextureUtils
                 $bdz = $bdzI * $diff;
 
                 $y = $chunk->getHighestBlockAt($bdx, $bdz);
+
+                // there is no block on this position
+                if ($y === null) continue;
+
                 $blockStateId = $chunk->getBlockStateId($bdx, $y, $bdz);
                 $block = BlockStateParser::getBlockFromStateId($blockStateId);
 
