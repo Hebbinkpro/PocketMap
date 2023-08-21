@@ -4,7 +4,7 @@ namespace Hebbinkpro\PocketMap\utils;
 
 use pocketmine\block\Block;
 
-class ResourcePack
+class TerrainTextures
 {
     private string $path;
     private array $manifest;

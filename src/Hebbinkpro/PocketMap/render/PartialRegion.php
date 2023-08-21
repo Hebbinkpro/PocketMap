@@ -4,7 +4,7 @@ namespace Hebbinkpro\PocketMap\render;
 
 use Generator;
 use Hebbinkpro\PocketMap\task\AsyncRegionRenderTask;
-use Hebbinkpro\PocketMap\utils\ResourcePack;
+use Hebbinkpro\PocketMap\utils\TerrainTextures;
 
 /**
  * A normal Region, but with a generator looping through set chunks instead of all chunks that are in the region.
@@ -14,7 +14,7 @@ class PartialRegion extends Region
     /** @var int[][] */
     private array $chunks;
 
-    public function __construct(string $worldName, int $zoom, int $regionX, int $regionZ, ResourcePack $rp)
+    public function __construct(string $worldName, int $zoom, int $regionX, int $regionZ, TerrainTextures $rp)
     {
         parent::__construct($worldName, $zoom, $regionX, $regionZ, $rp);
         $this->chunks = [];

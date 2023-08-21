@@ -8,7 +8,7 @@ use Hebbinkpro\PocketMap\task\ChunkRenderTask;
 use Hebbinkpro\PocketMap\task\RenderSchedulerTask;
 use Hebbinkpro\PocketMap\task\UpdateApiTask;
 use Hebbinkpro\PocketMap\utils\ConfigManager;
-use Hebbinkpro\PocketMap\utils\ResourcePack;
+use Hebbinkpro\PocketMap\utils\TerrainTextures;
 use Hebbinkpro\WebServer\exception\WebServerException;
 use Hebbinkpro\WebServer\http\HttpRequest;
 use Hebbinkpro\WebServer\http\HttpResponse;
@@ -39,7 +39,7 @@ class PocketMap extends PluginBase implements Listener
     private static ConfigManager $configManager;
     private static string $tmpDataPath;
 
-    private ResourcePack $resourcePack;
+    private TerrainTextures $resourcePack;
     private WebServer $webServer;
 
     private RenderSchedulerTask $renderScheduler;
@@ -90,9 +90,9 @@ class PocketMap extends PluginBase implements Listener
 
     /**
      * Get the resource pack
-     * @return ResourcePack
+     * @return TerrainTextures
      */
-    public function getResourcePack(): ResourcePack
+    public function getResourcePack(): TerrainTextures
     {
         return $this->resourcePack;
     }
@@ -238,7 +238,7 @@ class PocketMap extends PluginBase implements Listener
         // load all resources
         $this->loadResources();
 
-        $this->loadResourcePacks();
+        $this->extractResourcePacks();
 
         WebServer::register($this);
 
@@ -268,7 +268,11 @@ class PocketMap extends PluginBase implements Listener
         $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
     }
 
-    private function loadResourcePacks(): void {
+    /**
+     * Extract all resource packs inside the server's resource_packs folder
+     * @return void
+     */
+    private function extractResourcePacks(): void {
         $textureSettings = self::$configManager->getManager("textures");
 
         // get the fallback block
@@ -282,12 +286,12 @@ class PocketMap extends PluginBase implements Listener
         $path = $this->getDataFolder() . self::RESOURCE_PACK_PATH . self::RESOURCE_PACK_NAME . "/";
 
         // create the resource pack instance
-        $this->resourcePack = new ResourcePack($path, self::TEXTURE_SIZE, $fallbackBlock, $heightColor, $heightAlpha);
+        $this->resourcePack = new TerrainTextures($path, self::TEXTURE_SIZE, $fallbackBlock, $heightColor, $heightAlpha);
 
         $tmpPath = self::$tmpDataPath."resource_packs";
         if (!is_dir($tmpPath)) mkdir($tmpPath);
 
-        $lastLoaded = json_decode("$tmpPath/loaded_packs.json", true) ?? [];
+        $lastLoaded = json_decode(file_get_contents("$tmpPath/loaded_packs.json"), true) ?? [];
 
         $loaded = [];
 
@@ -300,32 +304,46 @@ class PocketMap extends PluginBase implements Listener
 
             $key = $manager->getPackEncryptionKey($uuid);
 
+            $filePath = explode("/", $pack->getPath());
+
             $info = [
                 "uuid" => $pack->getPackId(),
+                "file" => $filePath[array_key_last($filePath)],
                 "version" => $pack->getPackVersion(),
                 "sha256" => utf8_encode($pack->getSha256())
             ];
 
             // this pack is already loaded in a previous startup
-            if (array_key_exists($uuid, $lastLoaded)) {
-                $lp = $lastLoaded[$uuid];
-
-                if ($lp["version"] === $info["version"] && $lp["sha256"] === $info["sha256"]) {
-                    var_dump("Pack already loaded");
-                    $loaded[$uuid] = $info;
-                    continue;
-                }
+            if (in_array($info, $lastLoaded)) {
+                $loaded[$uuid] = $info;
+                continue;
             }
 
-            if ($this->loadResourcePack($pack, $key)) {
+            if ($this->extractResourcePack($pack, $key)) {
                 $loaded[$uuid] = $info;
             }
         }
 
+        foreach (scandir($tmpPath) as $file) {
+            $path = "$tmpPath/$file";
+            // not a dir
+            if (in_array($file, [".", ".."]) || !is_dir($path)) continue;
+
+            // remove unused dirs
+            if (!array_key_exists($file, $loaded)) rmdir($path);
+        }
+
+        // put in the loaded_packs.json which packs have been extracted
         file_put_contents("$tmpPath/loaded_packs.json", json_encode($loaded));
     }
 
-    private function loadResourcePack(ZippedResourcePack $pack, string $key = null): bool {
+    /**
+     * Extracts the given resource pack from the resource_packs folder
+     * @param ZippedResourcePack $pack the pack to extract
+     * @param string|null $key the encryption key
+     * @return bool if the extraction was successful
+     */
+    private function extractResourcePack(ZippedResourcePack $pack, string $key = null): bool {
         // TODO: encrypted packs
         if ($key !== null) return false;
         $uuid = $pack->getPackId();

@@ -28,10 +28,10 @@ final class ColorMapParser
      * Get the color of the given block in the Biome using the resource pack
      * @param Block $block the block to get the color of
      * @param Biome $biome the biome the block is in
-     * @param ResourcePack $rp the resource pack to use
+     * @param TerrainTextures $rp the resource pack to use
      * @return int the color of the block, or -1 when it is an invalid block
      */
-    public static function getColorFromBlock(Block $block, Biome $biome, ResourcePack $rp): int
+    public static function getColorFromBlock(Block $block, Biome $biome, TerrainTextures $rp): int
     {
         if (!array_key_exists($rp->getPath(), self::$colorMap)) {
             self::$colorMap[$rp->getPath()] = [];
@@ -61,10 +61,10 @@ final class ColorMapParser
     /**
      * Get the water color in a given biome using the resource pack
      * @param Biome $biome the biome
-     * @param ResourcePack $rp the resource pack
+     * @param TerrainTextures $rp the resource pack
      * @return int the color of the water
      */
-    public static function getWaterColor(Biome $biome, ResourcePack $rp): int
+    public static function getWaterColor(Biome $biome, TerrainTextures $rp): int
     {
         $biomes = json_decode(file_get_contents($rp->getPath() . self::BIOMES_CLIENT), true)["biomes"];
         $biomeData = $biomes[self::getBiomeName($biome)] ?? $biomes["default"];
@@ -128,10 +128,10 @@ final class ColorMapParser
     /**
      * Get the grass color in the given biome
      * @param Biome $biome the biome
-     * @param ResourcePack $rp the resource pack
+     * @param TerrainTextures $rp the resource pack
      * @return int the grass color
      */
-    public static function getGrassColor(Biome $biome, ResourcePack $rp): int
+    public static function getGrassColor(Biome $biome, TerrainTextures $rp): int
     {
         $texture = $rp->getPath() . self::COLOR_MAP_GRASS;
         $temp = $biome->getTemperature();
@@ -188,10 +188,10 @@ final class ColorMapParser
     /**
      * Get the foliage color inside a biome
      * @param Biome $biome the biome
-     * @param ResourcePack $rp the resource pack
+     * @param TerrainTextures $rp the resource pack
      * @return int the foliage color
      */
-    public static function getFoliageColor(Biome $biome, ResourcePack $rp): int
+    public static function getFoliageColor(Biome $biome, TerrainTextures $rp): int
     {
         $texture = $rp->getPath() . self::COLOR_MAP_FOLIAGE;
         $temp = $biome->getTemperature();

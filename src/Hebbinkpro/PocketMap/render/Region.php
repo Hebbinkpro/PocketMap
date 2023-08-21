@@ -6,7 +6,7 @@ use Exception;
 use Generator;
 use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\task\AsyncRegionRenderTask;
-use Hebbinkpro\PocketMap\utils\ResourcePack;
+use Hebbinkpro\PocketMap\utils\TerrainTextures;
 
 class Region
 {
@@ -14,11 +14,11 @@ class Region
     private int $zoom;
     private int $x;
     private int $z;
-    private ResourcePack $rp;
+    private TerrainTextures $rp;
     private string $tmpFile;
 
 
-    public function __construct(string $worldName, int $zoom, int $regionX, int $regionZ, ResourcePack $rp)
+    public function __construct(string $worldName, int $zoom, int $regionX, int $regionZ, TerrainTextures $rp)
     {
         $this->worldName = $worldName;
         $this->zoom = $zoom;
@@ -83,9 +83,9 @@ class Region
 
     /**
      * Get the resource pack used for rendering the region
-     * @return ResourcePack
+     * @return TerrainTextures
      */
-    public function getResourcePack(): ResourcePack
+    public function getResourcePack(): TerrainTextures
     {
         return $this->rp;
     }

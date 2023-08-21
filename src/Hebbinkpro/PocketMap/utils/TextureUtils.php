@@ -49,12 +49,12 @@ class TextureUtils
     /**
      * Create the texture of the given chunk
      * @param Chunk $chunk the chunk
-     * @param ResourcePack $rp the resource pack
+     * @param TerrainTextures $rp the resource pack
      * @param int $totalBlocks the amount of blocks visible in the texture
      * @param int $pixelsPerBlock the amount of pixels of each block
      * @return GdImage the texture image of the chunk
      */
-    public static function createChunkTexture(Chunk $chunk, ResourcePack $rp, int $totalBlocks, int $pixelsPerBlock): GdImage
+    public static function createChunkTexture(Chunk $chunk, TerrainTextures $rp, int $totalBlocks, int $pixelsPerBlock): GdImage
     {
         $invalidBlocks = [
             BlockTypeIds::FERN,
@@ -122,11 +122,11 @@ class TextureUtils
      * Create a block texture compressed to the given size
      * @param Block $block the block
      * @param Biome $biome the biome the block is in
-     * @param ResourcePack $rp the resource pack
+     * @param TerrainTextures $rp the resource pack
      * @param int $newSize the new size of the block texture
      * @return GdImage the block texture compressed to the $newSize
      */
-    public static function createCompressedBlockTexture(Block $block, Biome $biome, ResourcePack $rp, int $newSize): GdImage
+    public static function createCompressedBlockTexture(Block $block, Biome $biome, TerrainTextures $rp, int $newSize): GdImage
     {
         $img = self::createBlockTexture($block, $biome, $rp);
 
@@ -140,10 +140,10 @@ class TextureUtils
      * Get a block texture as an GdImage
      * @param Block $block
      * @param Biome $biome
-     * @param ResourcePack $rp
+     * @param TerrainTextures $rp
      * @return GdImage the texture of the block
      */
-    public static function createBlockTexture(Block $block, Biome $biome, ResourcePack $rp): GdImage
+    public static function createBlockTexture(Block $block, Biome $biome, TerrainTextures $rp): GdImage
     {
         if (!array_key_exists($rp->getPath(), self::$blockTextureMap)) {
             self::$blockTextureMap[$rp->getPath()] = [];
@@ -199,10 +199,10 @@ class TextureUtils
     /**
      * Get the texture of a given block
      * @param Block|null $block the block to get the texture of
-     * @param ResourcePack $rp the path to the resource pack
+     * @param TerrainTextures $rp the path to the resource pack
      * @return string|null the path to the texture or null when not found
      */
-    public static function getBlockTexture(?Block $block, ResourcePack $rp): ?string
+    public static function getBlockTexture(?Block $block, TerrainTextures $rp): ?string
     {
         if ($block === null) return null;
         $name = self::getBlockTextureName($block);
@@ -258,10 +258,10 @@ class TextureUtils
      * @param GdImage $texture the texture to apply the color map on
      * @param Block $block the block of the texture
      * @param Biome $biome the biome the block is in
-     * @param ResourcePack $rp the resource pack
+     * @param TerrainTextures $rp the resource pack
      * @return void
      */
-    public static function applyColorMap(GdImage $texture, Block $block, Biome $biome, ResourcePack $rp): void
+    public static function applyColorMap(GdImage $texture, Block $block, Biome $biome, TerrainTextures $rp): void
     {
         // get the color from the cache
         $colorMap = ColorMapParser::getColorFromBlock($block, $biome, $rp);

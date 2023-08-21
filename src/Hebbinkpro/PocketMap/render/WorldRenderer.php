@@ -4,7 +4,7 @@ namespace Hebbinkpro\PocketMap\render;
 
 use Hebbinkpro\PocketMap\task\ChunkRenderTask;
 use Hebbinkpro\PocketMap\task\RenderSchedulerTask;
-use Hebbinkpro\PocketMap\utils\ResourcePack;
+use Hebbinkpro\PocketMap\utils\TerrainTextures;
 use pocketmine\world\World;
 
 class WorldRenderer
@@ -33,12 +33,12 @@ class WorldRenderer
     ];
 
     private World $world;
-    private ResourcePack $rp;
+    private TerrainTextures $rp;
     private string $renderPath;
     private RenderSchedulerTask $scheduler;
     private ChunkRenderTask $chunkRenderer;
 
-    public function __construct(World $world, ResourcePack $rp, string $renderPath, RenderSchedulerTask $scheduler, ChunkRenderTask $chunkRenderer)
+    public function __construct(World $world, TerrainTextures $rp, string $renderPath, RenderSchedulerTask $scheduler, ChunkRenderTask $chunkRenderer)
     {
         $this->world = $world;
         $this->rp = $rp;
@@ -141,9 +141,9 @@ class WorldRenderer
 
     /**
      * Get the resource pack
-     * @return ResourcePack
+     * @return TerrainTextures
      */
-    public function getResourcePack(): ResourcePack
+    public function getResourcePack(): TerrainTextures
     {
         return $this->rp;
     }
