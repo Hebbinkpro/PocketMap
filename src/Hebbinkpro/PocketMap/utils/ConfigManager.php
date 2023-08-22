@@ -37,6 +37,17 @@ class ConfigManager
     }
 
     /**
+     * Create a new ConfigManager from a Config file
+     * @param string $file the config file
+     * @param bool $autoSave if the data should immediately be saved to the config file
+     * @return ConfigManager the config manager
+     */
+    public static function fromFile(string $file, bool $autoSave = false): ConfigManager
+    {
+        return new ConfigManager(new Config($file), $autoSave);
+    }
+
+    /**
      * @throws JsonException
      */
     public function save(): void

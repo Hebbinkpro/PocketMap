@@ -2,6 +2,7 @@
 
 namespace Hebbinkpro\PocketMap\task;
 
+use Exception;
 use GdImage;
 use Hebbinkpro\PocketMap\render\Region;
 use Hebbinkpro\PocketMap\render\RegionChunks;
@@ -114,7 +115,7 @@ class AsyncRegionRenderTask extends AsyncTask
      */
     private function drawChunks(Region $region, GdImage $image): void
     {
-        $rp = $region->getResourcePack();
+        $terrainTextures = $region->getTerrainTextures();
 
         $chunkSize = $region->getChunkPixelSize();
 
@@ -132,7 +133,7 @@ class AsyncRegionRenderTask extends AsyncTask
             $chunks[] = [$cx, $cz];
 
             // create the chunk image
-            $chunkImg = TextureUtils::createChunkTexture($chunk, $rp, $totalBlocks, $imgPixelsPerBlock);
+            $chunkImg = TextureUtils::createChunkTexture($chunk, $terrainTextures, $totalBlocks, $imgPixelsPerBlock);
 
             [$rcx, $rcz] = $region->getRegionChunkCoords($cx, $cz);
 
@@ -175,6 +176,9 @@ class AsyncRegionRenderTask extends AsyncTask
         imagedestroy($image);
     }
 
+    /**
+     * @throws Exception
+     */
     public function onCompletion(): void
     {
         /** @var Region $region */

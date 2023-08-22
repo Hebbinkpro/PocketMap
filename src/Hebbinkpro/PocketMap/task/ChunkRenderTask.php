@@ -11,7 +11,7 @@ use pocketmine\scheduler\Task;
 
 class ChunkRenderTask extends Task
 {
-    public const CACHE_FILE = "regions/render.txt";
+    public const CACHE_FILE = "tmp/regions/render.txt";
 
 
     private PocketMap $pocketMap;
@@ -44,7 +44,7 @@ class ChunkRenderTask extends Task
      */
     private function readFromCache(): void
     {
-        $cacheFile = PocketMap::getTmpDataPath() . self::CACHE_FILE;
+        $cacheFile = PocketMap::getFolder() . self::CACHE_FILE;
         if (!file_exists($cacheFile)) return;
 
         $data = file_get_contents($cacheFile);
@@ -118,7 +118,7 @@ class ChunkRenderTask extends Task
 
         if ($this->enableCache) {
             // update the cache
-            $cacheFile = PocketMap::getTmpDataPath() . self::CACHE_FILE;
+            $cacheFile = PocketMap::getFolder() . self::CACHE_FILE;
             file_put_contents($cacheFile, serialize($this->queuedRegions));
         }
     }

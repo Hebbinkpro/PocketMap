@@ -3,7 +3,8 @@
 namespace Hebbinkpro\PocketMap\utils;
 
 use GdImage;
-use Hebbinkpro\PocketMap\utils\block\BlockDataValues;
+use Hebbinkpro\PocketMap\PocketMap;
+use Hebbinkpro\PocketMap\terrainTextures\TerrainTextures;
 use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
 use Hebbinkpro\PocketMap\utils\block\old\OldBlockTypeNames as OBTN;
 use pocketmine\block\Block;
@@ -49,12 +50,12 @@ class TextureUtils
     /**
      * Create the texture of the given chunk
      * @param Chunk $chunk the chunk
-     * @param TerrainTextures $rp the resource pack
+     * @param TerrainTextures $terrainTextures the resource pack
      * @param int $totalBlocks the amount of blocks visible in the texture
      * @param int $pixelsPerBlock the amount of pixels of each block
      * @return GdImage the texture image of the chunk
      */
-    public static function createChunkTexture(Chunk $chunk, TerrainTextures $rp, int $totalBlocks, int $pixelsPerBlock): GdImage
+    public static function createChunkTexture(Chunk $chunk, TerrainTextures $terrainTextures, int $totalBlocks, int $pixelsPerBlock): GdImage
     {
         $invalidBlocks = [
             BlockTypeIds::FERN,
@@ -95,16 +96,16 @@ class TextureUtils
 
                 $biomeId = $chunk->getBiomeId($bdx, $y, $bdz);
                 $biome = BiomeRegistry::getInstance()->getBiome($biomeId);
-                $blockTexture = self::createCompressedBlockTexture($block, $biome, $rp, $pixelsPerBlock);
+                $blockTexture = self::createCompressedBlockTexture($block, $biome, $terrainTextures, $pixelsPerBlock);
 
-                if ($y % 2 != 0 && ($alpha = $rp->getHeightOverlayAlpha()) > 0) {
-                    $color = $rp->getHeightOverlayColor();
+                if ($y % 2 != 0 && ($alpha = $terrainTextures->getOptions()->getHeightOverlayAlpha()) > 0) {
+                    $color = $terrainTextures->getOptions()->getHeightOverlayColor();
                     $r = ($color >> 16) & 0xff;
                     $g = ($color >> 8) & 0xff;
                     $b = $color & 0xff;
 
                     $heightOverlay = imagecreatetruecolor($pixelsPerBlock, $pixelsPerBlock);
-                    imagefill($heightOverlay, 0, 0, imagecolorallocatealpha($heightOverlay, $r, $g, $b, 127-$alpha));
+                    imagefill($heightOverlay, 0, 0, imagecolorallocatealpha($heightOverlay, $r, $g, $b, 127 - $alpha));
                     imagecopy($blockTexture, $heightOverlay, 0, 0, 0, 0, $pixelsPerBlock, $pixelsPerBlock);
                 }
 
@@ -122,15 +123,15 @@ class TextureUtils
      * Create a block texture compressed to the given size
      * @param Block $block the block
      * @param Biome $biome the biome the block is in
-     * @param TerrainTextures $rp the resource pack
+     * @param TerrainTextures $terrainTextures the resource pack
      * @param int $newSize the new size of the block texture
      * @return GdImage the block texture compressed to the $newSize
      */
-    public static function createCompressedBlockTexture(Block $block, Biome $biome, TerrainTextures $rp, int $newSize): GdImage
+    public static function createCompressedBlockTexture(Block $block, Biome $biome, TerrainTextures $terrainTextures, int $newSize): GdImage
     {
-        $img = self::createBlockTexture($block, $biome, $rp);
+        $img = self::createBlockTexture($block, $biome, $terrainTextures);
 
-        $compressedImg = self::getCompressedImage($img, $rp->getTextureSize(), $rp->getTextureSize(), $newSize, $newSize);
+        $compressedImg = self::getCompressedImage($img, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE, $newSize, $newSize);
         imagedestroy($img);
 
         return $compressedImg;
@@ -140,39 +141,33 @@ class TextureUtils
      * Get a block texture as an GdImage
      * @param Block $block
      * @param Biome $biome
-     * @param TerrainTextures $rp
+     * @param TerrainTextures $terrainTextures
      * @return GdImage the texture of the block
      */
-    public static function createBlockTexture(Block $block, Biome $biome, TerrainTextures $rp): GdImage
+    public static function createBlockTexture(Block $block, Biome $biome, TerrainTextures $terrainTextures): GdImage
     {
-        if (!array_key_exists($rp->getPath(), self::$blockTextureMap)) {
-            self::$blockTextureMap[$rp->getPath()] = [];
+        if (!array_key_exists($terrainTextures->getPath(), self::$blockTextureMap)) {
+            self::$blockTextureMap[$terrainTextures->getPath()] = [];
         }
-        if (!array_key_exists($block->getTypeId(), self::$blockTextureMap[$rp->getPath()])) {
-            self::$blockTextureMap[$rp->getPath()][$block->getTypeId()] = [];
+        if (!array_key_exists($block->getTypeId(), self::$blockTextureMap[$terrainTextures->getPath()])) {
+            self::$blockTextureMap[$terrainTextures->getPath()][$block->getTypeId()] = [];
         }
 
         // texture exists in the cache, return it
-        if (array_key_exists($biome->getId(), self::$blockTextureMap[$rp->getPath()][$block->getTypeId()])) {
-            $cacheImg = self::$blockTextureMap[$rp->getPath()][$block->getTypeId()][$biome->getId()];
+        if (array_key_exists($biome->getId(), self::$blockTextureMap[$terrainTextures->getPath()][$block->getTypeId()])) {
+            $cacheImg = self::$blockTextureMap[$terrainTextures->getPath()][$block->getTypeId()][$biome->getId()];
 
             // create image and copy the cache data to it
-            $img = imagecreatetruecolor($rp->getTextureSize(), $rp->getTextureSize());
-            imagecopy($img, $cacheImg, 0, 0, 0, 0, $rp->getTextureSize(), $rp->getTextureSize());
+            $img = imagecreatetruecolor(PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
+            imagecopy($img, $cacheImg, 0, 0, 0, 0, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
 
             // return the copy of the cached image
             return $img;
         }
 
-        // texture does not exist in the cache, create it
-
-        // get the path of the texture
-        $path = self::getBlockTexture($block, $rp);
-
-        // block doesn't exist in the resource pack
-        if ($path === null) {
+        if ($block === null || ($path = $terrainTextures->getBlockTexturePath($block)) === null) {
             // set the path to the fallback texture
-            $path = $rp->getFallbackTexturePath();
+            $path = $terrainTextures->getRealTexturePath($terrainTextures->getOptions()->getFallbackBlock());
         }
 
 
@@ -180,77 +175,20 @@ class TextureUtils
         else if (is_file($path . ".tga")) $img = imagecreatefromtga($path . ".tga");
         else {
             // the path is null, return empty image
-            $img = imagecreatetruecolor($rp->getTextureSize(), $rp->getTextureSize());
+            $img = imagecreatetruecolor(PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
             imagecolorallocatealpha($img, 0, 0, 0, 127);
         }
 
         imagealphablending($img, true);
-        self::applyColorMap($img, $block, $biome, $rp);
+        self::applyColorMap($img, $block, $biome, $terrainTextures);
 
         // create a cache image
-        $cacheImg = imagecreatetruecolor($rp->getTextureSize(), $rp->getTextureSize());
-        imagecopy($cacheImg, $img, 0, 0, 0, 0, $rp->getTextureSize(), $rp->getTextureSize());
+        $cacheImg = imagecreatetruecolor(PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
+        imagecopy($cacheImg, $img, 0, 0, 0, 0, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
 
         // store the cache image
-        self::$blockTextureMap[$rp->getPath()][$block->getTypeId()][$biome->getId()] = $cacheImg;
+        self::$blockTextureMap[$terrainTextures->getPath()][$block->getTypeId()][$biome->getId()] = $cacheImg;
         return $img;
-    }
-
-    /**
-     * Get the texture of a given block
-     * @param Block|null $block the block to get the texture of
-     * @param TerrainTextures $rp the path to the resource pack
-     * @return string|null the path to the texture or null when not found
-     */
-    public static function getBlockTexture(?Block $block, TerrainTextures $rp): ?string
-    {
-        if ($block === null) return null;
-        $name = self::getBlockTextureName($block);
-
-        // get the block data
-        $blockData = $rp->getBlocks()[$name];
-        // block data does not exist
-        if (!$blockData) return null;
-        $blockTextures = $blockData["textures"];
-
-        // get the terrain texture name of the block to use
-        $textureName = is_string($blockTextures) ? $blockTextures : ($blockTextures["up"] ?? array_values($blockTextures)[0]);
-
-        // get the terrain data
-        $terrainTextures = $rp->getTerrainTextures()["texture_data"];
-
-        // get the terrain data of the given texture
-        // if the block does not exist in the terrain_texture.json file for some reason, give the expected texture
-        $terrainData = $terrainTextures[$textureName] ?? ["textures" => "textures/blocks/$textureName"];
-        $textures = $terrainData["textures"];
-
-        // the texture is just a straight forward texture path
-        if (is_string($textures)) return $rp->getPath() . $textures;
-
-        // well done, you found a block without texture
-        if (!is_array($textures) || empty($textures)) return null;
-
-        // texture contains image path and tint_color
-        if (is_array($textures[0])) {
-            // it doesn't have a path for some reason
-            if (!array_key_exists("path", $textures[0])) return null;
-            // return the path
-            return $rp->getPath() . $textures[0]["path"];
-        }
-
-        // only a single entry
-        if (count($textures) == 1) return $rp->getPath() . $textures[0];
-
-        // get the data value of the block
-        // the data value determines which texture to use of a list of textures
-        $dataValue = BlockDataValues::getDataValue($block);
-
-        // unknown data value
-        if (!$textures[$dataValue]) return null;
-
-        // check if the "path"
-        if (is_array($textures[$dataValue])) return $rp->getPath() . $textures[$dataValue]["path"];
-        return $rp->getPath() . $textures[$dataValue];
     }
 
     /**
@@ -258,18 +196,18 @@ class TextureUtils
      * @param GdImage $texture the texture to apply the color map on
      * @param Block $block the block of the texture
      * @param Biome $biome the biome the block is in
-     * @param TerrainTextures $rp the resource pack
+     * @param TerrainTextures $terrainTextures the resource pack
      * @return void
      */
-    public static function applyColorMap(GdImage $texture, Block $block, Biome $biome, TerrainTextures $rp): void
+    public static function applyColorMap(GdImage $texture, Block $block, Biome $biome, TerrainTextures $terrainTextures): void
     {
         // get the color from the cache
-        $colorMap = ColorMapParser::getColorFromBlock($block, $biome, $rp);
+        $colorMap = ColorMapParser::getColorFromBlock($block, $biome, $terrainTextures);
 
         // the given block is not mapped
         if ($colorMap < 0) return;
 
-        self::overlay($texture, $colorMap, $rp->getTextureSize());
+        self::overlay($texture, $colorMap, PocketMap::TEXTURE_SIZE);
     }
 
     /**
@@ -323,25 +261,16 @@ class TextureUtils
     }
 
     /**
-     * Clear the texture cache
-     * @return void
+     * Get the texture of a given block
+     * @param Block|null $block the block to get the texture of
+     * @param TerrainTextures $terrainTextures the path to the resource pack
+     * @return string|null the path to the texture or null when not found
+     * @deprecated
      */
-    public static function clearCache(): void
+    public static function getBlockTexture(?Block $block, TerrainTextures $terrainTextures): ?string
     {
-        // destroy all stored images
-        foreach (self::$blockTextureMap as $blocks) {
-            foreach ($blocks as $biomes) {
-                foreach ($biomes as $img) {
-                    imagedestroy($img);
-                }
-            }
-        }
+        return null;
 
-        // clear cache of all resource packs
-        $rps = array_keys(self::$blockTextureMap);
-        foreach ($rps as $rp) {
-            unset(self::$blockTextureMap[$rp]);
-        }
     }
 
     /**
@@ -351,7 +280,8 @@ class TextureUtils
      * @param Block $block the name of the block
      * @return string the texture name
      */
-    public static function getBlockTextureName(Block $block): string {
+    public static function getBlockTextureName(Block $block): string
+    {
         $stateData = BlockStateParser::getBlockStateData($block);
         $name = match ($stateData->getName()) {
             // replace all (old) logs with log or log2, all new logs have their own name
@@ -378,5 +308,27 @@ class TextureUtils
 
         // remove minecraft: and _block_ from the name
         return str_replace(["minecraft:", "_block_"], ["", "_"], $name);
+    }
+
+    /**
+     * Clear the texture cache
+     * @return void
+     */
+    public static function clearCache(): void
+    {
+        // destroy all stored images
+        foreach (self::$blockTextureMap as $blocks) {
+            foreach ($blocks as $biomes) {
+                foreach ($biomes as $img) {
+                    imagedestroy($img);
+                }
+            }
+        }
+
+        // clear cache of all resource packs
+        $textures = array_keys(self::$blockTextureMap);
+        foreach ($textures as $path) {
+            unset(self::$blockTextureMap[$path]);
+        }
     }
 }

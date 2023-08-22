@@ -2,6 +2,7 @@
 
 namespace Hebbinkpro\PocketMap\utils;
 
+use Hebbinkpro\PocketMap\terrainTextures\TerrainTextures;
 use pocketmine\block\Block;
 use pocketmine\block\BlockTypeIds as Ids;
 use pocketmine\data\bedrock\BiomeIds;
@@ -28,31 +29,31 @@ final class ColorMapParser
      * Get the color of the given block in the Biome using the resource pack
      * @param Block $block the block to get the color of
      * @param Biome $biome the biome the block is in
-     * @param TerrainTextures $rp the resource pack to use
+     * @param TerrainTextures $terrainTextures the resource pack to use
      * @return int the color of the block, or -1 when it is an invalid block
      */
-    public static function getColorFromBlock(Block $block, Biome $biome, TerrainTextures $rp): int
+    public static function getColorFromBlock(Block $block, Biome $biome, TerrainTextures $terrainTextures): int
     {
-        if (!array_key_exists($rp->getPath(), self::$colorMap)) {
-            self::$colorMap[$rp->getPath()] = [];
+        if (!array_key_exists($terrainTextures->getPath(), self::$colorMap)) {
+            self::$colorMap[$terrainTextures->getPath()] = [];
         }
-        if (!array_key_exists($block->getTypeId(), self::$colorMap[$rp->getPath()])) {
-            self::$colorMap[$rp->getPath()][$block->getTypeId()] = [];
+        if (!array_key_exists($block->getTypeId(), self::$colorMap[$terrainTextures->getPath()])) {
+            self::$colorMap[$terrainTextures->getPath()][$block->getTypeId()] = [];
         }
 
         // get the color from the cache, or request the color
-        $color = self::$colorMap[$rp->getPath()][$block->getTypeId()][$biome->getId()] ?? match ($block->getTypeId()) {
-            Ids::WATER => self::getWaterColor($biome, $rp),
-            Ids::SPRUCE_LEAVES => self::getColorFromMapFromBiome($biome, $rp->getPath() . self::COLOR_MAP_EVERGREEN),
-            Ids::BIRCH_LEAVES => self::getColorFromMapFromBiome($biome, $rp->getPath() . self::COLOR_MAP_BIRCH),
-            Ids::GRASS, Ids::TALL_GRASS, Ids::DOUBLE_TALLGRASS, Ids::FERN, Ids::LARGE_FERN, Ids::SUGARCANE => self::getGrassColor($biome, $rp),
-            Ids::OAK_LEAVES, Ids::JUNGLE_LEAVES, Ids::ACACIA_LEAVES, Ids::DARK_OAK_LEAVES, Ids::VINES => self::getFoliageColor($biome, $rp),
+        $color = self::$colorMap[$terrainTextures->getPath()][$block->getTypeId()][$biome->getId()] ?? match ($block->getTypeId()) {
+            Ids::WATER => self::getWaterColor($biome, $terrainTextures),
+            Ids::SPRUCE_LEAVES => self::getColorFromMapFromBiome($biome, $terrainTextures->getRealTexturePath(self::COLOR_MAP_EVERGREEN)),
+            Ids::BIRCH_LEAVES => self::getColorFromMapFromBiome($biome, $terrainTextures->getRealTexturePath(self::COLOR_MAP_BIRCH)),
+            Ids::GRASS, Ids::TALL_GRASS, Ids::DOUBLE_TALLGRASS, Ids::FERN, Ids::LARGE_FERN, Ids::SUGARCANE => self::getGrassColor($biome, $terrainTextures),
+            Ids::OAK_LEAVES, Ids::JUNGLE_LEAVES, Ids::ACACIA_LEAVES, Ids::DARK_OAK_LEAVES, Ids::VINES => self::getFoliageColor($biome, $terrainTextures),
             default => -1,
         };
 
         // if the biome color does not exist, add it to the cache
-        if (!array_key_exists($biome->getId(), self::$colorMap[$rp->getPath()][$block->getTypeId()])) {
-            self::$colorMap[$rp->getPath()][$block->getTypeId()][$biome->getId()] = $color;
+        if (!array_key_exists($biome->getId(), self::$colorMap[$terrainTextures->getPath()][$block->getTypeId()])) {
+            self::$colorMap[$terrainTextures->getPath()][$block->getTypeId()][$biome->getId()] = $color;
         }
 
         return $color;
@@ -61,12 +62,12 @@ final class ColorMapParser
     /**
      * Get the water color in a given biome using the resource pack
      * @param Biome $biome the biome
-     * @param TerrainTextures $rp the resource pack
+     * @param TerrainTextures $terrainTextures the resource pack
      * @return int the color of the water
      */
-    public static function getWaterColor(Biome $biome, TerrainTextures $rp): int
+    public static function getWaterColor(Biome $biome, TerrainTextures $terrainTextures): int
     {
-        $biomes = json_decode(file_get_contents($rp->getPath() . self::BIOMES_CLIENT), true)["biomes"];
+        $biomes = json_decode(file_get_contents($terrainTextures->getVanillaPath() . self::BIOMES_CLIENT), true)["biomes"];
         $biomeData = $biomes[self::getBiomeName($biome)] ?? $biomes["default"];
 
         $color = $biomeData["water_surface_color"];
@@ -128,18 +129,18 @@ final class ColorMapParser
     /**
      * Get the grass color in the given biome
      * @param Biome $biome the biome
-     * @param TerrainTextures $rp the resource pack
+     * @param TerrainTextures $terrainTextures the resource pack
      * @return int the grass color
      */
-    public static function getGrassColor(Biome $biome, TerrainTextures $rp): int
+    public static function getGrassColor(Biome $biome, TerrainTextures $terrainTextures): int
     {
-        $texture = $rp->getPath() . self::COLOR_MAP_GRASS;
+        $texture = $terrainTextures->getRealTexturePath(self::COLOR_MAP_GRASS);
         $temp = $biome->getTemperature();
         $rain = $biome->getRainfall();
 
         switch ($biome->getId()) {
             case BiomeIds::SWAMPLAND:
-                $texture = $rp->getPath() . self::COLOR_MAP_GRASS_SWAMP;
+                $texture = $terrainTextures->getRealTexturePath(self::COLOR_MAP_GRASS_SWAMP);
                 break;
 
             case BiomeIds::MESA:
@@ -188,18 +189,18 @@ final class ColorMapParser
     /**
      * Get the foliage color inside a biome
      * @param Biome $biome the biome
-     * @param TerrainTextures $rp the resource pack
+     * @param TerrainTextures $terrainTextures the resource pack
      * @return int the foliage color
      */
-    public static function getFoliageColor(Biome $biome, TerrainTextures $rp): int
+    public static function getFoliageColor(Biome $biome, TerrainTextures $terrainTextures): int
     {
-        $texture = $rp->getPath() . self::COLOR_MAP_FOLIAGE;
+        $texture = $terrainTextures->getRealTexturePath(self::COLOR_MAP_FOLIAGE);
         $temp = $biome->getTemperature();
         $rain = $biome->getRainfall();
 
         switch ($biome->getId()) {
             case BiomeIds::SWAMPLAND:
-                $texture = $rp->getPath() . self::COLOR_MAP_FOLIAGE_SWAMP;
+                $texture = $terrainTextures->getRealTexturePath(self::COLOR_MAP_FOLIAGE_SWAMP);
                 break;
 
             case BiomeIds::MESA:
@@ -227,11 +228,10 @@ final class ColorMapParser
      */
     public static function clearCache(): void
     {
-
         // clear cache of all resource packs
-        $rps = array_keys(self::$colorMap);
-        foreach ($rps as $rp) {
-            unset(self::$colorMap[$rp]);
+        $textures = array_keys(self::$colorMap);
+        foreach ($textures as $path) {
+            unset(self::$colorMap[$path]);
         }
     }
 }

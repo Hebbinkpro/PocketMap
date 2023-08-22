@@ -11,7 +11,7 @@ const map = L.map("map", {
 const bounds = [[Number.MIN_SAFE_INTEGER, Number.MIN_SAFE_INTEGER], [Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER]];
 map.fitBounds(bounds);
 
-const mapLayer = L.tileLayer(API_URL+"render/world/{z}/{x},{y}.png", {
+const mapLayer = L.tileLayer(API_URL + "render/world/{z}/{x},{y}.png", {
     minZoom: -4,
     maxZoom: 4,
     attribution: "&copy; 2023 Hebbinkpro",
@@ -62,12 +62,12 @@ async function update(updateTime) {
     let players = await getOnlinePlayers();
 
     // add markers for all online players
-    for(let i in players) {
+    for (let i in players) {
         let player = players[i]
         updateMarker(player);
     }
 
-    for(let uuid in MARKER_CACHE) {
+    for (let uuid in MARKER_CACHE) {
         // player with this uuid is online
         if (players.hasOwnProperty(uuid)) continue;
 
@@ -99,7 +99,7 @@ function updateMarker(player) {
 }
 
 async function getOnlinePlayers() {
-    let req = await fetch(API_URL+"players");
+    let req = await fetch(API_URL + "players");
     return (await req.json())["world"] ?? [];
 }
 
@@ -109,7 +109,7 @@ function getIcon(player) {
 
     if (icon !== null) return icon;
 
-    let headUrl = API_URL+`players/skin/${skinId}.png`;
+    let headUrl = API_URL + `players/skin/${skinId}.png`;
     let skinSize = player["skin"]["size"];
 
     icon = L.icon({

@@ -4,7 +4,7 @@ namespace Hebbinkpro\PocketMap\render;
 
 use Hebbinkpro\PocketMap\task\ChunkRenderTask;
 use Hebbinkpro\PocketMap\task\RenderSchedulerTask;
-use Hebbinkpro\PocketMap\utils\TerrainTextures;
+use Hebbinkpro\PocketMap\terrainTextures\TerrainTextures;
 use pocketmine\world\World;
 
 class WorldRenderer
@@ -33,15 +33,15 @@ class WorldRenderer
     ];
 
     private World $world;
-    private TerrainTextures $rp;
+    private TerrainTextures $terrainTextures;
     private string $renderPath;
     private RenderSchedulerTask $scheduler;
     private ChunkRenderTask $chunkRenderer;
 
-    public function __construct(World $world, TerrainTextures $rp, string $renderPath, RenderSchedulerTask $scheduler, ChunkRenderTask $chunkRenderer)
+    public function __construct(World $world, TerrainTextures $terrainTextures, string $renderPath, RenderSchedulerTask $scheduler, ChunkRenderTask $chunkRenderer)
     {
         $this->world = $world;
-        $this->rp = $rp;
+        $this->terrainTextures = $terrainTextures;
         $this->renderPath = $renderPath;
         $this->scheduler = $scheduler;
         $this->chunkRenderer = $chunkRenderer;
@@ -98,7 +98,7 @@ class WorldRenderer
         $rx = floor($chunkX / $totalChunks);
         $rz = floor($chunkZ / $totalChunks);
 
-        return new Region($this->getWorld()->getFolderName(), $zoom, $rx, $rz, $this->rp);
+        return new Region($this->getWorld()->getFolderName(), $zoom, $rx, $rz, $this->terrainTextures);
     }
 
     /**
@@ -123,7 +123,7 @@ class WorldRenderer
         $rx = floor($chunkX / $totalChunks);
         $rz = floor($chunkZ / $totalChunks);
 
-        return new PartialRegion($this->getWorld()->getFolderName(), $zoom, $rx, $rz, $this->rp);
+        return new PartialRegion($this->getWorld()->getFolderName(), $zoom, $rx, $rz, $this->terrainTextures);
     }
 
     /**
@@ -145,7 +145,7 @@ class WorldRenderer
      */
     public function getResourcePack(): TerrainTextures
     {
-        return $this->rp;
+        return $this->terrainTextures;
     }
 
     /**

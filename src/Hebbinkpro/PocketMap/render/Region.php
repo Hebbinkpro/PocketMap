@@ -6,7 +6,7 @@ use Exception;
 use Generator;
 use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\task\AsyncRegionRenderTask;
-use Hebbinkpro\PocketMap\utils\TerrainTextures;
+use Hebbinkpro\PocketMap\terrainTextures\TerrainTextures;
 
 class Region
 {
@@ -14,20 +14,20 @@ class Region
     private int $zoom;
     private int $x;
     private int $z;
-    private TerrainTextures $rp;
+    private TerrainTextures $terrainTextures;
     private string $tmpFile;
 
 
-    public function __construct(string $worldName, int $zoom, int $regionX, int $regionZ, TerrainTextures $rp)
+    public function __construct(string $worldName, int $zoom, int $regionX, int $regionZ, TerrainTextures $terrainTextures)
     {
         $this->worldName = $worldName;
         $this->zoom = $zoom;
         $this->x = $regionX;
         $this->z = $regionZ;
-        $this->rp = $rp;
+        $this->terrainTextures = $terrainTextures;
 
         $largestRegion = $this->getLargestZoomRegion();
-        $this->tmpFile = PocketMap::getTmpDataPath() . "regions/$this->worldName/{$largestRegion["x"]},{$largestRegion["z"]}.json";
+        $this->tmpFile = PocketMap::getFolder() . "tmp/regions/$this->worldName/{$largestRegion["x"]},{$largestRegion["z"]}.json";
     }
 
     /**
@@ -82,12 +82,12 @@ class Region
     }
 
     /**
-     * Get the resource pack used for rendering the region
+     * Get the terrain textures used for rendering the region
      * @return TerrainTextures
      */
-    public function getResourcePack(): TerrainTextures
+    public function getTerrainTextures(): TerrainTextures
     {
-        return $this->rp;
+        return $this->terrainTextures;
     }
 
     /**

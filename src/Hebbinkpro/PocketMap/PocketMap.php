@@ -7,8 +7,9 @@ use Hebbinkpro\PocketMap\render\WorldRenderer;
 use Hebbinkpro\PocketMap\task\ChunkRenderTask;
 use Hebbinkpro\PocketMap\task\RenderSchedulerTask;
 use Hebbinkpro\PocketMap\task\UpdateApiTask;
+use Hebbinkpro\PocketMap\terrainTextures\TerrainTextures;
+use Hebbinkpro\PocketMap\terrainTextures\TerrainTexturesOptions;
 use Hebbinkpro\PocketMap\utils\ConfigManager;
-use Hebbinkpro\PocketMap\utils\TerrainTextures;
 use Hebbinkpro\WebServer\exception\WebServerException;
 use Hebbinkpro\WebServer\http\HttpRequest;
 use Hebbinkpro\WebServer\http\HttpResponse;
@@ -18,11 +19,7 @@ use Hebbinkpro\WebServer\WebServer;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\event\Listener;
-use pocketmine\item\StringToItemParser;
 use pocketmine\plugin\PluginBase;
-use pocketmine\resourcepacks\ResourcePackException;
-use pocketmine\resourcepacks\ResourcePackManager;
-use pocketmine\resourcepacks\ZippedResourcePack;
 use pocketmine\utils\Config;
 use pocketmine\utils\Filesystem;
 use pocketmine\world\World;
@@ -31,15 +28,13 @@ class PocketMap extends PluginBase implements Listener
 {
     public const CONFIG_VERSION = 1.4;
 
-    public const RESOURCE_PACK_PATH = "resource_packs/";
     public const RESOURCE_PACK_NAME = "v1.20.10.1";
     public const TEXTURE_SIZE = 16;
-    public const RENDER_PATH = "renders/";
 
-    private static ConfigManager $configManager;
-    private static string $tmpDataPath;
+    private static PocketMap $instance;
+    private ConfigManager $configManager;
 
-    private TerrainTextures $resourcePack;
+    private TerrainTextures $terrainTextures;
     private WebServer $webServer;
 
     private RenderSchedulerTask $renderScheduler;
@@ -50,16 +45,12 @@ class PocketMap extends PluginBase implements Listener
 
     public static function getConfigManger(): ConfigManager
     {
-        return self::$configManager;
+        return self::$instance->configManager;
     }
 
-    /**
-     * Get the Tmp data path
-     * @return string
-     */
-    public static function getTmpDataPath(): string
+    public static function getFolder(): string
     {
-        return self::$tmpDataPath;
+        return self::$instance->getDataFolder();
     }
 
     /**
@@ -82,19 +73,19 @@ class PocketMap extends PluginBase implements Listener
      */
     public function createWorldRenderer(World $world): WorldRenderer
     {
-        $path = $this->getDataFolder() . PocketMap::RENDER_PATH . $world->getFolderName() . "/";
-        $renderer = new WorldRenderer($world, $this->getResourcePack(), $path, $this->getRenderScheduler(), $this->chunkRenderer);
+        $path = $this->getDataFolder() . "renders/" . $world->getFolderName() . "/";
+        $renderer = new WorldRenderer($world, $this->getTerrainTextures(), $path, $this->getRenderScheduler(), $this->chunkRenderer);
         $this->worldRenderers[$world->getFolderName()] = $renderer;
         return $renderer;
     }
 
     /**
-     * Get the resource pack
+     * Get the terrain textures
      * @return TerrainTextures
      */
-    public function getResourcePack(): TerrainTextures
+    public function getTerrainTextures(): TerrainTextures
     {
-        return $this->resourcePack;
+        return $this->terrainTextures;
     }
 
     /**
@@ -130,7 +121,7 @@ class PocketMap extends PluginBase implements Listener
         switch ($command->getName()) {
             case "reload":
                 $this->getLogger()->info("Reloading all config files...");
-                $this->loadResources(true);
+                $this->loadConfig();
                 $this->getLogger()->info("All config files are reloaded");
                 break;
 
@@ -142,12 +133,13 @@ class PocketMap extends PluginBase implements Listener
     }
 
     /**
-     * Load all resources in the plugin data folder
-     * @param bool $reloadWebFiles if the web files should be replaced by the files inside the resources folder
+     * Load the config
      * @return void
      */
-    private function loadResources(bool $reloadWebFiles = false): void
+    private function loadConfig(): void
     {
+        $folder = $this->getDataFolder();
+
         // save the config file
         $this->saveDefaultConfig();
 
@@ -159,86 +151,30 @@ class PocketMap extends PluginBase implements Listener
             $this->getLogger()->warning("Replacing 'config.yml v$version' with 'config.yml v" . self::CONFIG_VERSION . "'");
 
             // clone all contents from config.yml inside the backup config
-            file_put_contents($this->getDataFolder() . "config_v$version.yml",
-                file_get_contents($this->getDataFolder() . "config.yml"));
+            file_put_contents($folder . "config_v$version.yml",
+                file_get_contents($folder . "config.yml"));
 
             // save the new config
             $this->saveResource("config.yml", true);
             // update the config to use it in the config manager
             // don't use $this->getConfig(), because that will result in the OLD config
-            $config = new Config($this->getDataFolder()."config.yml");
+            $config = new Config($folder . "config.yml");
         }
 
         // construct the config manager
-        self::$configManager = ConfigManager::fromConfig($config);
-
-        // get startup settings
-        $startupSettings = self::$configManager->getManager("startup", true, ["reload-web-files" => false]);
-
-        $pluginResources = $this->getFile() . "resources/";
-        $data = $this->getDataFolder();
-
-        // load the resource pack files
-        $resourcePacks = "resource_packs/";
-        $defaultPack = $resourcePacks . self::RESOURCE_PACK_NAME;
-        if (!is_dir($data . $resourcePacks) || !is_dir($data . $defaultPack)) {
-            Filesystem::recursiveCopy($pluginResources . $resourcePacks, $data . $resourcePacks);
-        }
-
-        // removes existing web files on startup
-        if ($startupSettings->getBool("reload-web-files") || $reloadWebFiles) {
-            // reload web files on startup
-            Filesystem::recursiveUnlink($this->getDataFolder() . "web");
-        }
-
-        // load the web server files
-        $web = "web/";
-        if (!is_dir($data . $web)) {
-            Filesystem::recursiveCopy($pluginResources . $web, $data . $web);
-        }
-
-        // create the renders folder
-        $renders = "renders/";
-        if (!is_dir($data . $renders)) {
-            mkdir($data . $renders);
-        }
-
-        // create the tmp folder for storing temp data
-
-        self::$tmpDataPath = $data . "tmp/";
-        if (!is_dir(self::$tmpDataPath)) {
-            mkdir(self::$tmpDataPath);
-        }
-
-
-        // create the regions folder inside tmp
-        $tmpRegions = "regions/";
-        if (!is_dir(self::$tmpDataPath . $tmpRegions)) {
-            mkdir(self::$tmpDataPath . $tmpRegions);
-        }
-
-        // create render folders for each world
-        $worldFolders = scandir($this->getServer()->getDataPath() . "worlds/");
-        foreach ($worldFolders as $worldName) {
-            if (!is_dir($data . $renders . $worldName)) {
-                mkdir($data . $renders . $worldName);
-            }
-            if (!is_dir(self::$tmpDataPath . $tmpRegions . $worldName)) {
-                mkdir(self::$tmpDataPath . $tmpRegions . $worldName);
-            }
-        }
-
-        if (!is_dir(self::$tmpDataPath."api")) {
-            mkdir(self::$tmpDataPath."api");
-        }
+        $this->configManager = ConfigManager::fromConfig($config);
     }
 
     protected function onEnable(): void
     {
-        // load all resources
-        $this->loadResources();
+        self::$instance = $this;
 
-        $this->extractResourcePacks();
+        // load all resources
+        $this->loadConfig();
+        $this->generateFolderStructure();
+
+        // load the terrain textures
+        $this->loadTerrainTextures();
 
         WebServer::register($this);
 
@@ -254,158 +190,87 @@ class PocketMap extends PluginBase implements Listener
 
         // start the render scheduler
         $this->renderScheduler = new RenderSchedulerTask($this);
-        $this->getScheduler()->scheduleRepeatingTask($this->renderScheduler, self::$configManager->getInt("renderer.scheduler.run-period", 5));
+        $this->getScheduler()->scheduleRepeatingTask($this->renderScheduler, $this->configManager->getInt("renderer.scheduler.run-period", 5));
 
         // start the chunk update task, this check every period if regions have to be updated
         $this->chunkRenderer = new ChunkRenderTask($this);
-        $this->getScheduler()->scheduleRepeatingTask($this->chunkRenderer, self::$configManager->getInt("renderer.chunk-renderer.run-period", 10));
+        $this->getScheduler()->scheduleRepeatingTask($this->chunkRenderer, $this->configManager->getInt("renderer.chunk-renderer.run-period", 10));
 
         // start the api update task
-        $updateApiTask = new UpdateApiTask($this, self::$tmpDataPath."api/");
-        $this->getScheduler()->scheduleRepeatingTask($updateApiTask, self::$configManager->getInt("api.update-period", 20));
+        $updateApiTask = new UpdateApiTask($this, $this->getDataFolder() . "tmp/api/");
+        $this->getScheduler()->scheduleRepeatingTask($updateApiTask, $this->configManager->getInt("api.update-period", 20));
 
         // register the event listener
         $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
     }
 
-    /**
-     * Extract all resource packs inside the server's resource_packs folder
-     * @return void
-     */
-    private function extractResourcePacks(): void {
-        $textureSettings = self::$configManager->getManager("textures");
+    private function generateFolderStructure(): void
+    {
+        $folder = $this->getDataFolder();
+        $file = $this->getFile();
+
+        // load the resource pack files
+        if (!is_dir($folder . "resource_packs/" . self::RESOURCE_PACK_NAME)) {
+            Filesystem::recursiveCopy($file . "resource_packs", $folder . "resource_packs");
+        }
+
+        // create the renders folder
+        if (!is_dir($folder . "renders")) {
+            mkdir($folder . "renders");
+        }
+
+        if (!is_dir($folder . "tmp")) {
+            mkdir($folder . "tmp");
+        }
+
+        // create the regions folder inside tmp
+        if (!is_dir($folder . "tmp/regions")) {
+            mkdir($folder . "tmp/regions");
+        }
+
+        // create render folders for each world
+        $worldFolders = scandir($this->getServer()->getDataPath() . "worlds/");
+        foreach ($worldFolders as $worldName) {
+            // it's not a world
+            if (!is_dir($this->getServer()->getDataPath() . "worlds/$worldName")
+                || !in_array("level.dat", scandir($this->getServer()->getDataPath() . "worlds/$worldName"))) {
+                continue;
+            }
+
+            if (!is_dir($folder . "renders/$worldName")) {
+                mkdir($folder . "renders/$worldName");
+            }
+            if (!is_dir($folder . "tmp/regions/$worldName")) {
+                mkdir($folder . "tmp/regions/$worldName");
+            }
+        }
+
+        if (!is_dir($folder . "web")) {
+            mkdir($folder . "web");
+            Filesystem::recursiveCopy($this->getFile() . "resources", $this->getDataFolder() . "web");
+        }
+
+        if (!is_dir($folder . "tmp/api")) {
+            mkdir($folder . "tmp/api");
+        }
+    }
+
+    private function loadTerrainTextures(): void
+    {
+        $textureSettings = $this->configManager->getManager("textures");
 
         // get the fallback block
         $fallbackBlockId = $textureSettings->getString("fallback-block", "minecraft:bedrock");
-        $fallbackBlock = StringToItemParser::getInstance()->parse($fallbackBlockId)->getBlock();
 
         // get the height overlay data
         $heightColor = $textureSettings->getInt("height-overlay.color", 0x000000);
         $heightAlpha = $textureSettings->getInt("height-overlay.alpha", 3);
 
-        $path = $this->getDataFolder() . self::RESOURCE_PACK_PATH . self::RESOURCE_PACK_NAME . "/";
+        $options = new TerrainTexturesOptions($fallbackBlockId, $heightColor, $heightAlpha);
 
-        // create the resource pack instance
-        $this->resourcePack = new TerrainTextures($path, self::TEXTURE_SIZE, $fallbackBlock, $heightColor, $heightAlpha);
+        $path = $this->getDataFolder() . "resource_packs/";
 
-        $tmpPath = self::$tmpDataPath."resource_packs";
-        if (!is_dir($tmpPath)) mkdir($tmpPath);
-
-        $lastLoaded = json_decode(file_get_contents("$tmpPath/loaded_packs.json"), true) ?? [];
-
-        $loaded = [];
-
-        $manager = $this->getServer()->getResourcePackManager();
-        $packs = $manager->getPackIdList();
-        foreach ($packs as $uuid) {
-            // get the zipped resource pack
-            $pack = $this->getServer()->getResourcePackManager()->getPackById($uuid);
-            if (!$pack instanceof ZippedResourcePack) continue;
-
-            $key = $manager->getPackEncryptionKey($uuid);
-
-            $filePath = explode("/", $pack->getPath());
-
-            $info = [
-                "uuid" => $pack->getPackId(),
-                "file" => $filePath[array_key_last($filePath)],
-                "version" => $pack->getPackVersion(),
-                "sha256" => utf8_encode($pack->getSha256())
-            ];
-
-            // this pack is already loaded in a previous startup
-            if (in_array($info, $lastLoaded)) {
-                $loaded[$uuid] = $info;
-                continue;
-            }
-
-            if ($this->extractResourcePack($pack, $key)) {
-                $loaded[$uuid] = $info;
-            }
-        }
-
-        foreach (scandir($tmpPath) as $file) {
-            $path = "$tmpPath/$file";
-            // not a dir
-            if (in_array($file, [".", ".."]) || !is_dir($path)) continue;
-
-            // remove unused dirs
-            if (!array_key_exists($file, $loaded)) rmdir($path);
-        }
-
-        // put in the loaded_packs.json which packs have been extracted
-        file_put_contents("$tmpPath/loaded_packs.json", json_encode($loaded));
-    }
-
-    /**
-     * Extracts the given resource pack from the resource_packs folder
-     * @param ZippedResourcePack $pack the pack to extract
-     * @param string|null $key the encryption key
-     * @return bool if the extraction was successful
-     */
-    private function extractResourcePack(ZippedResourcePack $pack, string $key = null): bool {
-        // TODO: encrypted packs
-        if ($key !== null) return false;
-        $uuid = $pack->getPackId();
-
-        // open the zip archive
-        $archive = new \ZipArchive();
-        if(($openResult = $archive->open($pack->getPath())) !== true){
-            throw new ResourcePackException("Encountered ZipArchive error code $openResult while trying to open {$pack->getPath()}");
-        }
-
-        $tmpPath = self::$tmpDataPath."resource_packs/$uuid";
-        if (!is_dir($tmpPath)) mkdir("$tmpPath/textures/blocks", 0777, true);
-
-        $blocks = $archive->getFromName("manifest.json");
-        if ($blocks !== false) file_put_contents("$tmpPath/manifest.json", $blocks);
-        $blocks = $archive->getFromName("blocks.json");
-        if ($blocks !== false) file_put_contents("$tmpPath/blocks.json", $blocks);
-        $terrainTexture = $archive->getFromName("textures/terrain_texture.json");
-        if ($terrainTexture !== false) file_put_contents("$tmpPath/textures/terrain_texture.json", $terrainTexture);
-
-        $texturePaths = [];
-
-        // get all texture paths given in the terrain texture file
-        $terrainTextureData = json_decode($terrainTexture, true);
-        foreach ($terrainTextureData["texture_data"] as $block=>$blockData) {
-            $textures = $blockData["textures"];
-            if (is_string($textures)) $texturePaths[] = $textures;
-            else if (is_array($textures)) {
-                if (isset($textures["path"])) $texturePaths[] = $textures["path"];
-                else {
-                    foreach ($textures as $path) {
-                        $texturePaths[] = $path;
-                    }
-                }
-            }
-        }
-
-        // remove all .png/.tga file extensions from the path names
-        $texturePaths = str_replace([".png", ".tga"], "", $texturePaths);
-
-        // remove all duplicates (if they exist)
-        $texturePaths = array_unique($texturePaths);
-
-        // store all textures
-        foreach ($texturePaths as $path) {
-            $ext = "png";
-            $texture = $archive->getFromName("$path.png");
-
-            // it is possible that some textures use tga instead of png, but it's not that common
-            if ($texture === false) {
-                $ext = "tga";
-                $texture = $archive->getFromName("$path.tga");
-            }
-
-            if ($texture !== false) file_put_contents("$tmpPath/$path.$ext", $texture);
-            else $this->getLogger()->warning("Could not find texture with path '$path' in resource pack '$uuid'");
-        }
-
-        // close the archive
-        $archive->close();
-
-        return true;
+        $this->terrainTextures = TerrainTextures::generate($this, $path, $options);
     }
 
     /**
@@ -415,18 +280,19 @@ class PocketMap extends PluginBase implements Listener
      */
     private function createWebServer(): void
     {
-        $webSettings = self::$configManager->getManager("web-server", true, ["address" => "127.0.0.1", "port" => 3000]);
+        $webFolder = $this->getDataFolder() . "web/";
+
+        $webSettings = $this->configManager->getManager("web-server", true, ["address" => "127.0.0.1", "port" => 3000]);
 
         // create the web server
         $this->webServer = new WebServer($webSettings->getString("address", "127.0.0.1"), $webSettings->getInt("port", 3000));
         $router = $this->webServer->getRouter();
 
         // main route
-        $router->getFile("/", $this->getDataFolder()."web/pages/index.html");
+        $router->getFile("/", $webFolder . "pages/index.html");
 
         // all static files used by web pages
-        $web = $this->getDataFolder() . "web";
-        $router->getStatic("/static", "$web/static");
+        $router->getStatic("/static", $webFolder . "static");
 
         // register the api router
         $router->route("/api/pocketmap", $this->registerApiRoutes());
@@ -442,6 +308,8 @@ class PocketMap extends PluginBase implements Listener
      */
     private function registerApiRoutes(): Router
     {
+        $apiFolder = $this->getDataFolder() . "tmp/api/";
+
         $router = new Router();
 
         $router->get("/", function (HttpRequest $req, HttpResponse $res) {
@@ -450,20 +318,19 @@ class PocketMap extends PluginBase implements Listener
         });
 
         // get the world data
-        $router->getFile("/worlds", self::$tmpDataPath."api/worlds.json", "[]");
+        $router->getFile("/worlds", $apiFolder . "worlds.json", "[]");
 
         // get player data
-        $router->getFile("/players", self::$tmpDataPath."api/players.json", "[]");
+        $router->getFile("/players", $apiFolder . "players.json", "[]");
 
         // get the player heads
-        $router->getStatic("/players/skin", self::$tmpDataPath."api/skin");
+        $router->getStatic("/players/skin", $apiFolder . "skin");
 
         // get image renders
         $router->getStatic("/render", $this->getDataFolder() . "renders");
 
         return $router;
     }
-
 
     protected function onDisable(): void
     {

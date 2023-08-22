@@ -3,6 +3,7 @@
 A dynamic web-based world map for PocketMine-MP servers.
 
 ## What's new in v0.2.x?
+
 Go to the [changelogs](https://github.com/Hebbinkpro/PocketMap/blob/main/changelogs/v0.2.md)
 
 ## How to install

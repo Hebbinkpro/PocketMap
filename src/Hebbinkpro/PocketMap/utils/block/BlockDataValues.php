@@ -2,13 +2,9 @@
 
 namespace Hebbinkpro\PocketMap\utils\block;
 
-use pocketmine\block\BaseBanner;
-use pocketmine\block\Bed;
 use pocketmine\block\Block;
 use pocketmine\block\Candle;
 use pocketmine\block\ChemistryTable;
-use pocketmine\block\Concrete;
-use pocketmine\block\ConcretePowder;
 use pocketmine\block\Crops;
 use pocketmine\block\Door;
 use pocketmine\block\DoublePlant;
@@ -27,8 +23,6 @@ use pocketmine\block\Wall;
 use pocketmine\block\Wood;
 use pocketmine\block\WoodenDoor;
 use pocketmine\block\WoodenFence;
-use pocketmine\block\Wool;
-use pocketmine\color\Color;
 use pocketmine\data\bedrock\block\BlockStateNames as BSN;
 use pocketmine\data\bedrock\block\BlockStateStringValues as BSV;
 use pocketmine\data\bedrock\block\BlockTypeNames as BTN;
@@ -317,7 +311,8 @@ final class BlockDataValues
      * @param DyeColor $color the color to get the value of
      * @return int the color id
      */
-    public static function getColorDataValue(DyeColor $color): int {
+    public static function getColorDataValue(DyeColor $color): int
+    {
         return DyeColorIdMap::getInstance()->toId($color);
 
     }

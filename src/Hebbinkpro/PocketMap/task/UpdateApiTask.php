@@ -4,7 +4,6 @@ namespace Hebbinkpro\PocketMap\task;
 
 use Exception;
 use Hebbinkpro\PocketMap\PocketMap;
-use Hebbinkpro\PocketMap\utils\ConfigManager;
 use Himbeer\LibSkin\LibSkin;
 use Himbeer\LibSkin\SkinConverter;
 use pocketmine\player\Player;
@@ -31,7 +30,8 @@ class UpdateApiTask extends Task
         $this->setPlayerData();
     }
 
-    private function setWorldData(): void {
+    private function setWorldData(): void
+    {
         $worlds = PocketMap::getConfigManger()->getArray("api.worlds");
         if (empty($worlds)) $worlds = array_diff(scandir($this->plugin->getServer()->getDataPath() . "worlds"), [".", ".."]);
 
@@ -50,10 +50,18 @@ class UpdateApiTask extends Task
             ];
         }
 
-        file_put_contents($this->tmpFolder."worlds.json", json_encode($worldData));
+        file_put_contents($this->tmpFolder . "worlds.json", json_encode($worldData));
     }
 
-    private function setPlayerData(): void {
+    private function isWorldVisible(World|string $world): bool
+    {
+        if ($world instanceof World) $world = $world->getFolderName();
+        $list = PocketMap::getConfigManger()->getArray("api.worlds");
+        return empty($list) || in_array($world, $list);
+    }
+
+    private function setPlayerData(): void
+    {
         $onlinePlayers = $this->plugin->getServer()->getOnlinePlayers();
 
         $playerData = [];
@@ -100,12 +108,13 @@ class UpdateApiTask extends Task
         }
 
 
-        file_put_contents($this->tmpFolder."players.json", json_encode($playerData));
+        file_put_contents($this->tmpFolder . "players.json", json_encode($playerData));
     }
 
-    private function updatePlayerSkin(Player $player): void {
+    private function updatePlayerSkin(Player $player): void
+    {
         $skin = $player->getSkin();
-        $skinFile = $this->tmpFolder."skin/{$skin->getSkinId()}.png";
+        $skinFile = $this->tmpFolder . "skin/{$skin->getSkinId()}.png";
         if (file_exists($skinFile)) return;
 
         try {
@@ -119,7 +128,7 @@ class UpdateApiTask extends Task
         // get the size of the image
         $size = LibSkin::SKIN_WIDTH_MAP[strlen($skin->getSkinData())];
         // get the height/width of the head
-        $headSize = $size/8;
+        $headSize = $size / 8;
 
         // create the head img
         $headImg = imagecreatetruecolor(self::HEAD_IMG_SIZE, self::HEAD_IMG_SIZE);
@@ -128,11 +137,5 @@ class UpdateApiTask extends Task
 
         // save the head img
         imagepng($headImg, $skinFile);
-    }
-
-    private function isWorldVisible(World|string $world): bool {
-        if ($world instanceof World) $world = $world->getFolderName();
-        $list = PocketMap::getConfigManger()->getArray("api.worlds");
-        return empty($list) || in_array($world, $list);
     }
 }
