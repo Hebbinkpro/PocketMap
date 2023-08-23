@@ -188,6 +188,7 @@ final class BlockDataValues
         // block uses the ColoredTrait, so it's colored
         if (in_array(ColoredTrait::class, class_uses($block))) {
             // get the color of the block
+            /** @var ColoredTrait $block */
             /** @var DyeColor $color */
             $color = $block->getColor();
 

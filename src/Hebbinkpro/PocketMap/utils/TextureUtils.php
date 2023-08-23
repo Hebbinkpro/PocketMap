@@ -165,7 +165,7 @@ class TextureUtils
             return $img;
         }
 
-        if ($block === null || ($path = $terrainTextures->getBlockTexturePath($block)) === null) {
+        if (($path = $terrainTextures->getBlockTexturePath($block)) === null) {
             // set the path to the fallback texture
             $path = $terrainTextures->getRealTexturePath($terrainTextures->getOptions()->getFallbackBlock());
         }
