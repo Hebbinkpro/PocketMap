@@ -209,6 +209,10 @@ class PocketMap extends PluginBase implements Listener
         $folder = $this->getDataFolder();
         $file = $this->getFile();
 
+        if (!is_dir($folder."resource_packs")) {
+            mkdir($folder."resource_packs");
+        }
+
         // load the resource pack files
         if (!is_dir($folder . "resource_packs/" . self::RESOURCE_PACK_NAME)) {
             Filesystem::recursiveCopy($file . "resource_packs", $folder . "resource_packs");
