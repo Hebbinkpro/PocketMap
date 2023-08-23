@@ -207,7 +207,7 @@ class PocketMap extends PluginBase implements Listener
     private function generateFolderStructure(): void
     {
         $folder = $this->getDataFolder();
-        $file = $this->getFile();
+        $file = $this->getFile()."resources/";
 
         if (!is_dir($folder."resource_packs")) {
             mkdir($folder."resource_packs");
@@ -256,6 +256,10 @@ class PocketMap extends PluginBase implements Listener
 
         if (!is_dir($folder . "tmp/api")) {
             mkdir($folder . "tmp/api");
+        }
+
+        if (!is_dir($folder . "tmp/api/skin")) {
+            mkdir($folder . "tmp/api/skin");
         }
     }
 
