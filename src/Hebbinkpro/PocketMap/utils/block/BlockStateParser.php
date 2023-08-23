@@ -2,7 +2,6 @@
 
 namespace Hebbinkpro\PocketMap\utils\block;
 
-use Hoa\Exception\Exception;
 use pocketmine\block\Block;
 use pocketmine\block\RuntimeBlockStateRegistry;
 use pocketmine\data\bedrock\block\BlockStateData;

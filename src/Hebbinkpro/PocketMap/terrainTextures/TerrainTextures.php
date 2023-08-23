@@ -338,7 +338,8 @@ class TerrainTextures
      * @param string $texturePath
      * @return string
      */
-    public static function cleanTexturePath(string $texturePath): string {
+    public static function cleanTexturePath(string $texturePath): string
+    {
 
         $parts = explode("/", $texturePath);
         $last = $parts[array_key_last($parts)];
@@ -406,7 +407,7 @@ class TerrainTextures
     public function getBlockTexturePath(Block $block): ?string
     {
         $textureName = TextureUtils::getBlockTextureName($block);
-        if ($block instanceof ExampleBlock) var_dump("Texture name: ".($textureName ?? "<NOT FOUND>"));
+        if ($block instanceof ExampleBlock) var_dump("Texture name: " . ($textureName ?? "<NOT FOUND>"));
         if ($textureName === null) return null;
 
         $textures = $this->getTextureByName($textureName);
