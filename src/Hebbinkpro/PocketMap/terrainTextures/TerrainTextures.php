@@ -2,7 +2,6 @@
 
 namespace Hebbinkpro\PocketMap\terrainTextures;
 
-use CustomiesExample\block\ExampleBlock;
 use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\utils\block\BlockDataValues;
 use Hebbinkpro\PocketMap\utils\TextureUtils;
@@ -22,15 +21,11 @@ class TerrainTextures
 
     private string $path;
     private TerrainTexturesOptions $options;
-    private bool $cache;
 
-    private function __construct(string $path, TerrainTexturesOptions $options, bool $cache = true)
+    private function __construct(string $path, TerrainTexturesOptions $options)
     {
         $this->path = $path;
         $this->options = $options;
-        $this->cache = $cache;
-
-        if ($this->cache) $this->getTerrainTextures();
     }
 
     /**
@@ -40,8 +35,6 @@ class TerrainTextures
      */
     public function getTerrainTextures(): array
     {
-        if (!$this->cache) return json_decode(file_get_contents($this->path . self::TERRAIN_TEXTURES), true);
-
         if (empty(self::$blockIndex) && is_file($this->path . self::TERRAIN_TEXTURES)) {
             self::$blockIndex = json_decode(file_get_contents($this->path . self::TERRAIN_TEXTURES), true);
         }
@@ -51,7 +44,6 @@ class TerrainTextures
     public static function generate(PluginBase $plugin, string $path, TerrainTexturesOptions $options): TerrainTextures
     {
         $lastTerrainTextures = self::fromExistingTextures($path, $options);
-        var_dump($lastTerrainTextures !== null ? "Found" : "Not Found");
         $packs = self::extractResourcePacks($path, $plugin->getServer()->getResourcePackManager(), $lastTerrainTextures);
         self::indexBlocks($path, $packs, $lastTerrainTextures);
 
@@ -166,7 +158,7 @@ class TerrainTextures
 
         // get all texture paths given in the terrain texture file
         $terrainTextureData = json_decode($terrainTexture, true);
-        foreach ($terrainTextureData["texture_data"] as $block => $blockData) {
+        foreach ($terrainTextureData["texture_data"] as $blockData) {
             $textures = $blockData["textures"];
             if (is_string($textures)) $texturePaths[] = $textures;
             else if (is_array($textures)) {
@@ -207,20 +199,15 @@ class TerrainTextures
 
     private static function indexBlocks(string $path, array $resourcePacks, ?TerrainTextures $lastTerrainTextures = null): void
     {
-        var_dump("Creating pack index");
 
         $packs = [
             "vanilla" => PocketMap::RESOURCE_PACK_NAME,
             "resource_packs" => $resourcePacks
         ];
 
-        var_dump("New packs:", $packs);
-        var_dump("Old packs:", $lastTerrainTextures?->getPacks() ?? "None");
-
 
         // packs list is the same
         if ($lastTerrainTextures !== null && $lastTerrainTextures->getPacks() === $packs) return;
-        var_dump("Packs do not match, generating a new block index");
 
 
         // create the vanilla index
@@ -407,7 +394,6 @@ class TerrainTextures
     public function getBlockTexturePath(Block $block): ?string
     {
         $textureName = TextureUtils::getBlockTextureName($block);
-        if ($block instanceof ExampleBlock) var_dump("Texture name: " . ($textureName ?? "<NOT FOUND>"));
         if ($textureName === null) return null;
 
         $textures = $this->getTextureByName($textureName);

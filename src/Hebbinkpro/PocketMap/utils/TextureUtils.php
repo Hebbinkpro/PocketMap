@@ -2,7 +2,6 @@
 
 namespace Hebbinkpro\PocketMap\utils;
 
-use CustomiesExample\block\ExampleBlock;
 use GdImage;
 use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\terrainTextures\TerrainTextures;
@@ -170,9 +169,6 @@ class TextureUtils
             // set the path to the fallback texture
             $path = $terrainTextures->getRealTexturePath($terrainTextures->getOptions()->getFallbackBlock());
         }
-
-        if ($block instanceof ExampleBlock) var_dump("Using texture: $path");
-
 
         if (is_file($path . ".png")) $img = imagecreatefrompng($path . ".png");
         else if (is_file($path . ".tga")) $img = imagecreatefromtga($path . ".tga");
