@@ -247,7 +247,7 @@ class PocketMap extends PluginBase implements Listener
 
         if (!is_dir($folder . "web")) {
             mkdir($folder . "web");
-            Filesystem::recursiveCopy($this->getFile() . "resources", $this->getDataFolder() . "web");
+            Filesystem::recursiveCopy($this->getFile() . "resources/web", $this->getDataFolder() . "web");
         }
 
         if (!is_dir($folder . "tmp/api")) {
