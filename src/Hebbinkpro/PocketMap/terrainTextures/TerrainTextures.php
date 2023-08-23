@@ -2,6 +2,7 @@
 
 namespace Hebbinkpro\PocketMap\terrainTextures;
 
+use CustomiesExample\block\ExampleBlock;
 use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\utils\block\BlockDataValues;
 use Hebbinkpro\PocketMap\utils\TextureUtils;
@@ -266,8 +267,23 @@ class TerrainTextures
                 if (!isset($data["textures"])) continue;
                 $textures = $data["textures"];
 
-                if (is_string($textures)) $index[$name] = $textures;
-                if (is_array($textures) && !empty($textures)) $index[$name] = $textures;
+                if (is_string($textures)) $index[$name] = self::cleanTexturePath($textures);
+                if (is_array($textures) && !empty($textures)) {
+                    if (isset($textures["path"])) {
+                        $textures["path"] = self::cleanTexturePath($textures["path"]);
+                        $index[$name] = $textures;
+                        continue;
+                    }
+
+                    $index[$name] = [];
+                    foreach ($textures as $key => $texture) {
+                        if (is_string($texture)) $index[$name][$key] = self::cleanTexturePath($texture);
+                        if (is_array($texture) && isset($texture["path"])) {
+                            $texture["path"] = self::cleanTexturePath($texture["path"]);
+                            $index[$name][$key] = $texture;
+                        }
+                    }
+                }
             }
         }
 
@@ -305,6 +321,23 @@ class TerrainTextures
         }
 
         return $index;
+    }
+
+    /**
+     * Clean a texture path by removing any extensions at the end of it
+     * @param string $texturePath
+     * @return string
+     */
+    public static function cleanTexturePath(string $texturePath): string {
+
+        $parts = explode("/", $texturePath);
+        $last = $parts[array_key_last($parts)];
+
+        if (str_contains($last, ".")) {
+            $parts[array_key_last($parts)] = explode(".", $last)[0];
+        }
+
+        return implode("/", $parts);
     }
 
     /**
@@ -363,6 +396,8 @@ class TerrainTextures
     public function getBlockTexturePath(Block $block): ?string
     {
         $textureName = TextureUtils::getBlockTextureName($block);
+        if ($block instanceof ExampleBlock) var_dump("Texture name: ".($textureName ?? "<NOT FOUND>"));
+        if ($textureName === null) return null;
 
         $textures = $this->getTextureByName($textureName);
 

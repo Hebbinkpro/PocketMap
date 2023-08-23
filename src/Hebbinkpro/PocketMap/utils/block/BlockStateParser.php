@@ -2,10 +2,12 @@
 
 namespace Hebbinkpro\PocketMap\utils\block;
 
+use Hoa\Exception\Exception;
 use pocketmine\block\Block;
 use pocketmine\block\RuntimeBlockStateRegistry;
 use pocketmine\data\bedrock\block\BlockStateData;
-use pocketmine\data\bedrock\block\convert\BlockObjectToStateSerializer;
+use pocketmine\data\bedrock\block\BlockStateSerializeException;
+use pocketmine\world\format\io\GlobalBlockStateHandlers;
 
 final class BlockStateParser
 {
@@ -13,12 +15,16 @@ final class BlockStateParser
     /**
      * Get the BlockStateData of a given block
      * @param Block $block the block to get the BlockStateDate from
-     * @return BlockStateData the block state data of the block
+     * @return BlockStateData|null the block state data of the block
      */
-    public static function getBlockStateData(Block $block): BlockStateData
+    public static function getBlockStateData(Block $block): ?BlockStateData
     {
-        $serializer = new BlockObjectToStateSerializer();
-        return $serializer->serializeBlock($block);
+        try {
+            return GlobalBlockStateHandlers::getSerializer()->serializeBlock($block);
+        } catch (BlockStateSerializeException $e) {
+            // catch the serialize exception, this only occurs when the block does not exist in the serializer
+            return null;
+        }
     }
 
     /**

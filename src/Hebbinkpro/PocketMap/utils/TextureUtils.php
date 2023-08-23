@@ -2,6 +2,7 @@
 
 namespace Hebbinkpro\PocketMap\utils;
 
+use CustomiesExample\block\ExampleBlock;
 use GdImage;
 use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\terrainTextures\TerrainTextures;
@@ -170,6 +171,8 @@ class TextureUtils
             $path = $terrainTextures->getRealTexturePath($terrainTextures->getOptions()->getFallbackBlock());
         }
 
+        if ($block instanceof ExampleBlock) var_dump("Using texture: $path");
+
 
         if (is_file($path . ".png")) $img = imagecreatefrompng($path . ".png");
         else if (is_file($path . ".tga")) $img = imagecreatefromtga($path . ".tga");
@@ -261,28 +264,17 @@ class TextureUtils
     }
 
     /**
-     * Get the texture of a given block
-     * @param Block|null $block the block to get the texture of
-     * @param TerrainTextures $terrainTextures the path to the resource pack
-     * @return string|null the path to the texture or null when not found
-     * @deprecated
-     */
-    public static function getBlockTexture(?Block $block, TerrainTextures $terrainTextures): ?string
-    {
-        return null;
-
-    }
-
-    /**
      * Get the texture name of a block.
      * - In MOST cases, it's just the name with minecraft: removed, or _block_ replaced with _.
      * - There are some exceptions in which that's not the case and this is fixed with the match.
      * @param Block $block the name of the block
-     * @return string the texture name
+     * @return string|null the texture name
      */
-    public static function getBlockTextureName(Block $block): string
+    public static function getBlockTextureName(Block $block): ?string
     {
         $stateData = BlockStateParser::getBlockStateData($block);
+        if ($stateData === null) return null;
+
         $name = match ($stateData->getName()) {
             // replace all (old) logs with log or log2, all new logs have their own name
             BTN::OAK_LOG, BTN::BIRCH_LOG, BTN::SPRUCE_LOG, BTN::JUNGLE_LOG
@@ -306,8 +298,10 @@ class TextureUtils
             default => $stateData->getName()
         };
 
-        // remove minecraft: and _block_ from the name
-        return str_replace(["minecraft:", "_block_"], ["", "_"], $name);
+        // remove prefix from the item if it exists
+        if (str_contains($name, ":")) $name = explode(":", $name)[1];
+        // replace _block_ with _
+        return str_replace("_block_", "_", $name);
     }
 
     /**
