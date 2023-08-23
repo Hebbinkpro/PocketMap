@@ -28,19 +28,6 @@ class TerrainTextures
         $this->options = $options;
     }
 
-    /**
-     * Get the block index.
-     * When cache is enabled, the index will be stored and every call to this function will return the stored value
-     * @return array
-     */
-    public function getTerrainTextures(): array
-    {
-        if (empty(self::$blockIndex) && is_file($this->path . self::TERRAIN_TEXTURES)) {
-            self::$blockIndex = json_decode(file_get_contents($this->path . self::TERRAIN_TEXTURES), true);
-        }
-        return self::$blockIndex;
-    }
-
     public static function generate(PluginBase $plugin, string $path, TerrainTexturesOptions $options): TerrainTextures
     {
         $lastTerrainTextures = self::fromExistingTextures($path, $options);
@@ -115,6 +102,19 @@ class TerrainTextures
     public function getPacks(): array
     {
         return $this->getTerrainTextures()["packs"] ?? [];
+    }
+
+    /**
+     * Get the block index.
+     * When cache is enabled, the index will be stored and every call to this function will return the stored value
+     * @return array
+     */
+    public function getTerrainTextures(): array
+    {
+        if (empty(self::$blockIndex) && is_file($this->path . self::TERRAIN_TEXTURES)) {
+            self::$blockIndex = json_decode(file_get_contents($this->path . self::TERRAIN_TEXTURES), true);
+        }
+        return self::$blockIndex;
     }
 
     /**
