@@ -78,10 +78,11 @@ class RenderSchedulerTask extends Task
      * Run the render scheduler.
      * 1. Run the region chunk loaders
      * 2. Run the region renders
-     * 3. ONLY WHEN THE QUEUE IS EMPTY: clear the cache
      */
     public function onRun(): void
     {
+        var_dump("[DEBUG 1] current:".count(self::$currentRenders).", count:".$this->getCurrentRendersCount().", queue:".count($this->regionRenderQueue));
+
         // run all the chunk loaders
         $this->runRegionChunksLoaders();
         // run the region renders

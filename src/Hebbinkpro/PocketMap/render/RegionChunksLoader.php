@@ -61,7 +61,7 @@ class RegionChunksLoader
         }
 
         $this->finished = !$this->chunkCoords->valid();
-        $this->regionChunks = RegionChunks::addChunks($this->regionChunks, $chunks, $this->finished);
+        $this->regionChunks->addChunks($chunks, $this->finished);
 
         return $this->finished;
     }

@@ -81,20 +81,21 @@ class RegionChunks
 
     /**
      * Add chunks to an uncompleted region chunks instance
-     * @param RegionChunks $regionChunks the region to add chunks to
-     * @param Chunk[] $chunks the chunks to merge with the region
+     * @param Chunk[][] $chunks the chunks to merge with the region
      * @param bool $completed if the region is completed after this merge
-     * @return RegionChunks|null A new instance with merged chunks, or null when the instance was already completed
+     * @return bool false when the region was already completed
      */
-    public static function addChunks(RegionChunks $regionChunks, array $chunks, bool $completed = false): ?RegionChunks
+    public function addChunks(array $chunks, bool $completed = false): bool
     {
         // cannot add chunks to an already completed region chunks instance
-        if ($regionChunks->isCompleted()) return null;
+        if ($this->completed) return false;
 
         // merge the chunks from the region chunks instance and the new chunks together
-        $chunks = ArrayUtils::merge($regionChunks->getChunks(), $chunks);
+        $this->chunks = ArrayUtils::merge($this->chunks, $chunks);
+        $this->completed = $completed;
 
-        return new RegionChunks($regionChunks->getRegion(), $chunks, $completed);
+
+        return true;
     }
 
     /**
@@ -146,10 +147,8 @@ class RegionChunks
             }
         }
 
-        $data = [
+        return serialize([
             "chunks" => $chunkData
-        ];
-
-        return serialize($data);
+        ]);
     }
 }

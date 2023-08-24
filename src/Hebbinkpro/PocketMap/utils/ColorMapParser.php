@@ -23,7 +23,7 @@ final class ColorMapParser
     public const COLOR_MAP_FOLIAGE_SWAMP = "textures/colormap/swamp_foliage.png";
     public const COLOR_MAP_GRASS_SWAMP = "textures/colormap/swamp_grass.png";
 
-    private static array $colorMap = [];
+//    private static array $colorMap = [];
 
     /**
      * Get the color of the given block in the Biome using the resource pack
@@ -34,15 +34,16 @@ final class ColorMapParser
      */
     public static function getColorFromBlock(Block $block, Biome $biome, TerrainTextures $terrainTextures): int
     {
-        if (!array_key_exists($terrainTextures->getPath(), self::$colorMap)) {
-            self::$colorMap[$terrainTextures->getPath()] = [];
-        }
-        if (!array_key_exists($block->getTypeId(), self::$colorMap[$terrainTextures->getPath()])) {
-            self::$colorMap[$terrainTextures->getPath()][$block->getTypeId()] = [];
-        }
+//        if (!array_key_exists($terrainTextures->getPath(), self::$colorMap)) {
+//            self::$colorMap[$terrainTextures->getPath()] = [];
+//        }
+//        if (!array_key_exists($block->getTypeId(), self::$colorMap[$terrainTextures->getPath()])) {
+//            self::$colorMap[$terrainTextures->getPath()][$block->getTypeId()] = [];
+//        }
 
-        // get the color from the cache, or request the color
-        $color = self::$colorMap[$terrainTextures->getPath()][$block->getTypeId()][$biome->getId()] ?? match ($block->getTypeId()) {
+//         //get the color from the cache, or request the color
+//        $color ??= self::$colorMap[$terrainTextures->getPath()][$block->getTypeId()][$biome->getId()];
+        $color = match ($block->getTypeId()) {
             Ids::WATER => self::getWaterColor($biome, $terrainTextures),
             Ids::SPRUCE_LEAVES => self::getColorFromMapFromBiome($biome, $terrainTextures->getRealTexturePath(self::COLOR_MAP_EVERGREEN)),
             Ids::BIRCH_LEAVES => self::getColorFromMapFromBiome($biome, $terrainTextures->getRealTexturePath(self::COLOR_MAP_BIRCH)),
@@ -51,10 +52,10 @@ final class ColorMapParser
             default => -1,
         };
 
-        // if the biome color does not exist, add it to the cache
-        if (!array_key_exists($biome->getId(), self::$colorMap[$terrainTextures->getPath()][$block->getTypeId()])) {
-            self::$colorMap[$terrainTextures->getPath()][$block->getTypeId()][$biome->getId()] = $color;
-        }
+//        // if the biome color does not exist, add it to the cache
+//        if (!array_key_exists($biome->getId(), self::$colorMap[$terrainTextures->getPath()][$block->getTypeId()])) {
+//            self::$colorMap[$terrainTextures->getPath()][$block->getTypeId()][$biome->getId()] = $color;
+//        }
 
         return $color;
     }
@@ -228,10 +229,10 @@ final class ColorMapParser
      */
     public static function clearCache(): void
     {
-        // clear cache of all resource packs
-        $textures = array_keys(self::$colorMap);
-        foreach ($textures as $path) {
-            unset(self::$colorMap[$path]);
-        }
+//        // clear cache of all resource packs
+//        $textures = array_keys(self::$colorMap);
+//        foreach ($textures as $path) {
+//            unset(self::$colorMap[$path]);
+//        }
     }
 }
