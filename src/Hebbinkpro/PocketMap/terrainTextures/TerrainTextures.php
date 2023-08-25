@@ -4,6 +4,7 @@ namespace Hebbinkpro\PocketMap\terrainTextures;
 
 use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\utils\block\BlockDataValues;
+use Hebbinkpro\PocketMap\utils\ResourcePackUtils;
 use Hebbinkpro\PocketMap\utils\TextureUtils;
 use pocketmine\block\Block;
 use pocketmine\plugin\PluginBase;
@@ -138,54 +139,40 @@ class TerrainTextures
         if ($key !== null) return false;
         $uuid = $pack->getPackId();
 
+
         // open the zip archive
         $archive = new ZipArchive();
         if (($openResult = $archive->open($pack->getPath())) !== true) {
             throw new ResourcePackException("Encountered ZipArchive error code $openResult while trying to open {$pack->getPath()}");
         }
 
+
         $rpPath = $path . $uuid . "/";
-        if (!is_dir($rpPath)) mkdir($rpPath . "textures/blocks", 0777, true);
+        if (!is_dir($rpPath)) mkdir($rpPath . ResourcePackUtils::BLOCK_TEXTURES, 0777, true);
 
-        $blocks = $archive->getFromName("manifest.json");
-        if ($blocks !== false) file_put_contents($rpPath . "manifest.json", $blocks);
-        $blocks = $archive->getFromName("blocks.json");
-        if ($blocks !== false) file_put_contents($rpPath . "blocks.json", $blocks);
-        $terrainTexture = $archive->getFromName("textures/terrain_texture.json");
-        if ($terrainTexture !== false) file_put_contents($rpPath . "textures/terrain_texture.json", $terrainTexture);
+        $prefix = ResourcePackUtils::getPrefix($archive);
 
-        $texturePaths = [];
+        $manifest = $archive->getFromName($prefix . ResourcePackUtils::MANIFEST);
 
-        // get all texture paths given in the terrain texture file
-        $terrainTextureData = json_decode($terrainTexture, true);
-        foreach ($terrainTextureData["texture_data"] as $blockData) {
-            $textures = $blockData["textures"];
-            if (is_string($textures)) $texturePaths[] = $textures;
-            else if (is_array($textures)) {
-                if (isset($textures["path"])) $texturePaths[] = $textures["path"];
-                else {
-                    foreach ($textures as $path) {
-                        $texturePaths[] = $path;
-                    }
-                }
-            }
-        }
+        file_put_contents($rpPath . ResourcePackUtils::MANIFEST, $manifest);
 
-        // remove all .png/.tga file extensions from the path names
-        $texturePaths = str_replace([".png", ".tga"], "", $texturePaths);
+        $blocks = $archive->getFromName($prefix . ResourcePackUtils::BLOCKS);
+        if ($blocks !== false) file_put_contents($rpPath . ResourcePackUtils::BLOCKS, $blocks);
 
-        // remove all duplicates (if they exist)
-        $texturePaths = array_unique($texturePaths);
+        $terrainTexture = $archive->getFromName($prefix . ResourcePackUtils::TERRAIN_TEXTURE);
+        if ($terrainTexture !== false) file_put_contents($rpPath . ResourcePackUtils::TERRAIN_TEXTURE, $terrainTexture);
+
+        $blockTextures = ResourcePackUtils::getAllBlockTextures($archive, $prefix);
 
         // store all textures
-        foreach ($texturePaths as $path) {
+        foreach ($blockTextures as $path) {
             $ext = "png";
-            $texture = $archive->getFromName("$path.png");
+            $texture = $archive->getFromName($prefix . "$path.png");
 
             // it is possible that some textures use tga instead of png, but it's not that common
             if ($texture === false) {
                 $ext = "tga";
-                $texture = $archive->getFromName("$path.tga");
+                $texture = $archive->getFromName($prefix . "$path.tga");
             }
 
             if ($texture !== false) file_put_contents($rpPath . "$path.$ext", $texture);
@@ -238,8 +225,8 @@ class TerrainTextures
     private static function getResourcePackBlockIndex(string $path): array
     {
         $blocksTextures = [];
-        if (is_file($path . "blocks.json")) {
-            $contents = json_decode(file_get_contents($path . "blocks.json"), true) ?? [];
+        if (is_file($path . ResourcePackUtils::BLOCKS)) {
+            $contents = json_decode(file_get_contents($path . ResourcePackUtils::BLOCKS), true) ?? [];
 
             foreach ($contents as $name => $data) {
                 if (!isset($data["textures"])) continue;
@@ -257,8 +244,8 @@ class TerrainTextures
 
         // set all contents of terrain_textures.json to the index
         $index = [];
-        if (is_file($path . "textures/terrain_texture.json")) {
-            $contents = json_decode(file_get_contents($path . "textures/terrain_texture.json"), true) ?? [];
+        if (is_file($path . ResourcePackUtils::TERRAIN_TEXTURE)) {
+            $contents = json_decode(file_get_contents($path . ResourcePackUtils::TERRAIN_TEXTURE), true) ?? [];
 
             foreach ($contents["texture_data"] as $name => $data) {
                 if (!isset($data["textures"])) continue;
@@ -314,6 +301,17 @@ class TerrainTextures
                 }
 
                 if (isset($index[$name]) && empty($name)) unset($index[$name]);
+            }
+        }
+
+        foreach (scandir($path . ResourcePackUtils::BLOCK_TEXTURES) as $block) {
+            if (!is_file($path . ResourcePackUtils::BLOCK_TEXTURES . $block)) continue;
+
+            if (str_ends_with($block, ".png") || str_ends_with($block, ".tga")) {
+                $name = str_replace([".png", ".tga"], "", $block);
+                if (!array_key_exists($name, $index)) {
+                    $index[$name] = ResourcePackUtils::BLOCK_TEXTURES . $block;
+                }
             }
         }
 
