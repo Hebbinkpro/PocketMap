@@ -88,6 +88,24 @@ class RegionChunks
     }
 
     /**
+     * Yield all chunks from an encoded region chunks instance
+     * @param string $encodedData
+     * @return Generator|array{int, int, Chunk}
+     */
+    public static function yieldAllEncodedChunks(string $encodedData): Generator|array
+    {
+        /** @var array{chunks: string[][]} $data */
+        $data = unserialize($encodedData);
+
+        foreach ($data["chunks"] as $dx => $dzChunks) {
+            foreach ($dzChunks as $dz => $chunkData) {
+                yield ([$dx, $dz, unserialize($chunkData)]);
+                unset($data["chunks"][$dx][$dz]);
+            }
+        }
+    }
+
+    /**
      * Add chunks to an uncompleted region chunks instance
      * @param Chunk[][] $chunks the chunks to merge with the region
      * @param bool $completed if the region is completed after this merge
@@ -131,24 +149,6 @@ class RegionChunks
     public function getRegion(): Region
     {
         return $this->region;
-    }
-
-    /**
-     * Yield all chunks from an encoded region chunks instance
-     * @param string $encodedData
-     * @return Generator|array{int, int, Chunk}
-     */
-    public static function yieldAllEncodedChunks(string $encodedData): Generator|array
-    {
-        /** @var array{chunks: string[][]} $data */
-        $data = unserialize($encodedData);
-
-        foreach ($data["chunks"] as $dx => $dzChunks) {
-            foreach ($dzChunks as $dz => $chunkData) {
-                yield ([$dx, $dz, unserialize($chunkData)]);
-                unset($data["chunks"][$dx][$dz]);
-            }
-        }
     }
 
     /**

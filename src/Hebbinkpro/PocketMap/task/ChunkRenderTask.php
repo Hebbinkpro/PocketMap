@@ -89,7 +89,6 @@ class ChunkRenderTask extends Task
      */
     public function onRun(): void
     {
-        var_dump("[DEBUG 2] queue:".count($this->queuedRegions).", generator:".count($this->chunkGenerators));
         // add the chunks from the added iterator lists
         $this->loadChunksFromGenerators();
 

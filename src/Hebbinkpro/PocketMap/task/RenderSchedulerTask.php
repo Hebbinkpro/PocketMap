@@ -81,8 +81,6 @@ class RenderSchedulerTask extends Task
      */
     public function onRun(): void
     {
-        var_dump("[DEBUG 1] current:".count(self::$currentRenders).", count:".$this->getCurrentRendersCount().", queue:".count($this->regionRenderQueue));
-
         // run all the chunk loaders
         $this->runRegionChunksLoaders();
         // run the region renders
