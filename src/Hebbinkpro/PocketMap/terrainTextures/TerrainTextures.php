@@ -246,6 +246,7 @@ class TerrainTextures
         $index = [];
         if (is_file($path . ResourcePackUtils::TERRAIN_TEXTURE)) {
             $contents = json_decode(file_get_contents($path . ResourcePackUtils::TERRAIN_TEXTURE), true) ?? [];
+            if (!isset($contents["texture_data"])) $contents["texture_data"] = [];
 
             foreach ($contents["texture_data"] as $name => $data) {
                 if (!isset($data["textures"])) continue;
