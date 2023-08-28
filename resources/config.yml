@@ -1,5 +1,5 @@
 # the config.yml version DO NOT CHANGE
-version: 1.4
+version: 1.5
 
 # Settings for the renderer
 renderer:
@@ -12,6 +12,8 @@ renderer:
     # A too low number will cause a slower map generation
     # Default: 128
     chunks-per-run: 128
+    # Max amount of chunks that can be queued at the same time
+    queue-size: 256
 
   # Settings for the chunk renderer
   # The chunk renderer manages when a chunk is added to the scheduler
@@ -30,8 +32,8 @@ renderer:
     # How many chunks there can be yielded from a generator
     # This is used for rendering full worlds, the generator yields all chunks inside the world
     # The best is to yield a bit more than the scheduler can handle simultaneously
-    # Default: 10
-    generator-yield: 10
+    # Default: 16
+    generator-yield: 16
 
   scheduler:
     # in which interval in ticks the chunk renderer will run
@@ -39,11 +41,11 @@ renderer:
     run-period: 5
     # the amount of simultaneous renders
     # A render is the image that is generated
-    # Default: 5
-    renders: 5
+    # Default: 4
+    renders: 4
     # The queue size of the scheduler
-    # Default: 25
-    queue-size: 25
+    # Default: 16
+    queue-size: 16
 
 
 # Settings for the web server

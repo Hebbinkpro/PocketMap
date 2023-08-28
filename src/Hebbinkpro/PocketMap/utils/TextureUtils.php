@@ -17,7 +17,7 @@ use pocketmine\world\World;
 
 class TextureUtils
 {
-//    private static array $blockTextureMap = [];
+    private static array $blockTextureMap = [];
 
     /**
      * Get the total amount of visible blocks that can be shown on the given amount of pixels
@@ -63,8 +63,8 @@ class TextureUtils
             BlockTypeIds::DOUBLE_TALLGRASS
         ];
 
-        //$totalBlocks = self::getTotalBlocks($maxTextureSize);
-        //$pixelsPerBlock = self::getPixelsPerBlock($maxTextureSize, $totalBlocks);
+//        $totalBlocks = self::getTotalBlocks($maxTextureSize);
+//        $pixelsPerBlock = self::getPixelsPerBlock($maxTextureSize, $totalBlocks);
         $textureSize = $totalBlocks * $pixelsPerBlock;
 
         $texture = imagecreatetruecolor($textureSize, $textureSize);
@@ -146,24 +146,24 @@ class TextureUtils
      */
     public static function createBlockTexture(Block $block, Biome $biome, TerrainTextures $terrainTextures): GdImage
     {
-//        if (!array_key_exists($terrainTextures->getPath(), self::$blockTextureMap)) {
-//            self::$blockTextureMap[$terrainTextures->getPath()] = [];
-//        }
-//        if (!array_key_exists($block->getTypeId(), self::$blockTextureMap[$terrainTextures->getPath()])) {
-//            self::$blockTextureMap[$terrainTextures->getPath()][$block->getTypeId()] = [];
-//        }
-//
-//        // texture exists in the cache, return it
-//        if (array_key_exists($biome->getId(), self::$blockTextureMap[$terrainTextures->getPath()][$block->getTypeId()])) {
-//            $cacheImg = self::$blockTextureMap[$terrainTextures->getPath()][$block->getTypeId()][$biome->getId()];
-//
-//            // create image and copy the cache data to it
-//            $img = imagecreatetruecolor(PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
-//            imagecopy($img, $cacheImg, 0, 0, 0, 0, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
-//
-//            // return the copy of the cached image
-//            return $img;
-//        }
+        if (!array_key_exists($terrainTextures->getPath(), self::$blockTextureMap)) {
+            self::$blockTextureMap[$terrainTextures->getPath()] = [];
+        }
+        if (!array_key_exists($block->getTypeId(), self::$blockTextureMap[$terrainTextures->getPath()])) {
+            self::$blockTextureMap[$terrainTextures->getPath()][$block->getTypeId()] = [];
+        }
+
+        // texture exists in the cache, return it
+        if (array_key_exists($biome->getId(), self::$blockTextureMap[$terrainTextures->getPath()][$block->getTypeId()])) {
+            $cacheImg = self::$blockTextureMap[$terrainTextures->getPath()][$block->getTypeId()][$biome->getId()];
+
+            // create image and copy the cache data to it
+            $img = imagecreatetruecolor(PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
+            imagecopy($img, $cacheImg, 0, 0, 0, 0, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
+
+            // return the copy of the cached image
+            return $img;
+        }
 
         if (($path = $terrainTextures->getBlockTexturePath($block)) === null) {
             // set the path to the fallback texture
@@ -306,19 +306,19 @@ class TextureUtils
      */
     public static function clearCache(): void
     {
-//        // destroy all stored images
-//        foreach (self::$blockTextureMap as $blocks) {
-//            foreach ($blocks as $biomes) {
-//                foreach ($biomes as $img) {
-//                    imagedestroy($img);
-//                }
-//            }
-//        }
-//
-//        // clear cache of all resource packs
-//        $textures = array_keys(self::$blockTextureMap);
-//        foreach ($textures as $path) {
-//            unset(self::$blockTextureMap[$path]);
-//        }
+        // destroy all stored images
+        foreach (self::$blockTextureMap as $blocks) {
+            foreach ($blocks as $biomes) {
+                foreach ($biomes as $img) {
+                    imagedestroy($img);
+                }
+            }
+        }
+
+        // clear cache of all resource packs
+        $textures = array_keys(self::$blockTextureMap);
+        foreach ($textures as $path) {
+            unset(self::$blockTextureMap[$path]);
+        }
     }
 }

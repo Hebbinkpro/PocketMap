@@ -20,11 +20,19 @@ class RegionChunks
     private array $chunks;
     private bool $completed;
 
+    /**
+     * The RegionChunks becomes invalid when $this->encode() is called, $this->chunks will be cleared.
+     * Because of this, this class will become unusable.
+     * @var bool
+     */
+    private bool $valid;
+
     private function __construct(Region $region, array $chunks = [], bool $completed = false)
     {
         $this->region = $region;
         $this->chunks = $chunks;
         $this->completed = $completed;
+        $this->valid = true;
     }
 
     /**
@@ -83,12 +91,12 @@ class RegionChunks
      * Add chunks to an uncompleted region chunks instance
      * @param Chunk[][] $chunks the chunks to merge with the region
      * @param bool $completed if the region is completed after this merge
-     * @return bool false when the region was already completed
+     * @return bool false when the region was already completed or when it is invalid
      */
     public function addChunks(array $chunks, bool $completed = false): bool
     {
         // cannot add chunks to an already completed region chunks instance
-        if ($this->completed) return false;
+        if ($this->completed || !$this->valid) return false;
 
         // merge the chunks from the region chunks instance and the new chunks together
         $this->chunks = ArrayUtils::merge($this->chunks, $chunks);
@@ -105,6 +113,15 @@ class RegionChunks
     public function isCompleted(): bool
     {
         return $this->completed;
+    }
+
+    /**
+     * If this instance is still valid
+     * @return bool
+     */
+    public function isValid(): bool
+    {
+        return $this->valid;
     }
 
     /**
@@ -129,6 +146,7 @@ class RegionChunks
         foreach ($data["chunks"] as $dx => $dzChunks) {
             foreach ($dzChunks as $dz => $chunkData) {
                 yield ([$dx, $dz, unserialize($chunkData)]);
+                unset($data["chunks"][$dx][$dz]);
             }
         }
     }
@@ -144,8 +162,13 @@ class RegionChunks
             $chunkData[$dx] = [];
             foreach ($dzChunks as $dz => $chunk) {
                 $chunkData[$dx][$dz] = serialize($chunk);
+                unset($this->chunks[$dx][$dz]);
             }
         }
+
+        // destroy the chunk cache from the memory, WE NEED SPACE
+        unset($this->chunks);
+        $this->valid = false;
 
         return serialize([
             "chunks" => $chunkData

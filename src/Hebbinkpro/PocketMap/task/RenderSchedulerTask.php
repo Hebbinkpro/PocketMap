@@ -60,7 +60,7 @@ class RenderSchedulerTask extends Task
     public function scheduleRegionRender(string $path, Region $region, bool $force = false): bool
     {
         // when the action is not forced or the region is already in the scheduler, don't add the region
-        if ((!$force && count($this->regionRenderQueue) > $this->maxQueueSize) ||
+        if ((!$force && count($this->regionRenderQueue) >= $this->maxQueueSize) ||
             in_array("$region", self::$currentRenders)) return false;
 
         self::$currentRenders[] = "$region";
@@ -130,6 +130,8 @@ class RenderSchedulerTask extends Task
             $notCompleted[] = $rcl;
         }
 
+        // clear the list and set the contents to the notCompleted regions.
+        unset($this->regionChunksLoaders);
         $this->regionChunksLoaders = $notCompleted;
     }
 

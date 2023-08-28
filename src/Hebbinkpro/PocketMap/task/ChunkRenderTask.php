@@ -26,6 +26,8 @@ class ChunkRenderTask extends Task
 
     private bool $enableCache;
 
+    private int $maxQueueSize;
+
     public function __construct(PocketMap $pocketMap)
     {
         $this->pocketMap = $pocketMap;
@@ -33,6 +35,7 @@ class ChunkRenderTask extends Task
         $this->chunkGenerators = [];
 
         $this->enableCache = PocketMap::getConfigManger()->getBool("renderer.chunk-renderer.region-cache", true);
+        $this->maxQueueSize = PocketMap::getConfigManger()->getInt("chunk-loader.queue-size", 256);
 
         if ($this->enableCache) $this->readFromCache();
     }
@@ -142,7 +145,7 @@ class ChunkRenderTask extends Task
             /** @var Generator $chunks */
             $chunks = $worldChunks["chunks"];
 
-            while ($chunks->valid() && $loaded < $maxLoad) {
+            while ($chunks->valid() && $loaded < $maxLoad && count($this->queuedRegions) < $this->maxQueueSize) {
                 [$cx, $cz] = $chunks->key();
                 $this->addChunk($renderer, $cx, $cz);
                 $chunks->next();
@@ -156,9 +159,7 @@ class ChunkRenderTask extends Task
             }
 
             // the max amount of chunks of this run is loaded
-            if ($loaded >= $maxLoad) {
-                return;
-            }
+            if ($loaded >= $maxLoad || count($this->queuedRegions) >= $this->maxQueueSize) break;
         }
 
         foreach ($finished as $worldName) {

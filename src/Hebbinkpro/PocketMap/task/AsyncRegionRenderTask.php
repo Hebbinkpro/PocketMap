@@ -127,8 +127,12 @@ class AsyncRegionRenderTask extends AsyncTask
         $imgChunkSize = $totalBlocks * $imgPixelsPerBlock;
 
         $chunks = [];
+
+        $regionChunksGenerator = RegionChunks::yieldAllEncodedChunks($this->regionChunks);
+        unset($this->regionChunks);
+
         // yield all chunks
-        foreach (RegionChunks::yieldAllEncodedChunks($this->regionChunks) as [$cx, $cz, $chunk]) {
+        foreach ($regionChunksGenerator as [$cx, $cz, $chunk]) {
             // save the chunk to the region data
             $chunks[] = [$cx, $cz];
 
