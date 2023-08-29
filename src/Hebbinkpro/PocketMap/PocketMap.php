@@ -2,8 +2,6 @@
 
 namespace Hebbinkpro\PocketMap;
 
-use customiesdevs\customies\block\CustomiesBlockFactory;
-use customiesdevs\customies\Customies;
 use Exception;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
 use Hebbinkpro\PocketMap\task\ChunkRenderTask;
@@ -18,7 +16,6 @@ use Hebbinkpro\WebServer\http\HttpResponse;
 use Hebbinkpro\WebServer\libs\Laravel\SerializableClosure\Exceptions\PhpVersionNotSupportedException;
 use Hebbinkpro\WebServer\route\Router;
 use Hebbinkpro\WebServer\WebServer;
-use pocketmine\block\VanillaBlocks;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\event\Listener;

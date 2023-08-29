@@ -4,7 +4,6 @@ namespace Hebbinkpro\PocketMap\textures;
 
 use Hebbinkpro\PocketMap\utils\TextureUtils;
 use pocketmine\block\Block;
-use pocketmine\block\RuntimeBlockStateRegistry;
 use pocketmine\block\VanillaBlocks;
 
 class TerrainTexturesOptions

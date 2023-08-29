@@ -6,6 +6,14 @@ A dynamic web-based world map for PocketMine-MP servers.
 
 Go to the [changelogs](https://github.com/Hebbinkpro/PocketMap/blob/main/changelogs/v0.3.md)
 
+### Planned for v0.4.0
+
+V0.4.0 will add major improvements to the renders.
+
+- Show the correct block faces
+- Show blocks underwater
+-
+
 ## How to install
 
 1. Download the newest version of the plugin from [Poggit CI](https://poggit.pmmp.io/ci/Hebbinkpro/PocketMap)
@@ -34,17 +42,13 @@ them [here](https://github.com/Hebbinkpro/PocketMap/issues)!
 
 ## TO DO
 
-This is a list of all things that have to be added
-
-### Configuration
-
-- Add settings for rendering.
-- Add settings for resource packs.
+This is a list of all things that have to be added before the release of v1.0.0
 
 ### WebPage
 
-- Make online user images good-looking
 - Multiple worlds support
+- List of all online players
+- Better UI
 
 ### Renderer
 
@@ -52,10 +56,6 @@ This is a list of all things that have to be added
 - Render opaque block under transparent blocks (leaves, glass, etc)
 - Display blocks under the water surface (Block has the water texture overtop)
 - Water diffusion (Visibility of blocks underwater depends on their depth)
-
-### Resource packs
-
-- Functionality to add and use custom resource packs for the renders.
 
 ## Credits
 
