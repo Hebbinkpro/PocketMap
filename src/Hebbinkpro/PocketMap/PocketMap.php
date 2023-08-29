@@ -2,13 +2,15 @@
 
 namespace Hebbinkpro\PocketMap;
 
+use customiesdevs\customies\block\CustomiesBlockFactory;
+use customiesdevs\customies\Customies;
 use Exception;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
 use Hebbinkpro\PocketMap\task\ChunkRenderTask;
 use Hebbinkpro\PocketMap\task\RenderSchedulerTask;
 use Hebbinkpro\PocketMap\task\UpdateApiTask;
-use Hebbinkpro\PocketMap\terrainTextures\TerrainTextures;
-use Hebbinkpro\PocketMap\terrainTextures\TerrainTexturesOptions;
+use Hebbinkpro\PocketMap\textures\TerrainTextures;
+use Hebbinkpro\PocketMap\textures\TerrainTexturesOptions;
 use Hebbinkpro\PocketMap\utils\ConfigManager;
 use Hebbinkpro\WebServer\exception\WebServerException;
 use Hebbinkpro\WebServer\http\HttpRequest;
@@ -16,9 +18,11 @@ use Hebbinkpro\WebServer\http\HttpResponse;
 use Hebbinkpro\WebServer\libs\Laravel\SerializableClosure\Exceptions\PhpVersionNotSupportedException;
 use Hebbinkpro\WebServer\route\Router;
 use Hebbinkpro\WebServer\WebServer;
+use pocketmine\block\VanillaBlocks;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\event\Listener;
+use pocketmine\item\StringToItemParser;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\Config;
 use pocketmine\utils\Filesystem;
@@ -269,12 +273,13 @@ class PocketMap extends PluginBase implements Listener
 
         // get the fallback block
         $fallbackBlockId = $textureSettings->getString("fallback-block", "minecraft:bedrock");
+        $fallbackBlock = StringToItemParser::getInstance()->parse($fallbackBlockId)?->getBlock() ?? null;
 
         // get the height overlay data
         $heightColor = $textureSettings->getInt("height-overlay.color", 0x000000);
         $heightAlpha = $textureSettings->getInt("height-overlay.alpha", 3);
 
-        $options = new TerrainTexturesOptions($fallbackBlockId, $heightColor, $heightAlpha);
+        $options = new TerrainTexturesOptions($fallbackBlock, $heightColor, $heightAlpha);
 
         $path = $this->getDataFolder() . "resource_packs/";
 

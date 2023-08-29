@@ -4,7 +4,7 @@ namespace Hebbinkpro\PocketMap\utils;
 
 use GdImage;
 use Hebbinkpro\PocketMap\PocketMap;
-use Hebbinkpro\PocketMap\terrainTextures\TerrainTextures;
+use Hebbinkpro\PocketMap\textures\TerrainTextures;
 use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
 use Hebbinkpro\PocketMap\utils\block\old\OldBlockTypeNames as OBTN;
 use pocketmine\block\Block;

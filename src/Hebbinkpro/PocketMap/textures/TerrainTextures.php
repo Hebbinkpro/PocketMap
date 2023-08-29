@@ -1,6 +1,6 @@
 <?php
 
-namespace Hebbinkpro\PocketMap\terrainTextures;
+namespace Hebbinkpro\PocketMap\textures;
 
 use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\utils\block\BlockDataValues;
@@ -56,7 +56,7 @@ class TerrainTextures
         if (!is_dir($rpPath)) mkdir($rpPath);
 
         $lastLoaded = [];
-        if ($lastTerrainTextures !== null) $lastTerrainTextures->getPacks() ?? [];
+        if ($lastTerrainTextures !== null) $lastLoaded = $lastTerrainTextures->getPacks()["resource_packs"] ?? [];
 
         $loaded = [];
 
@@ -166,16 +166,8 @@ class TerrainTextures
 
         // store all textures
         foreach ($blockTextures as $path) {
-            $ext = "png";
-            $texture = $archive->getFromName($prefix . "$path.png");
-
-            // it is possible that some textures use tga instead of png, but it's not that common
-            if ($texture === false) {
-                $ext = "tga";
-                $texture = $archive->getFromName($prefix . "$path.tga");
-            }
-
-            if ($texture !== false) file_put_contents($rpPath . "$path.$ext", $texture);
+            $texture = $archive->getFromName($prefix . $path);
+            if ($texture !== false) file_put_contents($rpPath . $path, $texture);
         }
 
         // close the archive
@@ -272,6 +264,16 @@ class TerrainTextures
             }
         }
 
+        foreach (scandir($path . ResourcePackUtils::BLOCK_TEXTURES) as $block) {
+            if (!is_file($path . ResourcePackUtils::BLOCK_TEXTURES . $block)) continue;
+
+            if (str_ends_with($block, ".png") || str_ends_with($block, ".tga")) {
+                $name = str_replace([".png", ".tga"], "", $block);
+                if (!array_key_exists($name, $index)) {
+                    $index[$name] = ResourcePackUtils::BLOCK_TEXTURES . $name;
+                }
+            }
+        }
 
         // check all blocks.json entries and map them to the correct textures
         $replacements = [];
@@ -302,17 +304,6 @@ class TerrainTextures
                 }
 
                 if (isset($index[$name]) && empty($name)) unset($index[$name]);
-            }
-        }
-
-        foreach (scandir($path . ResourcePackUtils::BLOCK_TEXTURES) as $block) {
-            if (!is_file($path . ResourcePackUtils::BLOCK_TEXTURES . $block)) continue;
-
-            if (str_ends_with($block, ".png") || str_ends_with($block, ".tga")) {
-                $name = str_replace([".png", ".tga"], "", $block);
-                if (!array_key_exists($name, $index)) {
-                    $index[$name] = ResourcePackUtils::BLOCK_TEXTURES . $block;
-                }
             }
         }
 

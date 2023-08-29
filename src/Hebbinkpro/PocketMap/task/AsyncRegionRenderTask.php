@@ -4,8 +4,8 @@ namespace Hebbinkpro\PocketMap\task;
 
 use Exception;
 use GdImage;
-use Hebbinkpro\PocketMap\render\Region;
-use Hebbinkpro\PocketMap\render\RegionChunks;
+use Hebbinkpro\PocketMap\region\Region;
+use Hebbinkpro\PocketMap\region\RegionChunks;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
 use Hebbinkpro\PocketMap\utils\ColorMapParser;
 use Hebbinkpro\PocketMap\utils\TextureUtils;

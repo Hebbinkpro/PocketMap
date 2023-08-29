@@ -2,9 +2,11 @@
 
 namespace Hebbinkpro\PocketMap\render;
 
+use Hebbinkpro\PocketMap\region\PartialRegion;
+use Hebbinkpro\PocketMap\region\Region;
 use Hebbinkpro\PocketMap\task\ChunkRenderTask;
 use Hebbinkpro\PocketMap\task\RenderSchedulerTask;
-use Hebbinkpro\PocketMap\terrainTextures\TerrainTextures;
+use Hebbinkpro\PocketMap\textures\TerrainTextures;
 use pocketmine\world\World;
 
 class WorldRenderer

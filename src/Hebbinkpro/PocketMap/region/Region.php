@@ -1,12 +1,13 @@
 <?php
 
-namespace Hebbinkpro\PocketMap\render;
+namespace Hebbinkpro\PocketMap\region;
 
 use Exception;
 use Generator;
 use Hebbinkpro\PocketMap\PocketMap;
+use Hebbinkpro\PocketMap\render\WorldRenderer;
 use Hebbinkpro\PocketMap\task\AsyncRegionRenderTask;
-use Hebbinkpro\PocketMap\terrainTextures\TerrainTextures;
+use Hebbinkpro\PocketMap\textures\TerrainTextures;
 
 class Region
 {

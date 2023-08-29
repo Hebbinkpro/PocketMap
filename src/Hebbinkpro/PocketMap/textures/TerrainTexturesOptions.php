@@ -1,6 +1,11 @@
 <?php
 
-namespace Hebbinkpro\PocketMap\terrainTextures;
+namespace Hebbinkpro\PocketMap\textures;
+
+use Hebbinkpro\PocketMap\utils\TextureUtils;
+use pocketmine\block\Block;
+use pocketmine\block\RuntimeBlockStateRegistry;
+use pocketmine\block\VanillaBlocks;
 
 class TerrainTexturesOptions
 {
@@ -9,9 +14,11 @@ class TerrainTexturesOptions
     private int $heightColor;
     private int $heightAlpha;
 
-    public function __construct(string $fallbackBlock = "minecraft:bedrock", int $heightColor = 0x000000, int $heightAlpha = 0)
+    public function __construct(?Block $fallbackBlock = null, int $heightColor = 0x000000, int $heightAlpha = 0)
     {
-        $this->fallbackBlock = $fallbackBlock;
+        if ($fallbackBlock === null) $fallbackBlock = VanillaBlocks::BEDROCK();
+
+        $this->fallbackBlock = TextureUtils::getBlockTextureName($fallbackBlock);
         $this->heightColor = $heightColor;
         $this->heightAlpha = $heightAlpha;
     }

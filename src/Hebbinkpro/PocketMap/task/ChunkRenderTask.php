@@ -4,8 +4,8 @@ namespace Hebbinkpro\PocketMap\task;
 
 use Generator;
 use Hebbinkpro\PocketMap\PocketMap;
-use Hebbinkpro\PocketMap\render\PartialRegion;
-use Hebbinkpro\PocketMap\render\Region;
+use Hebbinkpro\PocketMap\region\PartialRegion;
+use Hebbinkpro\PocketMap\region\Region;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
 use pocketmine\scheduler\Task;
 

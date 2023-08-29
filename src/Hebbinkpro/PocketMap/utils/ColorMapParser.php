@@ -2,7 +2,7 @@
 
 namespace Hebbinkpro\PocketMap\utils;
 
-use Hebbinkpro\PocketMap\terrainTextures\TerrainTextures;
+use Hebbinkpro\PocketMap\textures\TerrainTextures;
 use pocketmine\block\Block;
 use pocketmine\block\BlockTypeIds as Ids;
 use pocketmine\data\bedrock\BiomeIds;

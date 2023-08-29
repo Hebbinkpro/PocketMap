@@ -3,10 +3,10 @@
 namespace Hebbinkpro\PocketMap\task;
 
 use Hebbinkpro\PocketMap\PocketMap;
-use Hebbinkpro\PocketMap\render\PartialRegion;
-use Hebbinkpro\PocketMap\render\Region;
-use Hebbinkpro\PocketMap\render\RegionChunks;
-use Hebbinkpro\PocketMap\render\RegionChunksLoader;
+use Hebbinkpro\PocketMap\region\PartialRegion;
+use Hebbinkpro\PocketMap\region\Region;
+use Hebbinkpro\PocketMap\region\RegionChunks;
+use Hebbinkpro\PocketMap\region\RegionChunksLoader;
 use Logger;
 use pocketmine\plugin\PluginBase;
 use pocketmine\scheduler\Task;

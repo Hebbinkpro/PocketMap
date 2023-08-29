@@ -1,10 +1,10 @@
 <?php
 
-namespace Hebbinkpro\PocketMap\render;
+namespace Hebbinkpro\PocketMap\region;
 
 use Generator;
 use Hebbinkpro\PocketMap\task\AsyncRegionRenderTask;
-use Hebbinkpro\PocketMap\terrainTextures\TerrainTextures;
+use Hebbinkpro\PocketMap\textures\TerrainTextures;
 
 /**
  * A normal Region, but with a generator looping through set chunks instead of all chunks that are in the region.

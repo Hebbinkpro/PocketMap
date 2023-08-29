@@ -1,6 +1,6 @@
 <?php
 
-namespace Hebbinkpro\PocketMap\render;
+namespace Hebbinkpro\PocketMap\region;
 
 use Generator;
 use Hebbinkpro\PocketMap\PocketMap;
