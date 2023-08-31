@@ -97,13 +97,9 @@ class TextureUtils
 
                 $biomeId = $chunk->getBiomeId($bdx, $y, $bdz);
                 $biome = BiomeRegistry::getInstance()->getBiome($biomeId);
-                $blockTexture = self::createCompressedBlockTexture($block, $biome, $terrainTextures, $pixelsPerBlock);
 
-                if (in_array(PillarRotationTrait::class, class_uses($block::class))) {
-                    /** @var PillarRotationTrait $block */
-                    //var_dump($block->getAxis());
-                    $blockTexture = self::rotateOnAxis($blockTexture, $block->getAxis());
-                }
+                $blockTexture = self::createCompressedBlockTexture($block, $biome, $terrainTextures, $pixelsPerBlock);
+                $blockTexture = self::rotateOnAxis($blockTexture, BlockStateParser::getBlockAxis($block));
 
                 if ($y % 2 != 0 && ($alpha = $terrainTextures->getOptions()->getHeightOverlayAlpha()) > 0) {
                     $color = $terrainTextures->getOptions()->getHeightOverlayColor();
@@ -249,17 +245,23 @@ class TextureUtils
 
     }
 
+    /**
+     * Rotate an image on the given axis
+     * @param GdImage $image
+     * @param int $axis
+     * @return GdImage
+     */
     public static function rotateOnAxis(GdImage $image, int $axis): GdImage
     {
         $angle = 0;
-        if ($axis == Axis::X) $angle = 90;
+        if ($axis == Axis::X) $angle = 270;
         else if ($axis === Axis::Z) $angle = 180;
 
         // angle of 0 does not have to be rotated
         if ($angle == 0) return $image;
 
         // rotate the image
-        return imagerotate($image, 360-$angle, 0);
+        return imagerotate($image, $angle, 0);
     }
 
     /**

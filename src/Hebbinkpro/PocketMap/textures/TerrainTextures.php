@@ -4,6 +4,7 @@ namespace Hebbinkpro\PocketMap\textures;
 
 use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\utils\block\BlockDataValues;
+use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
 use Hebbinkpro\PocketMap\utils\ResourcePackUtils;
 use Hebbinkpro\PocketMap\utils\TextureUtils;
 use pocketmine\block\Block;
@@ -403,25 +404,16 @@ class TerrainTextures
         // check if the textures has some rotations
         $faceIntersect = array_intersect(array_keys($textures), ["up", "down", "side", "north", "east", "south", "west"]);
         if (!empty($faceIntersect)) {
+            $axis = BlockStateParser::getBlockAxis($block);
 
-            if (in_array(PillarRotationTrait::class, class_uses($block::class))) {
-                /** @var PillarRotationTrait $block */
-                $faces = match ($block->getAxis()) {
-                    Axis::X => ["side", "east"],
-                    Axis::Z => ["side", "south"],
-                    default => ["up"],
-                };
-                $validFaces = array_intersect($faces, $faceIntersect);
-                if (count($validFaces) >= 1) $face = $validFaces[0];
-                else $face = array_key_first($textures);
+            $faces = match ($axis) {
+                Axis::X => ["side", "east"],
+                Axis::Z => ["side", "south"],
+                default => ["up", array_key_first($textures)],
+            };
 
-                var_dump("Block: ".Axis::toString($block->getAxis()).", Texture: ".$face);
-
-                $blockTextures ??= $textures[$face];
-            } else {
-                // has multiple items but no rotation trait, use up or the first available
-                $blockTextures ??= $textures["up"];
-            }
+            $face = array_intersect($faces, $faceIntersect)[0];
+            $blockTextures ??= $textures[$face];
 
             if ($blockTextures === null) $blockTextures = $textures[array_key_first($textures)];
 
