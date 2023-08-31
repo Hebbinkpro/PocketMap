@@ -72,12 +72,6 @@ final class BlockDataValues
             BSV::NEW_LEAF_TYPE_ACACIA => 0,
             BSV::NEW_LEAF_TYPE_DARK_OAK => 1
         ],
-        BTN::QUARTZ_BLOCK => [
-            BSV::CHISEL_TYPE_DEFAULT => 0,
-            BSV::CHISEL_TYPE_CHISELED => 1,
-            BSV::CHISEL_TYPE_LINES => 2,
-            BSV::CHISEL_TYPE_SMOOTH => 3
-        ],
         BTN::RED_FLOWER => [
             BSV::FLOWER_TYPE_POPPY => 0,
             BSV::FLOWER_TYPE_ORCHID => 1,
@@ -196,6 +190,16 @@ final class BlockDataValues
             return self::getColorDataValue($color);
         }
 
+        // it's a chiseled block
+        if (($chisel = BlockStateParser::getStateValue($bsd, BSN::CHISEL_TYPE)) !== null) {
+            return match ($chisel) {
+                BSV::CHISEL_TYPE_DEFAULT => 0,
+                BSV::CHISEL_TYPE_CHISELED => 1,
+                BSV::CHISEL_TYPE_LINES => 2,
+                BSV::CHISEL_TYPE_SMOOTH => 3
+            };
+        }
+
         // go through the switch to get the correct data values
         switch ($block::class) {
             case Planks::class:
@@ -291,8 +295,6 @@ final class BlockDataValues
 
             case Opaque::class:
                 return match ($name) {
-                    BTN::QUARTZ_BLOCK =>
-                    self::DATA_VALUES[BTN::QUARTZ_BLOCK][BlockStateParser::getStateValue($bsd, BSN::CHISEL_TYPE)],
                     BTN::SANDSTONE, BTN::RED_SANDSTONE =>
                     self::DATA_VALUES[BTN::SANDSTONE][BlockStateParser::getStateValue($bsd, BSN::SAND_STONE_TYPE)],
                     BTN::STONE =>
