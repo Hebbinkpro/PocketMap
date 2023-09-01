@@ -10,6 +10,7 @@ use Hebbinkpro\PocketMap\utils\TextureUtils;
 use pocketmine\block\Block;
 use pocketmine\block\utils\PillarRotationTrait;
 use pocketmine\math\Axis;
+use pocketmine\math\Facing;
 use pocketmine\plugin\PluginBase;
 use pocketmine\resourcepacks\ResourcePackException;
 use pocketmine\resourcepacks\ResourcePackManager;
@@ -404,11 +405,15 @@ class TerrainTextures
         // check if the textures has some rotations
         $faceIntersect = array_intersect(array_keys($textures), ["up", "down", "side", "north", "east", "south", "west"]);
         if (!empty($faceIntersect)) {
-            $axis = BlockStateParser::getBlockAxis($block);
+            $axis = BlockStateParser::getBlockFace($block);
 
             $faces = match ($axis) {
-                Axis::X => ["side", "east"],
-                Axis::Z => ["side", "south"],
+                Facing::UP => ["up"],
+                Facing::DOWN => ["down", "up"],
+                Facing::EAST => ["east", "side"],
+                Facing::WEST => ["west", "side"],
+                Facing::SOUTH => ["south", "side"],
+                Facing::NORTH => ["north", "side"],
                 default => ["up", array_key_first($textures)],
             };
 

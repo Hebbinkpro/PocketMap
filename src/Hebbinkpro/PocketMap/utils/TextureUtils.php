@@ -12,6 +12,7 @@ use pocketmine\block\BlockTypeIds;
 use pocketmine\block\utils\PillarRotationTrait;
 use pocketmine\data\bedrock\block\BlockTypeNames as BTN;
 use pocketmine\math\Axis;
+use pocketmine\math\Facing;
 use pocketmine\network\mcpe\protocol\types\inventory\ContainerIds;
 use pocketmine\world\biome\Biome;
 use pocketmine\world\biome\BiomeRegistry;
@@ -99,7 +100,7 @@ class TextureUtils
                 $biome = BiomeRegistry::getInstance()->getBiome($biomeId);
 
                 $blockTexture = self::createCompressedBlockTexture($block, $biome, $terrainTextures, $pixelsPerBlock);
-                $blockTexture = self::rotateOnAxis($blockTexture, BlockStateParser::getBlockAxis($block));
+                $blockTexture = self::rotateToFacing($blockTexture, BlockStateParser::getBlockFace($block));
 
                 if ($y % 2 != 0 && ($alpha = $terrainTextures->getOptions()->getHeightOverlayAlpha()) > 0) {
                     $color = $terrainTextures->getOptions()->getHeightOverlayColor();
@@ -248,14 +249,20 @@ class TextureUtils
     /**
      * Rotate an image on the given axis
      * @param GdImage $image
-     * @param int $axis
+     * @param int $facing
      * @return GdImage
      */
-    public static function rotateOnAxis(GdImage $image, int $axis): GdImage
+    public static function rotateToFacing(GdImage $image, int $facing): GdImage
     {
-        $angle = 0;
-        if ($axis == Axis::X) $angle = 270;
-        else if ($axis === Axis::Z) $angle = 180;
+        $angle = match ($facing) {
+            Facing::UP => 0,        // +y
+            Facing::DOWN => 180,    // -y
+            Facing::EAST => 270,    // +x
+            Facing::WEST => 90,     // -x
+            Facing::SOUTH => 180,   // +z
+            Facing::NORTH => 0,     // -z
+            default => 0
+        };
 
         // angle of 0 does not have to be rotated
         if ($angle == 0) return $image;

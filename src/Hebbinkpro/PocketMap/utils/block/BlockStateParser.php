@@ -4,10 +4,12 @@ namespace Hebbinkpro\PocketMap\utils\block;
 
 use pocketmine\block\Block;
 use pocketmine\block\RuntimeBlockStateRegistry;
+use pocketmine\block\utils\AnyFacingTrait;
 use pocketmine\block\utils\PillarRotationTrait;
 use pocketmine\data\bedrock\block\BlockStateData;
 use pocketmine\data\bedrock\block\BlockStateSerializeException;
 use pocketmine\math\Axis;
+use pocketmine\math\Facing;
 use pocketmine\world\format\io\GlobalBlockStateHandlers;
 
 final class BlockStateParser
@@ -50,18 +52,28 @@ final class BlockStateParser
     }
 
     /**
-     * Get the rotation axis of a block
+     * Get the face of a block
      * @param Block $block
      * @return int
      */
-    public static function getBlockAxis(Block $block): int {
-        // the block uses the PillarRotationTrait, so it has an axis
-        if (in_array(PillarRotationTrait::class, class_uses($block::class))) {
-            /** @var PillarRotationTrait $block */
-            return $block->getAxis();
+    public static function getBlockFace(Block $block): int {
+
+        // the block uses the AnyFacingTrait
+        if (in_array(AnyFacingTrait::class, class_uses($block::class))) {
+            /** @var AnyFacingTrait $block */
+
+            return $block->getFacing();
         }
 
-        // the block does not have an axis, default is Y
-        return Axis::Y;
+        // the block uses the PillarRotationTrait
+        if (in_array(PillarRotationTrait::class, class_uses($block::class))) {
+            /** @var PillarRotationTrait $block */
+
+            // convert axis to facing
+            return ($block->getAxis() << 1) | Facing::FLAG_AXIS_POSITIVE;
+        }
+
+        // the block does not have an axis, default is +Y
+        return Facing::UP;
     }
 }
