@@ -9,7 +9,11 @@ use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
 use Hebbinkpro\PocketMap\utils\block\old\OldBlockTypeNames as OBTN;
 use pocketmine\block\Block;
 use pocketmine\block\BlockTypeIds;
+use pocketmine\block\utils\PillarRotationTrait;
 use pocketmine\data\bedrock\block\BlockTypeNames as BTN;
+use pocketmine\math\Axis;
+use pocketmine\math\Facing;
+use pocketmine\network\mcpe\protocol\types\inventory\ContainerIds;
 use pocketmine\world\biome\Biome;
 use pocketmine\world\biome\BiomeRegistry;
 use pocketmine\world\format\Chunk;
@@ -63,8 +67,6 @@ class TextureUtils
             BlockTypeIds::DOUBLE_TALLGRASS
         ];
 
-//        $totalBlocks = self::getTotalBlocks($maxTextureSize);
-//        $pixelsPerBlock = self::getPixelsPerBlock($maxTextureSize, $totalBlocks);
         $textureSize = $totalBlocks * $pixelsPerBlock;
 
         $texture = imagecreatetruecolor($textureSize, $textureSize);
@@ -96,7 +98,9 @@ class TextureUtils
 
                 $biomeId = $chunk->getBiomeId($bdx, $y, $bdz);
                 $biome = BiomeRegistry::getInstance()->getBiome($biomeId);
+
                 $blockTexture = self::createCompressedBlockTexture($block, $biome, $terrainTextures, $pixelsPerBlock);
+                $blockTexture = self::rotateToFacing($blockTexture, BlockStateParser::getBlockFace($block));
 
                 if ($y % 2 != 0 && ($alpha = $terrainTextures->getOptions()->getHeightOverlayAlpha()) > 0) {
                     $color = $terrainTextures->getOptions()->getHeightOverlayColor();
@@ -182,8 +186,8 @@ class TextureUtils
         self::applyColorMap($img, $block, $biome, $terrainTextures);
 
         // create a cache image
-        $cacheImg = imagecreatetruecolor(PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
-        imagecopy($cacheImg, $img, 0, 0, 0, 0, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
+//        $cacheImg = imagecreatetruecolor(PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
+//        imagecopy($cacheImg, $img, 0, 0, 0, 0, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
 
         // store the cache image
 //        self::$blockTextureMap[$terrainTextures->getPath()][$block->getTypeId()][$biome->getId()] = $cacheImg;
@@ -240,6 +244,31 @@ class TextureUtils
             }
         }
 
+    }
+
+    /**
+     * Rotate an image on the given axis
+     * @param GdImage $image
+     * @param int $facing
+     * @return GdImage
+     */
+    public static function rotateToFacing(GdImage $image, int $facing): GdImage
+    {
+        $angle = match ($facing) {
+            Facing::UP => 0,        // +y
+            Facing::DOWN => 180,    // -y
+            Facing::EAST => 270,    // +x
+            Facing::WEST => 90,     // -x
+            Facing::SOUTH => 180,   // +z
+            Facing::NORTH => 0,     // -z
+            default => 0
+        };
+
+        // angle of 0 does not have to be rotated
+        if ($angle == 0) return $image;
+
+        // rotate the image
+        return imagerotate($image, $angle, 0);
     }
 
     /**

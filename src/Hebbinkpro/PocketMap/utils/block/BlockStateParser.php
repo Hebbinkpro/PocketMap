@@ -4,8 +4,12 @@ namespace Hebbinkpro\PocketMap\utils\block;
 
 use pocketmine\block\Block;
 use pocketmine\block\RuntimeBlockStateRegistry;
+use pocketmine\block\utils\AnyFacingTrait;
+use pocketmine\block\utils\PillarRotationTrait;
 use pocketmine\data\bedrock\block\BlockStateData;
 use pocketmine\data\bedrock\block\BlockStateSerializeException;
+use pocketmine\math\Axis;
+use pocketmine\math\Facing;
 use pocketmine\world\format\io\GlobalBlockStateHandlers;
 
 final class BlockStateParser
@@ -21,7 +25,7 @@ final class BlockStateParser
         try {
             return GlobalBlockStateHandlers::getSerializer()->serializeBlock($block);
         } catch (BlockStateSerializeException $e) {
-            // catch the serialize exception, this only occurs when the block does not exist in the serializer
+            // catch serialize exception, this only occurs when the block does not exist in the serializer
             return null;
         }
     }
@@ -45,5 +49,31 @@ final class BlockStateParser
     public static function getBlockFromStateId(int $stateId): Block
     {
         return RuntimeBlockStateRegistry::getInstance()->fromStateId($stateId);
+    }
+
+    /**
+     * Get the face of a block
+     * @param Block $block
+     * @return int
+     */
+    public static function getBlockFace(Block $block): int {
+
+        // the block uses the AnyFacingTrait
+        if (in_array(AnyFacingTrait::class, class_uses($block::class))) {
+            /** @var AnyFacingTrait $block */
+
+            return $block->getFacing();
+        }
+
+        // the block uses the PillarRotationTrait
+        if (in_array(PillarRotationTrait::class, class_uses($block::class))) {
+            /** @var PillarRotationTrait $block */
+
+            // convert axis to facing
+            return ($block->getAxis() << 1) | Facing::FLAG_AXIS_POSITIVE;
+        }
+
+        // the block does not have an axis, default is +Y
+        return Facing::UP;
     }
 }

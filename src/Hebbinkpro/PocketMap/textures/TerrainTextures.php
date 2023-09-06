@@ -4,9 +4,13 @@ namespace Hebbinkpro\PocketMap\textures;
 
 use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\utils\block\BlockDataValues;
+use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
 use Hebbinkpro\PocketMap\utils\ResourcePackUtils;
 use Hebbinkpro\PocketMap\utils\TextureUtils;
 use pocketmine\block\Block;
+use pocketmine\block\utils\PillarRotationTrait;
+use pocketmine\math\Axis;
+use pocketmine\math\Facing;
 use pocketmine\plugin\PluginBase;
 use pocketmine\resourcepacks\ResourcePackException;
 use pocketmine\resourcepacks\ResourcePackManager;
@@ -401,11 +405,27 @@ class TerrainTextures
         // check if the textures has some rotations
         $faceIntersect = array_intersect(array_keys($textures), ["up", "down", "side", "north", "east", "south", "west"]);
         if (!empty($faceIntersect)) {
-            // TODO: check for block rotations in the world
-            $textures = $textures["up"] ?? $textures[array_key_first($textures)];
+            $axis = BlockStateParser::getBlockFace($block);
+
+            $faces = match ($axis) {
+                Facing::UP => ["up"],
+                Facing::DOWN => ["down", "up"],
+                Facing::EAST => ["east", "side"],
+                Facing::WEST => ["west", "side"],
+                Facing::SOUTH => ["south", "side"],
+                Facing::NORTH => ["north", "side"],
+                default => ["up", array_key_first($textures)],
+            };
+
+            $face = array_intersect($faces, $faceIntersect)[0];
+            $blockTextures ??= $textures[$face];
+
+            if ($blockTextures === null) $blockTextures = $textures[array_key_first($textures)];
 
             // it's a single textures
-            if (is_string($textures)) return $this->getRealTexturePath($textures);
+            if (is_string($blockTextures)) return $this->getRealTexturePath($blockTextures);
+
+            $textures = $blockTextures;
         }
 
         // texture contains image path and tint_color
