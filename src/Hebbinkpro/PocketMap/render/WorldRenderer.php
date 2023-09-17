@@ -4,13 +4,18 @@ namespace Hebbinkpro\PocketMap\render;
 
 use Hebbinkpro\PocketMap\region\PartialRegion;
 use Hebbinkpro\PocketMap\region\Region;
-use Hebbinkpro\PocketMap\task\ChunkRenderTask;
-use Hebbinkpro\PocketMap\task\RenderSchedulerTask;
+use Hebbinkpro\PocketMap\scheduler\ChunkSchedulerTask;
+use Hebbinkpro\PocketMap\scheduler\RenderSchedulerTask;
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
 use pocketmine\world\World;
 
 class WorldRenderer
 {
+    /**
+     * The lowest zoom level available
+     */
+    public const MIN_ZOOM = 4;
+
     /**
      * The size of a render in pixels
      */
@@ -38,9 +43,9 @@ class WorldRenderer
     private TerrainTextures $terrainTextures;
     private string $renderPath;
     private RenderSchedulerTask $scheduler;
-    private ChunkRenderTask $chunkRenderer;
+    private ChunkSchedulerTask $chunkRenderer;
 
-    public function __construct(World $world, TerrainTextures $terrainTextures, string $renderPath, RenderSchedulerTask $scheduler, ChunkRenderTask $chunkRenderer)
+    public function __construct(World $world, TerrainTextures $terrainTextures, string $renderPath, RenderSchedulerTask $scheduler, ChunkSchedulerTask $chunkRenderer)
     {
         $this->world = $world;
         $this->terrainTextures = $terrainTextures;
@@ -112,6 +117,27 @@ class WorldRenderer
         return $this->world;
     }
 
+    public function getNextZoomRegion(Region $region): ?Region
+    {
+        $nextZoom = $region->getZoom() - 1;
+        // there is no smaller zoom available
+        if ($nextZoom < -4) return null;
+
+        $nextX = floor($region->getX() / 2);
+        $nextZ = floor($region->getZ() / 2);
+
+        return new Region($region->getWorldName(), $nextZoom, $nextX, $nextZ, $this->getResourcePack());
+    }
+
+    /**
+     * Get the resource pack
+     * @return TerrainTextures
+     */
+    public function getResourcePack(): TerrainTextures
+    {
+        return $this->terrainTextures;
+    }
+
     /**
      * Get a partial region from a chunk
      * @param int $zoom
@@ -142,20 +168,23 @@ class WorldRenderer
     }
 
     /**
-     * Get the resource pack
-     * @return TerrainTextures
-     */
-    public function getResourcePack(): TerrainTextures
-    {
-        return $this->terrainTextures;
-    }
-
-    /**
      * Get the render path of this world
      * @return string
      */
     public function getRenderPath(): string
     {
         return $this->renderPath;
+    }
+
+    /**
+     * Get if the given chunk is rendered
+     * @param int $x the x coordinate of the chunk
+     * @param int $z the z coordinate of the chunk
+     * @return bool
+     */
+    public function isChunkRendered(int $x, int $z): bool
+    {
+        $file = $this->renderPath . self::MIN_ZOOM . "/$x,$z.png";
+        return is_file($file);
     }
 }

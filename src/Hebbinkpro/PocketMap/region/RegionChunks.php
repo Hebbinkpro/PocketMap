@@ -4,9 +4,7 @@ namespace Hebbinkpro\PocketMap\region;
 
 use Generator;
 use Hebbinkpro\PocketMap\utils\ArrayUtils;
-use Hebbinkpro\PocketMap\utils\ChunkUtils;
 use pocketmine\world\format\Chunk;
-use pocketmine\world\WorldManager;
 
 /**
  * Class that contains chunk information of all chunks inside a region.
@@ -27,54 +25,12 @@ class RegionChunks
      */
     private bool $valid;
 
-    private function __construct(Region $region, array $chunks = [], bool $completed = false)
+    private function __construct(Region $region)
     {
         $this->region = $region;
-        $this->chunks = $chunks;
-        $this->completed = $completed;
+        $this->chunks = [];
+        $this->completed = false;
         $this->valid = true;
-    }
-
-    /**
-     * Create a region chunks instance and immediately loads all chunks into the instance
-     * @param Region $region
-     * @param WorldManager $wm
-     * @return RegionChunks|null
-     */
-    public static function getCompleted(Region $region, WorldManager $wm): ?RegionChunks
-    {
-        // load the world of the region
-        if (!$wm->isWorldLoaded($region->getWorldName())) $wm->loadWorld($region->getWorldName());
-        $world = $wm->getWorldByName($region->getWorldName());
-
-        // the world the region is in does not exist!
-        if ($world === null) return null;
-
-
-        $provider = $world->getProvider();
-        $chunks = [];
-
-        foreach ($region->getChunks() as [$x, $z]) {
-            //load the chunk
-            $chunkData = $provider->loadChunk($x, $z);
-            if ($chunkData === null) {
-                continue;
-            }
-
-            if (!array_key_exists($x, $chunks)) $chunks[$x] = [];
-            $chunks[$x][$z] = ChunkUtils::getChunkFromData($chunkData->getData());
-        }
-
-        return new RegionChunks($region, $chunks, true);
-    }
-
-    /**
-     * Get all the loaded chunks
-     * @return array
-     */
-    public function getChunks(): array
-    {
-        return $this->chunks;
     }
 
     /**

@@ -3,27 +3,23 @@
 namespace Hebbinkpro\PocketMap;
 
 use Exception;
+use Hebbinkpro\PocketMap\api\UpdateApiTask;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
-use Hebbinkpro\PocketMap\task\ChunkRenderTask;
-use Hebbinkpro\PocketMap\task\RenderSchedulerTask;
-use Hebbinkpro\PocketMap\task\UpdateApiTask;
+use Hebbinkpro\PocketMap\scheduler\ChunkSchedulerTask;
+use Hebbinkpro\PocketMap\scheduler\RenderSchedulerTask;
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
 use Hebbinkpro\PocketMap\textures\TerrainTexturesOptions;
-use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
 use Hebbinkpro\PocketMap\utils\ConfigManager;
-use Hebbinkpro\PocketMap\utils\TextureUtils;
 use Hebbinkpro\WebServer\exception\WebServerException;
 use Hebbinkpro\WebServer\http\HttpRequest;
 use Hebbinkpro\WebServer\http\HttpResponse;
 use Hebbinkpro\WebServer\libs\Laravel\SerializableClosure\Exceptions\PhpVersionNotSupportedException;
 use Hebbinkpro\WebServer\route\Router;
 use Hebbinkpro\WebServer\WebServer;
-use pocketmine\block\VanillaBlocks;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\event\Listener;
 use pocketmine\item\StringToItemParser;
-use pocketmine\math\Axis;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\Config;
 use pocketmine\utils\Filesystem;
@@ -37,16 +33,13 @@ class PocketMap extends PluginBase implements Listener
     public const TEXTURE_SIZE = 16;
 
     private static PocketMap $instance;
+    /** @var WorldRenderer[] */
+    private static array $worldRenderers = [];
     private ConfigManager $configManager;
-
     private TerrainTextures $terrainTextures;
     private WebServer $webServer;
-
     private RenderSchedulerTask $renderScheduler;
-    private ChunkRenderTask $chunkRenderer;
-
-    /** @var WorldRenderer[] */
-    private array $worldRenderers = [];
+    private ChunkSchedulerTask $chunkRenderer;
 
     public static function getConfigManger(): ConfigManager
     {
@@ -63,12 +56,12 @@ class PocketMap extends PluginBase implements Listener
      * @param World|string $world The world or the name of the world
      * @return WorldRenderer|null the WorldRenderer or null when it wasn't found
      */
-    public function getWorldRenderer(World|string $world): ?WorldRenderer
+    public static function getWorldRenderer(World|string $world): ?WorldRenderer
     {
         if (is_string($world)) $worldName = $world;
         else $worldName = $world->getFolderName();
 
-        return $this->worldRenderers[$worldName] ?? null;
+        return self::$worldRenderers[$worldName] ?? null;
     }
 
     /**
@@ -80,7 +73,7 @@ class PocketMap extends PluginBase implements Listener
     {
         $path = $this->getDataFolder() . "renders/" . $world->getFolderName() . "/";
         $renderer = new WorldRenderer($world, $this->getTerrainTextures(), $path, $this->getRenderScheduler(), $this->chunkRenderer);
-        $this->worldRenderers[$world->getFolderName()] = $renderer;
+        self::$worldRenderers[$world->getFolderName()] = $renderer;
         return $renderer;
     }
 
@@ -104,9 +97,9 @@ class PocketMap extends PluginBase implements Listener
 
     /**
      * Get the chunk renderer
-     * @return ChunkRenderTask
+     * @return ChunkSchedulerTask
      */
-    public function getChunkRenderer(): ChunkRenderTask
+    public function getChunkRenderer(): ChunkSchedulerTask
     {
         return $this->chunkRenderer;
     }
@@ -118,7 +111,7 @@ class PocketMap extends PluginBase implements Listener
      */
     public function removeWorldRenderer(World $world): void
     {
-        unset($this->worldRenderers[$world->getFolderName()]);
+        unset(self::$worldRenderers[$world->getFolderName()]);
     }
 
     public function onCommand(CommandSender $sender, Command $command, string $label, array $args): bool
@@ -198,7 +191,7 @@ class PocketMap extends PluginBase implements Listener
         $this->getScheduler()->scheduleRepeatingTask($this->renderScheduler, $this->configManager->getInt("renderer.scheduler.run-period", 5));
 
         // start the chunk update task, this check every period if regions have to be updated
-        $this->chunkRenderer = new ChunkRenderTask($this);
+        $this->chunkRenderer = new ChunkSchedulerTask($this);
         $this->getScheduler()->scheduleRepeatingTask($this->chunkRenderer, $this->configManager->getInt("renderer.chunk-renderer.run-period", 10));
 
         // start the api update task

@@ -1,6 +1,6 @@
 <?php
 
-namespace Hebbinkpro\PocketMap\task;
+namespace Hebbinkpro\PocketMap\scheduler;
 
 use Generator;
 use Hebbinkpro\PocketMap\PocketMap;
@@ -9,7 +9,7 @@ use Hebbinkpro\PocketMap\region\Region;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
 use pocketmine\scheduler\Task;
 
-class ChunkRenderTask extends Task
+class ChunkSchedulerTask extends Task
 {
     public const CACHE_FILE = "tmp/regions/render.txt";
 
@@ -71,16 +71,6 @@ class ChunkRenderTask extends Task
     }
 
     /**
-     * Check if a region is already in the queue
-     * @param Region $region
-     * @return bool
-     */
-    public function isAdded(Region $region): bool
-    {
-        return array_key_exists("$region", $this->queuedRegions);
-    }
-
-    /**
      * Run the chunk render task
      * 1. Add chunks from the generators
      * 2. Update all region cool-downs
@@ -109,7 +99,7 @@ class ChunkRenderTask extends Task
                 break;
             }
 
-            $this->pocketMap->getLogger()->debug("[Chunk Render] Added render of region: $region to the scheduler");
+            $this->pocketMap->getLogger()->debug("[Chunk Render] Added region to the scheduler: " . $region->getName());
             $started[] = $name;
 
         }
@@ -175,11 +165,8 @@ class ChunkRenderTask extends Task
      */
     public function addChunk(WorldRenderer $renderer, int $chunkX, int $chunkZ): void
     {
-        // add all regions the chunk is in to the queue
-        foreach (array_keys(WorldRenderer::ZOOM_LEVELS) as $zoom) {
-            $region = $renderer->getPartialRegion($zoom, $chunkX, $chunkZ);
-            $this->addPartialRegion($region, $chunkX, $chunkZ);
-        }
+        $region = $renderer->getPartialRegion(WorldRenderer::MIN_ZOOM, $chunkX, $chunkZ);
+        $this->addPartialRegion($region, $chunkX, $chunkZ);
     }
 
     /**
@@ -196,10 +183,10 @@ class ChunkRenderTask extends Task
         // the region is already stored
         if ($queuedRegion === null) {
             $queuedRegion = $region;
-            $this->pocketMap->getLogger()->debug("[Chunk Render] Added region to the queue: $region, world: " . $region->getWorldName());
-            $this->queuedRegions["$region"] = $region;
+            $this->pocketMap->getLogger()->debug("[Chunk Render] Added region to the queue: " . $region->getName());
+            $this->queuedRegions[$region->getName()] = $region;
         }
-        $this->pocketMap->getLogger()->debug("[Chunk Render] Added chunk: $chunkX,$chunkZ, to region: $queuedRegion");
+        $this->pocketMap->getLogger()->debug("[Chunk Render] Added chunk: $chunkX,$chunkZ, to region: " . $queuedRegion->getName());
 
         // add the chunk to the stored region
         $queuedRegion->addChunk($chunkX, $chunkZ);
@@ -212,6 +199,6 @@ class ChunkRenderTask extends Task
      */
     public function getQueuedRegion(Region $region): ?Region
     {
-        return $this->queuedRegions["$region"] ?? null;
+        return $this->queuedRegions[$region->getName()] ?? null;
     }
 }

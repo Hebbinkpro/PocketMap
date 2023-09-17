@@ -2,7 +2,6 @@
 
 namespace Hebbinkpro\PocketMap;
 
-use Hebbinkpro\PocketMap\render\WorldRenderer;
 use Hebbinkpro\PocketMap\utils\ChunkUtils;
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\block\BlockBurnEvent;
@@ -64,19 +63,14 @@ class EventListener implements Listener
         $cz = $e->getChunkZ();
 
         // get the world renderer
-        $renderer = $this->plugin->getWorldRenderer($world->getFolderName());
+        $renderer = PocketMap::getWorldRenderer($world->getFolderName());
         if ($renderer === null) {
             $this->plugin->getLogger()->debug("Renderer of world: {$world->getFoldername()} not found!");
             return;
         }
 
-        // get the largest zoom (most chunks) this chunk is in
-        // if it's missing in there, its missing everywhere
-        $maxZoom = array_key_first(WorldRenderer::ZOOM_LEVELS);
-        $region = $renderer->getRegionFromChunk($maxZoom, $cx, $cz);
-
         // chunk is not yet rendered
-        if (!$region->isChunkInRenderData($cx, $cz)) {
+        if (!$renderer->isChunkRendered($cx, $cz)) {
             // it's a new chunk
             if ($e->isNewChunk()) {
                 $chunk = $e->getChunk();
@@ -107,7 +101,7 @@ class EventListener implements Listener
 
         // get the chunk
         $chunk = $world->getChunk($chunkX, $chunkZ);
-        $renderer = $this->plugin->getWorldRenderer($world->getFolderName());
+        $renderer = PocketMap::getWorldRenderer($world->getFolderName());
         if ($chunk === null || $renderer === null) return;
 
         if ($this->hasChunkCooldown($chunkX, $chunkZ)) return;

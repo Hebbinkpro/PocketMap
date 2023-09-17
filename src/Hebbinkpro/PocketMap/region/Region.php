@@ -2,11 +2,8 @@
 
 namespace Hebbinkpro\PocketMap\region;
 
-use Exception;
 use Generator;
-use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
-use Hebbinkpro\PocketMap\task\AsyncRegionRenderTask;
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
 
 class Region
@@ -16,7 +13,6 @@ class Region
     private int $x;
     private int $z;
     private TerrainTextures $terrainTextures;
-    private string $tmpFile;
 
 
     public function __construct(string $worldName, int $zoom, int $regionX, int $regionZ, TerrainTextures $terrainTextures)
@@ -26,9 +22,6 @@ class Region
         $this->x = $regionX;
         $this->z = $regionZ;
         $this->terrainTextures = $terrainTextures;
-
-        $largestRegion = $this->getLargestZoomRegion();
-        $this->tmpFile = PocketMap::getFolder() . "tmp/regions/$this->worldName/{$largestRegion["x"]},{$largestRegion["z"]}.json";
     }
 
     /**
@@ -177,75 +170,6 @@ class Region
         return $this->z;
     }
 
-    /**
-     * Get the render mode
-     * @return int
-     */
-    public function getRenderMode(): int
-    {
-        return AsyncRegionRenderTask::RENDER_MODE_FULL;
-    }
-
-    /**
-     * Add a chunk to the list in the render data of the render with the highest zoom level
-     * @param int[][] $chunks
-     * @return void
-     * @throws Exception
-     */
-    public function addChunksToRenderData(array $chunks): void
-    {
-        // cannot add chunk
-        if ($this->isRenderDataComplete()) return;
-
-        $renderData = $this->loadRenderData();
-
-        foreach ($chunks as [$cx, $cz]) {
-            if (!$this->isChunkInRegion($cx, $cz)) continue;
-
-            if (!array_key_exists("$cx", $renderData["chunks"])) $renderData["chunks"]["$cx"] = [];
-
-            if (!in_array($cz, $renderData["chunks"]["$cx"])) {
-                $renderData["chunks"]["$cx"][] = $cz;
-            }
-
-        }
-
-        $largestRegion = $this->getLargestZoomRegion();
-        $totalChunks = $largestRegion["chunks"];
-
-        // the region is completed
-        if ($this->getChunksInRenderData($renderData) >= pow($totalChunks, 2)) {
-            // mark region as completed
-            $renderData["completed"] = true;
-            // remove the redundant data
-            $renderData["chunks"] = [];
-        }
-
-        file_put_contents($this->tmpFile, json_encode($renderData));
-    }
-
-    /**
-     * Get if the render data if complete
-     * @return bool
-     */
-    public function isRenderDataComplete(): bool
-    {
-        $data = $this->loadRenderData();
-        return $data["completed"] ?? false;
-    }
-
-    private function loadRenderData(): array
-    {
-        try {
-            $fileData = file_get_contents($this->tmpFile);
-            $data = json_decode($fileData, true);
-            if (!$data) $data = ["completed" => false, "chunks" => []];
-        } catch (Exception $e) {
-            $data = ["completed" => false, "chunks" => []];
-        }
-
-        return $data;
-    }
 
     /**
      * Check if a chunk is inside the region.
@@ -264,39 +188,24 @@ class Region
             && $minZ <= $chunkZ && $chunkZ < $maxZ;
     }
 
-    public function getChunksInRenderData(array $renderData): int
+    /**
+     * Get the region name in the format: world/zoom/x,z
+     * @param bool $includeWorld if the world is included in the name
+     * @return string
+     */
+    public function getName(bool $includeWorld = true): string
     {
-        $amount = 0;
-
-        foreach ($renderData["chunks"] as $x => $chunks) {
-            $amount += count($renderData["chunks"]["$x"]);
-        }
-
-        return $amount;
+        $region = $this->getZoom() . "/" . $this->getX() . "," . $this->getZ();
+        if (!$includeWorld) return $region;
+        return $this->getWorldName() . "/" . $region;
     }
 
     /**
-     * Get if the given chunk is inside the render data
-     * @param int $chunkX the x pos of the chunk
-     * @param int $chunkZ the z pos of the chunk
-     * @return bool if the chunk is inside the render data
+     * Get if the region only exists out of a single chunk.
+     * @return bool
      */
-    public function isChunkInRenderData(int $chunkX, int $chunkZ): bool
+    public function isChunk(): bool
     {
-        if (!$this->isChunkInRegion($chunkX, $chunkZ)) {
-            return false;
-        }
-        if ($this->isRenderDataComplete()) return true;
-
-        $data = $this->loadRenderData() ?? [];
-
-        if (!array_key_exists("chunks", $data)) return false;
-        if (!array_key_exists($chunkX, $data["chunks"])) return false;
-        return in_array($chunkZ, $data["chunks"]["$chunkX"]);
-    }
-
-    public function __toString(): string
-    {
-        return $this->getZoom() . "/" . $this->getX() . "," . $this->getZ();
+        return $this->getTotalChunks() == 1;
     }
 }

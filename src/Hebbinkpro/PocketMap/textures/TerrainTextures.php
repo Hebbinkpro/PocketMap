@@ -8,8 +8,6 @@ use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
 use Hebbinkpro\PocketMap\utils\ResourcePackUtils;
 use Hebbinkpro\PocketMap\utils\TextureUtils;
 use pocketmine\block\Block;
-use pocketmine\block\utils\PillarRotationTrait;
-use pocketmine\math\Axis;
 use pocketmine\math\Facing;
 use pocketmine\plugin\PluginBase;
 use pocketmine\resourcepacks\ResourcePackException;
@@ -417,7 +415,8 @@ class TerrainTextures
                 default => ["up", array_key_first($textures)],
             };
 
-            $face = array_intersect($faces, $faceIntersect)[0];
+            $validFaces = array_intersect($faces, $faceIntersect);
+            $face = $validFaces[array_key_first($validFaces)];
             $blockTextures ??= $textures[$face];
 
             if ($blockTextures === null) $blockTextures = $textures[array_key_first($textures)];

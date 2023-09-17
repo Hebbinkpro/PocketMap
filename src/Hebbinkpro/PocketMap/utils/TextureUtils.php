@@ -8,16 +8,9 @@ use Hebbinkpro\PocketMap\textures\TerrainTextures;
 use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
 use Hebbinkpro\PocketMap\utils\block\old\OldBlockTypeNames as OBTN;
 use pocketmine\block\Block;
-use pocketmine\block\BlockTypeIds;
-use pocketmine\block\utils\PillarRotationTrait;
 use pocketmine\data\bedrock\block\BlockTypeNames as BTN;
-use pocketmine\math\Axis;
 use pocketmine\math\Facing;
-use pocketmine\network\mcpe\protocol\types\inventory\ContainerIds;
 use pocketmine\world\biome\Biome;
-use pocketmine\world\biome\BiomeRegistry;
-use pocketmine\world\format\Chunk;
-use pocketmine\world\World;
 
 class TextureUtils
 {
@@ -49,78 +42,6 @@ class TextureUtils
     public static function getPixelsPerBlock(int $totalPixels, int $blocks): int
     {
         return floor(max($totalPixels / $blocks, 1));
-    }
-
-    /**
-     * Create the texture of the given chunk
-     * @param Chunk $chunk the chunk
-     * @param TerrainTextures $terrainTextures the resource pack
-     * @param int $totalBlocks the amount of blocks visible in the texture
-     * @param int $pixelsPerBlock the amount of pixels of each block
-     * @return GdImage the texture image of the chunk
-     */
-    public static function createChunkTexture(Chunk $chunk, TerrainTextures $terrainTextures, int $totalBlocks, int $pixelsPerBlock): GdImage
-    {
-        $invalidBlocks = [
-            BlockTypeIds::FERN,
-            BlockTypeIds::TALL_GRASS,
-            BlockTypeIds::DOUBLE_TALLGRASS
-        ];
-
-        $textureSize = $totalBlocks * $pixelsPerBlock;
-
-        $texture = imagecreatetruecolor($textureSize, $textureSize);
-
-        // amount of blocks between two blocks to render
-        // this is to prevent rendering of only the upper left corner for rendering when <16 pixels are available for a chunk
-        $diff = floor(16 / $totalBlocks);
-
-        // loop through all block indices that can be rendered
-        for ($bdxI = 0; $bdxI < $totalBlocks; $bdxI++) {
-            for ($bdzI = 0; $bdzI < $totalBlocks; $bdzI++) {
-                // get the real x and z positions from the indices
-                $bdx = $bdxI * $diff;
-                $bdz = $bdzI * $diff;
-
-                $y = $chunk->getHighestBlockAt($bdx, $bdz);
-
-                // there is no block on this position
-                if ($y === null) continue;
-
-                $blockStateId = $chunk->getBlockStateId($bdx, $y, $bdz);
-                $block = BlockStateParser::getBlockFromStateId($blockStateId);
-
-                while (in_array($block->getTypeId(), $invalidBlocks) && $y > World::Y_MIN) {
-                    $y--;
-                    $blockStateId = $chunk->getBlockStateId($bdx, $y, $bdz);
-                    $block = BlockStateParser::getBlockFromStateId($blockStateId);
-                }
-
-                $biomeId = $chunk->getBiomeId($bdx, $y, $bdz);
-                $biome = BiomeRegistry::getInstance()->getBiome($biomeId);
-
-                $blockTexture = self::createCompressedBlockTexture($block, $biome, $terrainTextures, $pixelsPerBlock);
-                $blockTexture = self::rotateToFacing($blockTexture, BlockStateParser::getBlockFace($block));
-
-                if ($y % 2 != 0 && ($alpha = $terrainTextures->getOptions()->getHeightOverlayAlpha()) > 0) {
-                    $color = $terrainTextures->getOptions()->getHeightOverlayColor();
-                    $r = ($color >> 16) & 0xff;
-                    $g = ($color >> 8) & 0xff;
-                    $b = $color & 0xff;
-
-                    $heightOverlay = imagecreatetruecolor($pixelsPerBlock, $pixelsPerBlock);
-                    imagefill($heightOverlay, 0, 0, imagecolorallocatealpha($heightOverlay, $r, $g, $b, 127 - $alpha));
-                    imagecopy($blockTexture, $heightOverlay, 0, 0, 0, 0, $pixelsPerBlock, $pixelsPerBlock);
-                }
-
-                $tx = $bdxI * $pixelsPerBlock;
-                $ty = $bdzI * $pixelsPerBlock;
-
-                imagecopy($texture, $blockTexture, $tx, $ty, 0, 0, $pixelsPerBlock, $pixelsPerBlock);
-            }
-        }
-
-        return $texture;
     }
 
     /**
@@ -247,6 +168,23 @@ class TextureUtils
     }
 
     /**
+     * Get a compressed image
+     * @param GdImage $src the image to compress
+     * @param int $srcWidth the width of the image
+     * @param int $srcHeight teh height of the image
+     * @param int $newWidth the new width of the image
+     * @param int $newHeight the new height of the image
+     * @return GdImage the compressed image with the new weight and height
+     */
+    public static function getCompressedImage(GdImage $src, int $srcWidth, int $srcHeight, int $newWidth, int $newHeight): GdImage
+    {
+        $compressedImg = imagecreatetruecolor($newWidth, $newHeight);
+        imagecopyresized($compressedImg, $src, 0, 0, 0, 0, $newWidth, $newHeight, $srcHeight, $srcWidth);
+
+        return $compressedImg;
+    }
+
+    /**
      * Rotate an image on the given axis
      * @param GdImage $image
      * @param int $facing
@@ -269,23 +207,6 @@ class TextureUtils
 
         // rotate the image
         return imagerotate($image, $angle, 0);
-    }
-
-    /**
-     * Get a compressed image
-     * @param GdImage $src the image to compress
-     * @param int $srcWidth the width of the image
-     * @param int $srcHeight teh height of the image
-     * @param int $newWidth the new width of the image
-     * @param int $newHeight the new height of the image
-     * @return GdImage the compressed image with the new weight and height
-     */
-    public static function getCompressedImage(GdImage $src, int $srcWidth, int $srcHeight, int $newWidth, int $newHeight): GdImage
-    {
-        $compressedImg = imagecreatetruecolor($newWidth, $newHeight);
-        imagecopyresized($compressedImg, $src, 0, 0, 0, 0, $newWidth, $newHeight, $srcHeight, $srcWidth);
-
-        return $compressedImg;
     }
 
     /**

@@ -3,7 +3,6 @@
 namespace Hebbinkpro\PocketMap\region;
 
 use Generator;
-use Hebbinkpro\PocketMap\task\AsyncRegionRenderTask;
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
 
 /**
@@ -62,10 +61,5 @@ class PartialRegion extends Region
         foreach ($this->chunks as $pos) {
             yield $pos;
         }
-    }
-
-    public function getRenderMode(): int
-    {
-        return AsyncRegionRenderTask::RENDER_MODE_PARTIAL;
     }
 }

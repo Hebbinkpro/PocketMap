@@ -8,7 +8,6 @@ use pocketmine\block\utils\AnyFacingTrait;
 use pocketmine\block\utils\PillarRotationTrait;
 use pocketmine\data\bedrock\block\BlockStateData;
 use pocketmine\data\bedrock\block\BlockStateSerializeException;
-use pocketmine\math\Axis;
 use pocketmine\math\Facing;
 use pocketmine\world\format\io\GlobalBlockStateHandlers;
 
@@ -56,7 +55,8 @@ final class BlockStateParser
      * @param Block $block
      * @return int
      */
-    public static function getBlockFace(Block $block): int {
+    public static function getBlockFace(Block $block): int
+    {
 
         // the block uses the AnyFacingTrait
         if (in_array(AnyFacingTrait::class, class_uses($block::class))) {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Hebbinkpro\PocketMap\task;
+namespace Hebbinkpro\PocketMap\api;
 
 use Exception;
 use Hebbinkpro\PocketMap\PocketMap;

@@ -1,12 +1,15 @@
 <?php
 
-namespace Hebbinkpro\PocketMap\task;
+namespace Hebbinkpro\PocketMap\scheduler;
 
 use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\region\PartialRegion;
 use Hebbinkpro\PocketMap\region\Region;
 use Hebbinkpro\PocketMap\region\RegionChunks;
 use Hebbinkpro\PocketMap\region\RegionChunksLoader;
+use Hebbinkpro\PocketMap\render\AsyncChunkRenderTask;
+use Hebbinkpro\PocketMap\render\AsyncRegionRenderTask;
+use Hebbinkpro\PocketMap\render\AsyncRenderTask;
 use Logger;
 use pocketmine\plugin\PluginBase;
 use pocketmine\scheduler\Task;
@@ -24,7 +27,6 @@ class RenderSchedulerTask extends Task
     private array $regionRenderQueue;
     private int $maxCurrentRenders;
     private int $maxQueueSize;
-    private int $maxChunksPerRun;
 
     public function __construct(PluginBase $plugin)
     {
@@ -35,19 +37,25 @@ class RenderSchedulerTask extends Task
 
         $this->maxCurrentRenders = PocketMap::getConfigManger()->getInt("renderer.scheduler.renders", 5);
         $this->maxQueueSize = PocketMap::getConfigManger()->getInt("renderer.scheduler.queue-size", 25);
-        $this->maxChunksPerRun = PocketMap::getConfigManger()->getInt("renderer.chunk-loader.chunks-per-run", 128);
 
         self::$logger = $plugin->getLogger();
     }
 
     public static function finishedRender(Region $region): void
     {
-        if (!in_array("$region", self::$currentRenders)) return;
+        if (!in_array($region->getName(), self::$currentRenders)) return;
         // remove the region from the list
-        $key = array_search("$region", self::$currentRenders);
+        $key = array_search($region->getName(), self::$currentRenders);
         array_splice(self::$currentRenders, $key, 1);
 
-        self::$logger->debug("[Scheduler] Finished render of region: $region");
+        self::$logger->debug("[Scheduler] Finished render of region: " . $region->getName());
+
+        // start now the render for the next zoom level
+        $renderer = PocketMap::getWorldRenderer($region->getWorldName());
+        $next = $renderer->getNextZoomRegion($region);
+        if ($next !== null) {
+            $renderer->startRegionRender($next, true);
+        }
     }
 
     /**
@@ -61,9 +69,9 @@ class RenderSchedulerTask extends Task
     {
         // when the action is not forced or the region is already in the scheduler, don't add the region
         if ((!$force && count($this->regionRenderQueue) >= $this->maxQueueSize) ||
-            in_array("$region", self::$currentRenders)) return false;
+            in_array($region->getName(), self::$currentRenders)) return false;
 
-        self::$currentRenders[] = "$region";
+        self::$currentRenders[] = $region->getName();
 
         // add the path and region to the queue
         $this->regionRenderQueue[] = [
@@ -100,13 +108,11 @@ class RenderSchedulerTask extends Task
             $path = $rcl["path"];
             /** @var RegionChunksLoader $loader */
             $loader = $rcl["loader"];
-            /** @var int $renderMode */
-            $renderMode = $rcl["mode"];
 
             // is completely loaded
             if ($loader->run()) {
-                $chunks = $loader->getRegionChunks();
-                $region = $chunks->getRegion();
+                $regionChunks = $loader->getRegionChunks();
+                $region = $regionChunks->getRegion();
 
                 // it's a partial region
                 if ($region instanceof PartialRegion) {
@@ -120,7 +126,7 @@ class RenderSchedulerTask extends Task
                     }
                 }
 
-                $this->startRenderTask($path, $chunks, $renderMode);
+                $this->startChunkRenderTask($regionChunks, $path);
                 continue;
             }
 
@@ -134,22 +140,31 @@ class RenderSchedulerTask extends Task
     }
 
     /**
-     * Start a new async region render
-     * @param string $path the path the render will be placed in
-     * @param RegionChunks $regionChunks the chunks inside the region
-     * @param int $renderMode the render behaviour
+     * Start a new chunk render
+     * @param RegionChunks $regionChunks the chunks of a region
+     * @param string $path the path of the render
      * @return void
      */
-    private function startRenderTask(string $path, RegionChunks $regionChunks, int $renderMode): void
+    public function startChunkRenderTask(RegionChunks $regionChunks, string $path): void
     {
-        // create a new async task
-        $task = new AsyncRegionRenderTask($path, $regionChunks, $renderMode);
+        $task = new AsyncChunkRenderTask($regionChunks, $path);
+        $this->startRenderTask($regionChunks->getRegion(), $task);
+    }
+
+    /**
+     * Start a new render
+     * @param Region $region the region of the render
+     * @param AsyncRenderTask $task the render task
+     * @return void
+     */
+    public function startRenderTask(Region $region, AsyncRenderTask $task): void
+    {
         $this->currentRegionRenders[] = $task;
 
         // submit the task to the async pool
         $this->plugin->getServer()->getAsyncPool()->submitTask($task);
 
-        self::$logger->debug("[Scheduler] Started render of region: " . $regionChunks->getRegion());
+        self::$logger->debug("[Scheduler] Started render of region: " . $region->getName());
     }
 
     /**
@@ -178,25 +193,21 @@ class RenderSchedulerTask extends Task
         while ($this->getCurrentRendersCount() < $this->maxCurrentRenders && count($this->regionRenderQueue) > 0) {
             $rr = array_shift($this->regionRenderQueue);
             $path = $rr["path"];
+            /** @var Region $region */
             $region = $rr["region"];
 
-            // amount of chunks in render is higher than max load limit
-            if (pow($region->getTotalChunks(), 2) > $this->maxChunksPerRun) {
-                // now we are going to use a region chunks loader
+            if ($region->isChunk()) {
                 $world = $this->plugin->getServer()->getWorldManager()->getWorldByName($region->getWorldName());
                 $loader = new RegionChunksLoader($region, $world->getProvider());
                 $this->regionChunksLoaders[] = [
                     "path" => $path,
-                    "loader" => $loader,
-                    "mode" => $region->getRenderMode()
+                    "loader" => $loader
                 ];
+
                 continue;
             }
 
-            // get now the chunks of this region
-            $regionChunks = RegionChunks::getCompleted($region, $this->plugin->getServer()->getWorldManager());
-
-            $this->startRenderTask($path, $regionChunks, $region->getRenderMode());
+            $this->startRegionRenderTask($region, $path);
         }
     }
 
@@ -207,5 +218,17 @@ class RenderSchedulerTask extends Task
     public function getCurrentRendersCount(): int
     {
         return count($this->currentRegionRenders) + count($this->regionChunksLoaders);
+    }
+
+    /**
+     * Start a new region render
+     * @param Region $region the region to render
+     * @param string $path the path of the render
+     * @return void
+     */
+    public function startRegionRenderTask(Region $region, string $path): void
+    {
+        $task = new AsyncRegionRenderTask($region, $path);
+        $this->startRenderTask($region, $task);
     }
 }
