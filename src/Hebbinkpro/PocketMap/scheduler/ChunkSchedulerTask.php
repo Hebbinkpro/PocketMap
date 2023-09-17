@@ -90,15 +90,10 @@ class ChunkSchedulerTask extends Task
             $renderer = $this->pocketMap->getWorldRenderer($region->getWorldName());
             if (!$renderer) continue;
 
-            $isStarted = $renderer->startRegionRender($region);
-
             // the render did not start
-            if (!$isStarted) {
-                // the queue is full, so no other has to try it
-                break;
-            }
+            if (!$renderer->startRegionRender($region, true)) break;
 
-            $this->pocketMap->getLogger()->debug("[Chunk Render] Added region to the scheduler: " . $region->getName());
+            $this->pocketMap->getLogger()->debug("[Chunk Render] Added chunk to the scheduler: " . $region->getName());
             $started[] = $name;
 
         }
@@ -165,7 +160,7 @@ class ChunkSchedulerTask extends Task
     public function addChunk(WorldRenderer $renderer, int $chunkX, int $chunkZ): void
     {
         $world = $renderer->getWorld()->getFolderName();
-        $textures = $renderer->getResourcePack();
+        $textures = $renderer->getTerrainTextures();
         $region = new Region($world, WorldRenderer::MIN_ZOOM, $chunkX, $chunkZ, $textures);
         $this->queuedRegions[$region->getName()] = $region;
     }

@@ -16,27 +16,28 @@ use pocketmine\scheduler\Task;
 
 class RenderSchedulerTask extends Task
 {
-    private static array $currentRenders = [];
+    /** @var string[] */
+    private static array $unfinishedRenders = [];
     private static Logger $logger;
     private PluginBase $plugin;
     /** @var AsyncRegionRenderTask[] */
-    private array $currentRegionRenders;
+    private array $runningRenders;
     /** @var array{path: string, loader: RegionChunksLoader, mode: int}[] */
-    private array $regionChunksLoaders;
+    private array $scheduledChunkLoaders;
     /** @var array<string, array{path: string, region: Region}>[] */
-    private array $regionRenderQueue;
-    private int $maxCurrentRenders;
-    private int $maxQueueSize;
+    private array $scheduledRenders;
+    private int $maxRunningRenders;
+    private int $maxScheduled;
 
     public function __construct(PluginBase $plugin)
     {
         $this->plugin = $plugin;
-        $this->currentRegionRenders = [];
-        $this->regionChunksLoaders = [];
-        $this->regionRenderQueue = [];
+        $this->runningRenders = [];
+        $this->scheduledChunkLoaders = [];
+        $this->scheduledRenders = [];
 
-        $this->maxCurrentRenders = PocketMap::getConfigManger()->getInt("renderer.scheduler.renders", 5);
-        $this->maxQueueSize = PocketMap::getConfigManger()->getInt("renderer.scheduler.queue-size", 25);
+        $this->maxRunningRenders = PocketMap::getConfigManger()->getInt("renderer.scheduler.renders", 5);
+        $this->maxScheduled = PocketMap::getConfigManger()->getInt("renderer.scheduler.queue-size", 25);
 
         self::$logger = $plugin->getLogger();
     }
@@ -48,7 +49,7 @@ class RenderSchedulerTask extends Task
      */
     public static function finishRender(Region $region): void
     {
-        if (!in_array($region->getName(), self::$currentRenders)) return;
+        if (!in_array($region->getName(), self::$unfinishedRenders)) return;
         // remove the region from the list
         self::removeCurrentRender($region);
 
@@ -56,7 +57,7 @@ class RenderSchedulerTask extends Task
 
         // start now the render for the next zoom level
         $renderer = PocketMap::getWorldRenderer($region->getWorldName());
-        if (($next = $renderer->getNextZoomRegion($region)) !== null) {
+        if (($next = $region->getNextZoomRegion()) !== null) {
             // start region render for the next region
             // use replace, so when it was already in the queue, it's added in the back
             // these regions will ALWAYS be added, even if the queue is "full",
@@ -72,8 +73,8 @@ class RenderSchedulerTask extends Task
      */
     private static function removeCurrentRender(Region $region): void
     {
-        $key = array_search($region->getName(), self::$currentRenders);
-        if ($key !== false) array_splice(self::$currentRenders, $key, 1);
+        $key = array_search($region->getName(), self::$unfinishedRenders);
+        if ($key !== false) array_splice(self::$unfinishedRenders, $key, 1);
     }
 
     /**
@@ -86,31 +87,27 @@ class RenderSchedulerTask extends Task
     public function scheduleRegionRender(string $path, Region $region, bool $replace = false, bool $force = false): bool
     {
         // check if the region is already scheduled
-        $scheduled = in_array($region->getName(), $this->regionRenderQueue);
+        $scheduled = in_array($region->getName(), $this->scheduledRenders);
 
         // when the action is not forced, and it isn't already scheduled
-        if (!$force && !$scheduled && count($this->regionRenderQueue) >= $this->maxQueueSize) return false;
+        if (!$force && !$scheduled && count($this->scheduledRenders) >= $this->maxScheduled) return false;
 
         // this render is already scheduled
         if (($replace || !$force) && $scheduled) {
             // and we are not allowed to replace
-            if (!$replace) {
-                var_dump("I'm not replacing: " . $region->getName());
-                return false;
-            }
+            if (!$replace) return false;
 
             // we are going to replace the already existing render
             // remove the render that was already queued
-            unset($this->regionRenderQueue[$region->getName()]);
+            unset($this->scheduledRenders[$region->getName()]);
             // remove the region from the current renders
             self::removeCurrentRender($region);
-            var_dump("Replacing: " . $region->getName());
         }
 
-        self::$currentRenders[] = $region->getName();
+        self::$unfinishedRenders[] = $region->getName();
 
         // add the path and region to the queue
-        $this->regionRenderQueue[$region->getName()] = [
+        $this->scheduledRenders[$region->getName()] = [
             "path" => $path,
             "region" => $region
         ];
@@ -139,7 +136,7 @@ class RenderSchedulerTask extends Task
     {
         $notCompleted = [];
 
-        foreach ($this->regionChunksLoaders as $rcl) {
+        foreach ($this->scheduledChunkLoaders as $rcl) {
             /** @var string $path */
             $path = $rcl["path"];
             /** @var RegionChunksLoader $loader */
@@ -171,8 +168,8 @@ class RenderSchedulerTask extends Task
         }
 
         // clear the list and set the contents to the notCompleted regions.
-        unset($this->regionChunksLoaders);
-        $this->regionChunksLoaders = $notCompleted;
+        unset($this->scheduledChunkLoaders);
+        $this->scheduledChunkLoaders = $notCompleted;
     }
 
     /**
@@ -195,7 +192,7 @@ class RenderSchedulerTask extends Task
      */
     public function startRenderTask(Region $region, AsyncRenderTask $task): void
     {
-        $this->currentRegionRenders[] = $task;
+        $this->runningRenders[] = $task;
 
         // submit the task to the async pool
         $this->plugin->getServer()->getAsyncPool()->submitTask($task);
@@ -213,7 +210,7 @@ class RenderSchedulerTask extends Task
     {
         $completed = [];
         // check if the current renders are completed
-        foreach ($this->currentRegionRenders as $i => $render) {
+        foreach ($this->runningRenders as $i => $render) {
             // render has ended
             if ($render->isFinished()) {
                 $completed[] = $i;
@@ -222,12 +219,12 @@ class RenderSchedulerTask extends Task
 
         // remove all completed renders
         foreach ($completed as $i) {
-            unset($this->currentRegionRenders[$i]);
+            unset($this->runningRenders[$i]);
         }
 
         // add new renders until the cap is reached or no new renders are available
-        while ($this->getCurrentRendersCount() < $this->maxCurrentRenders && count($this->regionRenderQueue) > 0) {
-            $rr = array_shift($this->regionRenderQueue);
+        while ($this->getCurrentRendersCount() < $this->maxRunningRenders && count($this->scheduledRenders) > 0) {
+            $rr = array_shift($this->scheduledRenders);
             $path = $rr["path"];
             /** @var Region $region */
             $region = $rr["region"];
@@ -235,7 +232,7 @@ class RenderSchedulerTask extends Task
             if ($region->isChunk()) {
                 $world = $this->plugin->getServer()->getWorldManager()->getWorldByName($region->getWorldName());
                 $loader = new RegionChunksLoader($region, $world->getProvider());
-                $this->regionChunksLoaders[] = [
+                $this->scheduledChunkLoaders[] = [
                     "path" => $path,
                     "loader" => $loader
                 ];
@@ -253,7 +250,7 @@ class RenderSchedulerTask extends Task
      */
     public function getCurrentRendersCount(): int
     {
-        return count($this->currentRegionRenders) + count($this->regionChunksLoaders);
+        return count($this->runningRenders) + count($this->scheduledChunkLoaders);
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace Hebbinkpro\PocketMap\utils;
 
+use Exception;
 use JsonException;
 use pocketmine\utils\Config;
 
@@ -158,7 +159,7 @@ class ConfigManager
 
             // find the value inside this manager
             return $mngr->getValue(implode(".", $nameParts));
-        } catch (JsonException $e) {
+        } catch (Exception $e) {
             return $default;
         }
     }

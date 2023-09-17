@@ -7,6 +7,7 @@ use Hebbinkpro\PocketMap\textures\TerrainTextures;
 
 /**
  * A normal Region, but with a generator looping through set chunks instead of all chunks that are in the region.
+ * @deprecated Only single chunks will be rendered and the next renders are created from those renders, making this class useless.
  */
 class PartialRegion extends Region
 {

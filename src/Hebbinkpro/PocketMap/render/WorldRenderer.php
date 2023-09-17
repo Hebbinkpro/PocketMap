@@ -2,7 +2,6 @@
 
 namespace Hebbinkpro\PocketMap\render;
 
-use Hebbinkpro\PocketMap\region\PartialRegion;
 use Hebbinkpro\PocketMap\region\Region;
 use Hebbinkpro\PocketMap\scheduler\ChunkSchedulerTask;
 use Hebbinkpro\PocketMap\scheduler\RenderSchedulerTask;
@@ -78,38 +77,6 @@ class WorldRenderer
     }
 
     /**
-     * Get all regions a chunk is in
-     * @param int $chunkX
-     * @param int $chunkZ
-     * @return Region[]
-     */
-    public function getAllRegionsFromChunk(int $chunkX, int $chunkZ): array
-    {
-        $regions = [];
-        foreach (self::ZOOM_LEVELS as $zoom => $chunks) {
-            $regions[] = $this->getRegionFromChunk($zoom, $chunkX, $chunkZ);
-        }
-
-        return $regions;
-    }
-
-    /**
-     * Get a region from a chunk
-     * @param int $zoom
-     * @param int $chunkX
-     * @param int $chunkZ
-     * @return Region
-     */
-    public function getRegionFromChunk(int $zoom, int $chunkX, int $chunkZ): Region
-    {
-        $totalChunks = self::ZOOM_LEVELS[$zoom];
-        $rx = floor($chunkX / $totalChunks);
-        $rz = floor($chunkZ / $totalChunks);
-
-        return new Region($this->getWorld()->getFolderName(), $zoom, $rx, $rz, $this->terrainTextures);
-    }
-
-    /**
      * Get the world
      * @return World
      */
@@ -118,54 +85,13 @@ class WorldRenderer
         return $this->world;
     }
 
-    public function getNextZoomRegion(Region $region): ?Region
-    {
-        $nextZoom = $region->getZoom() - 1;
-        // there is no smaller zoom available
-        if ($nextZoom < -4) return null;
-
-        $nextX = floor($region->getX() / 2);
-        $nextZ = floor($region->getZ() / 2);
-
-        return new Region($region->getWorldName(), $nextZoom, $nextX, $nextZ, $this->getResourcePack());
-    }
-
     /**
-     * Get the resource pack
+     * Get the terrain textures
      * @return TerrainTextures
      */
-    public function getResourcePack(): TerrainTextures
+    public function getTerrainTextures(): TerrainTextures
     {
         return $this->terrainTextures;
-    }
-
-    /**
-     * Get a partial region from a chunk
-     * @param int $zoom
-     * @param int $chunkX
-     * @param int $chunkZ
-     * @return PartialRegion
-     */
-    public function getPartialRegion(int $zoom, int $chunkX, int $chunkZ): PartialRegion
-    {
-        $totalChunks = self::ZOOM_LEVELS[$zoom];
-        $rx = floor($chunkX / $totalChunks);
-        $rz = floor($chunkZ / $totalChunks);
-
-        return new PartialRegion($this->getWorld()->getFolderName(), $zoom, $rx, $rz, $this->terrainTextures);
-    }
-
-    /**
-     * Check if there exists a render of the given region
-     * @param Region $region
-     * @return bool
-     */
-    public function hasRender(Region $region): bool
-    {
-        $zoom = $region->getZoom();
-        $rx = $region->getX();
-        $rz = $region->getZ();
-        return is_file($this->renderPath . "$zoom/$rx,$rz.png");
     }
 
     /**

@@ -193,13 +193,10 @@ class TextureUtils
     public static function rotateToFacing(GdImage $image, int $facing): GdImage
     {
         $angle = match ($facing) {
-            Facing::UP => 0,        // +y
-            Facing::DOWN => 180,    // -y
-            Facing::EAST => 270,    // +x
-            Facing::WEST => 90,     // -x
-            Facing::SOUTH => 180,   // +z
-            Facing::NORTH => 0,     // -z
-            default => 0
+            Facing::DOWN, Facing::SOUTH => 180,     // -y, +z
+            Facing::EAST => 270,                    // +x
+            Facing::WEST => 90,                     // -x
+            default => 0                            // +y, -z
         };
 
         // angle of 0 does not have to be rotated
