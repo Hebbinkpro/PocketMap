@@ -242,9 +242,6 @@ class PocketMap extends PluginBase implements Listener
             if (!is_dir($folder . "renders/$worldName")) {
                 mkdir($folder . "renders/$worldName");
             }
-            if (!is_dir($folder . "tmp/regions/$worldName")) {
-                mkdir($folder . "tmp/regions/$worldName");
-            }
         }
 
         if (!is_dir($folder . "web")) {

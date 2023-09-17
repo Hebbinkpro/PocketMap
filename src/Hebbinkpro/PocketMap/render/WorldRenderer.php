@@ -66,14 +66,15 @@ class WorldRenderer
     /**
      * Schedule a render of the given region
      * @param Region $region
+     * @param bool $replace
      * @param bool $force
      * @return bool
      */
-    public function startRegionRender(Region $region, bool $force = false): bool
+    public function startRegionRender(Region $region, bool $replace = false, bool $force = false): bool
     {
         if (!is_dir($this->renderPath . $region->getZoom())) mkdir($this->renderPath . $region->getZoom());
 
-        return $this->scheduler->scheduleRegionRender($this->renderPath, $region, $force);
+        return $this->scheduler->scheduleRegionRender($this->renderPath, $region, $replace, $force);
     }
 
     /**

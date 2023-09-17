@@ -23,7 +23,7 @@ class RenderSchedulerTask extends Task
     private array $currentRegionRenders;
     /** @var array{path: string, loader: RegionChunksLoader, mode: int}[] */
     private array $regionChunksLoaders;
-    /** @var array{path: string, region: Region}[] */
+    /** @var array<string, array{path: string, region: Region}>[] */
     private array $regionRenderQueue;
     private int $maxCurrentRenders;
     private int $maxQueueSize;
@@ -41,40 +41,76 @@ class RenderSchedulerTask extends Task
         self::$logger = $plugin->getLogger();
     }
 
-    public static function finishedRender(Region $region): void
+    /**
+     * Mark a region render as finished
+     * @param Region $region the region that is finished
+     * @return void
+     */
+    public static function finishRender(Region $region): void
     {
         if (!in_array($region->getName(), self::$currentRenders)) return;
         // remove the region from the list
-        $key = array_search($region->getName(), self::$currentRenders);
-        array_splice(self::$currentRenders, $key, 1);
+        self::removeCurrentRender($region);
 
         self::$logger->debug("[Scheduler] Finished render of region: " . $region->getName());
 
         // start now the render for the next zoom level
         $renderer = PocketMap::getWorldRenderer($region->getWorldName());
-        $next = $renderer->getNextZoomRegion($region);
-        if ($next !== null) {
-            $renderer->startRegionRender($next, true);
+        if (($next = $renderer->getNextZoomRegion($region)) !== null) {
+            // start region render for the next region
+            // use replace, so when it was already in the queue, it's added in the back
+            // these regions will ALWAYS be added, even if the queue is "full",
+            // but new chunk renders will wait until there is space again, so it's not that harmful for performance
+            $renderer->startRegionRender($next, true, true);
         }
     }
 
     /**
-     * Add a region render to teh scheduler
+     * Remove a region from the current renders list
+     * @param Region $region the region to remove
+     * @return void
+     */
+    private static function removeCurrentRender(Region $region): void
+    {
+        $key = array_search($region->getName(), self::$currentRenders);
+        if ($key !== false) array_splice(self::$currentRenders, $key, 1);
+    }
+
+    /**
+     * Add a region render to the scheduler
      * @param string $path the path the render is placed in
      * @param Region $region the region to render
-     * @param bool $force if the render has to be loaded immediately
+     * @param bool $force if the render has to be added no matter how full the queue is
      * @return bool if the region is scheduled, if false, you have to manually schedule it again!
      */
-    public function scheduleRegionRender(string $path, Region $region, bool $force = false): bool
+    public function scheduleRegionRender(string $path, Region $region, bool $replace = false, bool $force = false): bool
     {
-        // when the action is not forced or the region is already in the scheduler, don't add the region
-        if ((!$force && count($this->regionRenderQueue) >= $this->maxQueueSize) ||
-            in_array($region->getName(), self::$currentRenders)) return false;
+        // check if the region is already scheduled
+        $scheduled = in_array($region->getName(), $this->regionRenderQueue);
+
+        // when the action is not forced, and it isn't already scheduled
+        if (!$force && !$scheduled && count($this->regionRenderQueue) >= $this->maxQueueSize) return false;
+
+        // this render is already scheduled
+        if (($replace || !$force) && $scheduled) {
+            // and we are not allowed to replace
+            if (!$replace) {
+                var_dump("I'm not replacing: " . $region->getName());
+                return false;
+            }
+
+            // we are going to replace the already existing render
+            // remove the render that was already queued
+            unset($this->regionRenderQueue[$region->getName()]);
+            // remove the region from the current renders
+            self::removeCurrentRender($region);
+            var_dump("Replacing: " . $region->getName());
+        }
 
         self::$currentRenders[] = $region->getName();
 
         // add the path and region to the queue
-        $this->regionRenderQueue[] = [
+        $this->regionRenderQueue[$region->getName()] = [
             "path" => $path,
             "region" => $region
         ];
@@ -89,8 +125,8 @@ class RenderSchedulerTask extends Task
      */
     public function onRun(): void
     {
-        // run all the chunk loaders
-        $this->runRegionChunksLoaders();
+        // load the region chunks
+        $this->loadRegionChunks();
         // run the region renders
         $this->runRegionRenders();
     }
@@ -99,7 +135,7 @@ class RenderSchedulerTask extends Task
      * Run the region chunk loaders
      * @return void
      */
-    private function runRegionChunksLoaders(): void
+    private function loadRegionChunks(): void
     {
         $notCompleted = [];
 

@@ -89,7 +89,7 @@ abstract class AsyncRenderTask extends AsyncTask
         $region = unserialize($this->serializedRegion);
 
         // mark the render as finished
-        RenderSchedulerTask::finishedRender($region);
+        RenderSchedulerTask::finishRender($region);
     }
 
     /**

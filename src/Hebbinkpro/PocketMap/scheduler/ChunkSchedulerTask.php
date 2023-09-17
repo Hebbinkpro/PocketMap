@@ -4,7 +4,6 @@ namespace Hebbinkpro\PocketMap\scheduler;
 
 use Generator;
 use Hebbinkpro\PocketMap\PocketMap;
-use Hebbinkpro\PocketMap\region\PartialRegion;
 use Hebbinkpro\PocketMap\region\Region;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
 use pocketmine\scheduler\Task;
@@ -165,40 +164,9 @@ class ChunkSchedulerTask extends Task
      */
     public function addChunk(WorldRenderer $renderer, int $chunkX, int $chunkZ): void
     {
-        $region = $renderer->getPartialRegion(WorldRenderer::MIN_ZOOM, $chunkX, $chunkZ);
-        $this->addPartialRegion($region, $chunkX, $chunkZ);
-    }
-
-    /**
-     * Adds a partial region to the queue
-     * @param PartialRegion $region
-     * @param int $chunkX
-     * @param int $chunkZ
-     * @return void
-     */
-    public function addPartialRegion(PartialRegion $region, int $chunkX, int $chunkZ): void
-    {
-
-        $queuedRegion = $this->getQueuedRegion($region);
-        // the region is already stored
-        if ($queuedRegion === null) {
-            $queuedRegion = $region;
-            $this->pocketMap->getLogger()->debug("[Chunk Render] Added region to the queue: " . $region->getName());
-            $this->queuedRegions[$region->getName()] = $region;
-        }
-        $this->pocketMap->getLogger()->debug("[Chunk Render] Added chunk: $chunkX,$chunkZ, to region: " . $queuedRegion->getName());
-
-        // add the chunk to the stored region
-        $queuedRegion->addChunk($chunkX, $chunkZ);
-    }
-
-    /**
-     * Get a queued region by a similar region
-     * @param Region $region
-     * @return Region|null
-     */
-    public function getQueuedRegion(Region $region): ?Region
-    {
-        return $this->queuedRegions[$region->getName()] ?? null;
+        $world = $renderer->getWorld()->getFolderName();
+        $textures = $renderer->getResourcePack();
+        $region = new Region($world, WorldRenderer::MIN_ZOOM, $chunkX, $chunkZ, $textures);
+        $this->queuedRegions[$region->getName()] = $region;
     }
 }
