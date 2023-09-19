@@ -7,16 +7,16 @@ use Hebbinkpro\PocketMap\textures\TerrainTextures;
 
 /**
  * A normal Region, but with a generator looping through set chunks instead of all chunks that are in the region.
- * @deprecated Only single chunks will be rendered and the next renders are created from those renders, making this class useless.
+ * This region type will also make sure all chunks in the region will be rendered by default.
  */
 class PartialRegion extends Region
 {
     /** @var int[][] */
     private array $chunks;
 
-    public function __construct(string $worldName, int $zoom, int $regionX, int $regionZ, TerrainTextures $terrainTextures)
+    public function __construct(string $worldName, int $zoom, int $regionX, int $regionZ, TerrainTextures $terrainTextures, bool $renderChunks = true)
     {
-        parent::__construct($worldName, $zoom, $regionX, $regionZ, $terrainTextures);
+        parent::__construct($worldName, $zoom, $regionX, $regionZ, $terrainTextures, $renderChunks);
         $this->chunks = [];
     }
 

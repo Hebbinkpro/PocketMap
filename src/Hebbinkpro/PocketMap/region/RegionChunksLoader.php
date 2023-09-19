@@ -13,7 +13,6 @@ class RegionChunksLoader
     private RegionChunks $regionChunks;
     private Generator|array $chunkCoords;
     private bool $finished;
-    private array $notLoadedChunks;
 
     private int $maxChunksPerRun;
 
@@ -23,8 +22,6 @@ class RegionChunksLoader
         $this->regionChunks = RegionChunks::getEmpty($region);
         $this->chunkCoords = $region->getChunks();
         $this->finished = false;
-        $this->notLoadedChunks = [];
-
         $this->maxChunksPerRun = PocketMap::getConfigManger()->getInt("renderer.chunk-loader.chunks-per-run", 128);
     }
 
@@ -40,6 +37,10 @@ class RegionChunksLoader
         $i = 0;
         $chunks = [];
 
+        /** @var PartialRegion $partialRegion */
+        $partialRegion = null;
+        if ($this->regionChunks->getRegion() instanceof $partialRegion) $partialRegion = $this->regionChunks->getRegion();
+
         // loop through all chunk coords
         while ($this->chunkCoords->valid()) {
 
@@ -52,7 +53,8 @@ class RegionChunksLoader
                 $chunks[$x][$z] = ChunkUtils::getChunkFromData($chunkData->getData());
             } else {
                 // the chunk data of this chunk didn't exist
-                $this->notLoadedChunks[] = [$x, $z];
+                // remove the chunk from the partial region
+                $partialRegion?->removeChunk($x, $z);
             }
             $this->chunkCoords->next();
 
@@ -67,29 +69,11 @@ class RegionChunksLoader
     }
 
     /**
-     * Get if the loader is finished
-     * @return bool
-     */
-    public function isFinished(): bool
-    {
-        return $this->finished;
-    }
-
-    /**
      * Get the region chunks that are loaded
      * @return RegionChunks
      */
     public function getRegionChunks(): RegionChunks
     {
         return $this->regionChunks;
-    }
-
-    /**
-     * Get all chunks that are not loaded
-     * @return array
-     */
-    public function getNotLoadedChunks(): array
-    {
-        return $this->notLoadedChunks;
     }
 }

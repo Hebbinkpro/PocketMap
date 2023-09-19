@@ -2,6 +2,7 @@
 
 namespace Hebbinkpro\PocketMap\render;
 
+use Hebbinkpro\PocketMap\region\PartialRegion;
 use Hebbinkpro\PocketMap\region\Region;
 use Hebbinkpro\PocketMap\scheduler\ChunkSchedulerTask;
 use Hebbinkpro\PocketMap\scheduler\RenderSchedulerTask;
@@ -86,15 +87,6 @@ class WorldRenderer
     }
 
     /**
-     * Get the terrain textures
-     * @return TerrainTextures
-     */
-    public function getTerrainTextures(): TerrainTextures
-    {
-        return $this->terrainTextures;
-    }
-
-    /**
      * Get the render path of this world
      * @return string
      */
@@ -113,5 +105,15 @@ class WorldRenderer
     {
         $file = $this->renderPath . self::MIN_ZOOM . "/$x,$z.png";
         return is_file($file);
+    }
+
+    /**
+     * Get the smallest region the chunk is in
+     * @param int $x the x coordinate of the chunk
+     * @param int $z the z coordinate of the chunk
+     * @return PartialRegion
+     */
+    public function getSmallestRegion(int $x, int $z): PartialRegion {
+        return new PartialRegion($this->world->getFolderName(), self::MIN_ZOOM, $x, $z, $this->terrainTextures);
     }
 }

@@ -13,15 +13,17 @@ class Region
     private int $x;
     private int $z;
     private TerrainTextures $terrainTextures;
+    private bool $renderChunks;
 
 
-    public function __construct(string $worldName, int $zoom, int $regionX, int $regionZ, TerrainTextures $terrainTextures)
+    public function __construct(string $worldName, int $zoom, int $regionX, int $regionZ, TerrainTextures $terrainTextures, bool $renderChunks = false)
     {
         $this->worldName = $worldName;
         $this->zoom = $zoom;
         $this->x = $regionX;
         $this->z = $regionZ;
         $this->terrainTextures = $terrainTextures;
+        $this->renderChunks = $renderChunks;
     }
 
     /**
@@ -165,5 +167,14 @@ class Region
     public function getTerrainTextures(): TerrainTextures
     {
         return $this->terrainTextures;
+    }
+
+    /**
+     * If all chunks inside the region should be rendered individually.
+     * When false, the previous render will be used.
+     * @return bool
+     */
+    public function renderAllChunks(): bool {
+        return $this->isChunk() || $this->renderChunks;
     }
 }

@@ -4,7 +4,7 @@ namespace Hebbinkpro\PocketMap\scheduler;
 
 use Generator;
 use Hebbinkpro\PocketMap\PocketMap;
-use Hebbinkpro\PocketMap\region\Region;
+use Hebbinkpro\PocketMap\region\PartialRegion;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
 use pocketmine\scheduler\Task;
 
@@ -15,7 +15,7 @@ class ChunkSchedulerTask extends Task
 
     private PocketMap $pocketMap;
 
-    /** @var Region[] */
+    /** @var PartialRegion[] */
     private array $queuedRegions;
 
     /**
@@ -151,7 +151,7 @@ class ChunkSchedulerTask extends Task
     }
 
     /**
-     * Add a chunk to the render queue
+     * Add the smallest region the chunk is in to the render queue
      * @param WorldRenderer $renderer
      * @param int $chunkX
      * @param int $chunkZ
@@ -159,9 +159,11 @@ class ChunkSchedulerTask extends Task
      */
     public function addChunk(WorldRenderer $renderer, int $chunkX, int $chunkZ): void
     {
-        $world = $renderer->getWorld()->getFolderName();
-        $textures = $renderer->getTerrainTextures();
-        $region = new Region($world, WorldRenderer::MIN_ZOOM, $chunkX, $chunkZ, $textures);
-        $this->queuedRegions[$region->getName()] = $region;
+        $region = $renderer->getSmallestRegion($chunkX, $chunkZ);
+        if (!array_key_exists($region->getName(), $this->queuedRegions)) {
+            $this->queuedRegions[$region->getName()] = $region;
+        }
+
+        $this->queuedRegions[$region->getName()]->addChunk($chunkX, $chunkZ);
     }
 }

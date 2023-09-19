@@ -3,7 +3,6 @@
 namespace Hebbinkpro\PocketMap\scheduler;
 
 use Hebbinkpro\PocketMap\PocketMap;
-use Hebbinkpro\PocketMap\region\PartialRegion;
 use Hebbinkpro\PocketMap\region\Region;
 use Hebbinkpro\PocketMap\region\RegionChunks;
 use Hebbinkpro\PocketMap\region\RegionChunksLoader;
@@ -145,20 +144,6 @@ class RenderSchedulerTask extends Task
             // is completely loaded
             if ($loader->run()) {
                 $regionChunks = $loader->getRegionChunks();
-                $region = $regionChunks->getRegion();
-
-                // it's a partial region
-                if ($region instanceof PartialRegion) {
-                    // get all chunks that are not loaded
-                    $notLoadedChunks = $loader->getNotLoadedChunks();
-
-                    // remove all not loaded chunks from the list
-                    // otherwise, they will be marked as generated which will cause them to be black images
-                    foreach ($notLoadedChunks as [$x, $z]) {
-                        $region->removeChunk($x, $z);
-                    }
-                }
-
                 $this->startChunkRenderTask($regionChunks, $path);
                 continue;
             }
@@ -229,7 +214,8 @@ class RenderSchedulerTask extends Task
             /** @var Region $region */
             $region = $rr["region"];
 
-            if ($region->isChunk()) {
+            // if all chunks should be rendered, prepare for the ChunkRenderTask
+            if ($region->renderAllChunks()) {
                 $world = $this->plugin->getServer()->getWorldManager()->getWorldByName($region->getWorldName());
                 $loader = new RegionChunksLoader($region, $world->getProvider());
                 $this->scheduledChunkLoaders[] = [
