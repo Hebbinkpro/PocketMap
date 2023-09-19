@@ -39,7 +39,7 @@ class RegionChunksLoader
 
         /** @var PartialRegion $partialRegion */
         $partialRegion = null;
-        if ($this->regionChunks->getRegion() instanceof $partialRegion) $partialRegion = $this->regionChunks->getRegion();
+        if ($this->regionChunks->getRegion() instanceof PartialRegion) $partialRegion = $this->regionChunks->getRegion();
 
         // loop through all chunk coords
         while ($this->chunkCoords->valid()) {
