@@ -169,7 +169,16 @@ class TerrainTextures
         // store all textures
         foreach ($blockTextures as $path) {
             $texture = $archive->getFromName($prefix . $path);
-            if ($texture !== false) file_put_contents($rpPath . $path, $texture);
+            if ($texture !== false) {
+                $blockPath = str_replace($rpPath . ResourcePackUtils::BLOCK_TEXTURES, "", $rpPath . $path);
+                if (($parts = explode("/", $blockPath)) > 1) {
+                    array_pop($parts);
+                    $blockFolderPath = $rpPath . ResourcePackUtils::BLOCK_TEXTURES . implode("/", $parts);
+                    if (!is_dir($blockFolderPath)) mkdir($blockFolderPath, 0777, true);
+                }
+
+                file_put_contents($rpPath . $path, $texture);
+            }
         }
 
         // close the archive
@@ -369,8 +378,25 @@ class TerrainTextures
         }
     }
 
-    private static function canOverwrite(string $texture, array $noOverwrite): bool
+    private static function canOverwrite(string|array $texture, array $noOverwrite): bool
     {
+        // TODO: not all blocks will be overwritten even when it is supposed to
+        // - with blocks in arrays, e.g. crops
+        // - blocks which use textures of other blocks e.g. stairs
+
+        if (is_array($texture)) {
+            if (array_key_exists("path", $texture)) {
+                return self::canOverwrite($texture["path"], $noOverwrite);
+            } else {
+                foreach ($texture as $key=>$realTexture) {
+                    $canOverwrite = self::canOverwrite($realTexture, $noOverwrite);
+                    if (!$canOverwrite) return false;
+                }
+
+                return true;
+            }
+        }
+
         foreach ($noOverwrite as $prefix) {
             if (str_starts_with($texture, $prefix)) return false;
         }
