@@ -139,15 +139,6 @@ class Region
         return $this->worldName;
     }
 
-    /**
-     * Get if the region only exists out of a single chunk.
-     * @return bool
-     */
-    public function isChunk(): bool
-    {
-        return $this->getTotalChunks() == 1;
-    }
-
     public function getNextZoomRegion(): ?Region
     {
         $nextZoom = $this->zoom - 1;
@@ -174,7 +165,17 @@ class Region
      * When false, the previous render will be used.
      * @return bool
      */
-    public function renderAllChunks(): bool {
+    public function renderAllChunks(): bool
+    {
         return $this->isChunk() || $this->renderChunks;
+    }
+
+    /**
+     * Get if the region only exists out of a single chunk.
+     * @return bool
+     */
+    public function isChunk(): bool
+    {
+        return $this->getTotalChunks() == 1;
     }
 }

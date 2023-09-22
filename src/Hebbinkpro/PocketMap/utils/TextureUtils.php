@@ -268,4 +268,24 @@ class TextureUtils
             unset(self::$blockTextureMap[$path]);
         }
     }
+
+    public static function getBlockFaceTexture(Block $block, array $availableFaces): ?string
+    {
+        if (empty($availableFaces)) return null;
+
+        $axis = BlockStateParser::getBlockFace($block);
+
+        $faces = match ($axis) {
+            Facing::UP => ["up"],
+            Facing::DOWN => ["down", "up"],
+            Facing::EAST => ["east", "side"],
+            Facing::WEST => ["west", "side"],
+            Facing::SOUTH => ["south", "side"],
+            Facing::NORTH => ["north", "side"],
+            default => ["up", $availableFaces[0]],
+        };
+
+        $validFaces = array_intersect($faces, $availableFaces);
+        return $validFaces[array_key_first($validFaces)];
+    }
 }

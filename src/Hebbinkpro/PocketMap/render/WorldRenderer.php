@@ -113,7 +113,8 @@ class WorldRenderer
      * @param int $z the z coordinate of the chunk
      * @return PartialRegion
      */
-    public function getSmallestRegion(int $x, int $z): PartialRegion {
+    public function getSmallestRegion(int $x, int $z): PartialRegion
+    {
         return new PartialRegion($this->world->getFolderName(), self::MIN_ZOOM, $x, $z, $this->terrainTextures);
     }
 }
