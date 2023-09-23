@@ -142,14 +142,14 @@ class ResourcePackTextures
             if (!isset($data["textures"])) continue;
             $texture = $data["textures"];
 
-            if (is_string($texture) && self::isValidTextureAlias($texture)) {
+            if (is_string($texture) && self::isValidTerrainTexture($texture)) {
                 $this->blocks[$name] = $texture;
             }
 
             if (is_array($texture)) {
                 $this->blocks[$name] = [];
                 foreach ($texture as $direction => $directionAlias) {
-                    if (self::isValidTextureAlias($directionAlias)) {
+                    if (self::isValidTerrainTexture($directionAlias)) {
                         $this->blocks[$name][$direction] = $directionAlias;
                     }
                 }
@@ -162,9 +162,9 @@ class ResourcePackTextures
 
     }
 
-    public function isValidTextureAlias(string $alias): bool
+    public function isValidTerrainTexture(string $alias): bool
     {
-        return array_key_exists($alias, $this->terrainTextures);
+        return array_key_exists($alias, $this->terrainTextures) || $this->isValidTexture($alias);
     }
 
     /**

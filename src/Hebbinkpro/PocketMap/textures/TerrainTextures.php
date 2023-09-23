@@ -253,6 +253,8 @@ class TerrainTextures extends ResourcePackTextures
         if ($textureName === null) return null;
 
         $texture = $this->getTextureByBlock($block);
+        if ($texture === null) return null;
+
         return $this->getRealTexturePath($texture);
     }
 

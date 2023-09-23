@@ -2,6 +2,7 @@
 
 namespace Hebbinkpro\PocketMap\utils;
 
+use Exception;
 use GdImage;
 use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
@@ -95,12 +96,15 @@ class TextureUtils
             $path = $terrainTextures->getRealTexturePath($terrainTextures->getOptions()->getFallbackBlock());
         }
 
-        if (is_file($path . ".png")) $img = imagecreatefrompng($path . ".png");
-        else if (is_file($path . ".tga")) $img = imagecreatefromtga($path . ".tga");
+        if (is_file($path . ".png")) $img = @imagecreatefrompng($path . ".png");
+        else if (is_file($path . ".tga")) $img = @imagecreatefromtga($path . ".tga");
         else {
             // the path is null, return empty image
             $img = imagecreatetruecolor(PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
             imagecolorallocatealpha($img, 0, 0, 0, 127);
+        }
+        if ($img === false) {
+            throw new Exception("Oh god, $path, is not a valid image");
         }
 
         imagealphablending($img, true);
@@ -218,33 +222,39 @@ class TextureUtils
         $stateData = BlockStateParser::getBlockStateData($block);
         if ($stateData === null) return null;
 
-        $name = match ($stateData->getName()) {
-            // replace all (old) logs with log or log2, all new logs have their own name
+        $name = self::getBlockTypeName($stateData->getName());
+
+        // replace _block_ with _
+        return str_replace("_block_", "_", self::removeBlockTypeNamePrefix($name));
+    }
+
+    public static function getBlockTypeName(string $stateName): string
+    {
+        return match ($stateName) {
             BTN::OAK_LOG, BTN::BIRCH_LOG, BTN::SPRUCE_LOG, BTN::JUNGLE_LOG
             => OBTN::LOG,
             BTN::ACACIA_LOG, BTN::DARK_OAK_LOG
             => OBTN::LOG2,
 
-            // replace all concrete types with minecraft:concrete,
-            // because concrete is the only block that doesn't have entries for single colors, but still uses the color indexes
             BTN::WHITE_CONCRETE, BTN::ORANGE_CONCRETE, BTN::MAGENTA_CONCRETE, BTN::LIGHT_BLUE_CONCRETE,
             BTN::YELLOW_CONCRETE, BTN::LIME_CONCRETE, BTN::PINK_CONCRETE, BTN::GRAY_CONCRETE,
             BTN::LIGHT_GRAY_CONCRETE, BTN::CYAN_CONCRETE, BTN::PURPLE_CONCRETE, BTN::BLUE_CONCRETE,
             BTN::BROWN_CONCRETE, BTN::GREEN_CONCRETE, BTN::RED_CONCRETE, BTN::BLACK_CONCRETE
             => OBTN::CONCRETE,
 
-            // replace concrete_powder with concretePowder, but WHY minecraft it isn't that hard
             BTN::CONCRETE_POWDER
             => OBTN::CONCRETE_POWDER,
 
             // just return the name
-            default => $stateData->getName()
+            default => $stateName
         };
+    }
 
+    public static function removeBlockTypeNamePrefix(string $name): string
+    {
         // remove prefix from the item if it exists
         if (str_contains($name, ":")) $name = explode(":", $name)[1];
-        // replace _block_ with _
-        return str_replace("_block_", "_", $name);
+        return $name;
     }
 
     /**
