@@ -2,7 +2,6 @@
 
 namespace Hebbinkpro\PocketMap\utils;
 
-use Exception;
 use GdImage;
 use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
@@ -56,8 +55,8 @@ class TextureUtils
     public static function createCompressedBlockTexture(Block $block, Biome $biome, TerrainTextures $terrainTextures, int $newSize): GdImage
     {
         $img = self::createBlockTexture($block, $biome, $terrainTextures);
-
         $compressedImg = self::getCompressedImage($img, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE, $newSize, $newSize);
+
         imagedestroy($img);
 
         return $compressedImg;
@@ -85,7 +84,9 @@ class TextureUtils
 
             // create image and copy the cache data to it
             $img = imagecreatetruecolor(PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
+            imagealphablending($img, false);
             imagecopy($img, $cacheImg, 0, 0, 0, 0, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
+            imagesavealpha($img, true);
 
             // return the copy of the cached image
             return $img;
@@ -96,26 +97,28 @@ class TextureUtils
             $path = $terrainTextures->getRealTexturePath($terrainTextures->getOptions()->getFallbackBlock());
         }
 
-        if (is_file($path . ".png")) $img = @imagecreatefrompng($path . ".png");
-        else if (is_file($path . ".tga")) $img = @imagecreatefromtga($path . ".tga");
+        if (is_file($path . ".png")) $img = imagecreatefrompng($path . ".png");
+        else if (is_file($path . ".tga")) $img = imagecreatefromtga($path . ".tga");
         else {
             // the path is null, return empty image
             $img = imagecreatetruecolor(PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
             imagecolorallocatealpha($img, 0, 0, 0, 127);
         }
-        if ($img === false) {
-            throw new Exception("Oh god, $path, is not a valid image");
-        }
+        imagealphablending($img, false);
 
-        imagealphablending($img, true);
         self::applyColorMap($img, $block, $biome, $terrainTextures);
+        imagesavealpha($img, true);
 
         // create a cache image
         $cacheImg = imagecreatetruecolor(PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
+        imagealphablending($cacheImg, false);
         imagecopy($cacheImg, $img, 0, 0, 0, 0, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
+        imagesavealpha($cacheImg, true);
 
         // store the cache image
         self::$blockTextureMap[$terrainTextures->getPath()][$block->getTypeId()][$biome->getId()] = $cacheImg;
+
+
         return $img;
     }
 
@@ -135,7 +138,8 @@ class TextureUtils
         // the given block is not mapped
         if ($colorMap < 0) return;
 
-        self::overlay($texture, $colorMap, PocketMap::TEXTURE_SIZE);
+        self::applyColorOverlay($texture, $colorMap, PocketMap::TEXTURE_SIZE);
+
     }
 
     /**
@@ -145,7 +149,7 @@ class TextureUtils
      * @param int $size the size (in pixels) of the image
      * @return void
      */
-    public static function overlay(GdImage $image, int $overlay, int $size): void
+    public static function applyColorOverlay(GdImage $image, int $overlay, int $size): void
     {
         $co = imagecolorsforindex($image, $overlay);
 
@@ -168,7 +172,6 @@ class TextureUtils
                 imagesetpixel($image, $x, $y, imagecolorexactalpha($image, $cr["red"], $cr["green"], $cr["blue"], $cr["alpha"]));
             }
         }
-
     }
 
     /**
@@ -183,9 +186,33 @@ class TextureUtils
     public static function getCompressedImage(GdImage $src, int $srcWidth, int $srcHeight, int $newWidth, int $newHeight): GdImage
     {
         $compressedImg = imagecreatetruecolor($newWidth, $newHeight);
+        imagealphablending($compressedImg, false);
         imagecopyresized($compressedImg, $src, 0, 0, 0, 0, $newWidth, $newHeight, $srcHeight, $srcWidth);
+        imagesavealpha($compressedImg, true);
 
         return $compressedImg;
+    }
+
+    /**
+     * Apply an alpha value over the whole image
+     * @param GdImage $image the image
+     * @param int $alpha the alpha value
+     * @param int $size the size of the image
+     * @return void
+     */
+    public static function applyAlpha(GdImage $image, int $alpha, int $size): void
+    {
+
+        for ($x = 0; $x < $size; $x++) {
+            for ($y = 0; $y < $size; $y++) {
+                $c = imagecolorsforindex($image, imagecolorat($image, $x, $y));
+                $c["alpha"] += $alpha;
+                if ($c["alpha"] > 127) $c["alpha"] = 127;
+                else if ($c["alpha"] < 0) $c["alpha"] = 0;
+
+                imagesetpixel($image, $x, $y, imagecolorexactalpha($image, $c["red"], $c["green"], $c["blue"], $c["alpha"]));
+            }
+        }
     }
 
     /**
@@ -208,6 +235,7 @@ class TextureUtils
 
         // rotate the image
         return imagerotate($image, $angle, 0);
+
     }
 
     /**
@@ -298,4 +326,6 @@ class TextureUtils
         $validFaces = array_intersect($faces, $availableFaces);
         return $validFaces[array_key_first($validFaces)];
     }
+
+
 }

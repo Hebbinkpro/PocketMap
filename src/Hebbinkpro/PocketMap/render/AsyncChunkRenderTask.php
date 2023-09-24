@@ -7,8 +7,10 @@ use Hebbinkpro\PocketMap\region\Region;
 use Hebbinkpro\PocketMap\region\RegionChunks;
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
 use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
+use Hebbinkpro\PocketMap\utils\ColorMapParser;
 use Hebbinkpro\PocketMap\utils\TextureUtils;
 use pocketmine\block\BlockTypeIds;
+use pocketmine\block\Opaque;
 use pocketmine\world\biome\BiomeRegistry;
 use pocketmine\world\format\Chunk;
 use pocketmine\world\World;
@@ -78,12 +80,6 @@ class AsyncChunkRenderTask extends AsyncRenderTask
      */
     private function createChunkTexture(Chunk $chunk, TerrainTextures $terrainTextures, int $totalBlocks, int $pixelsPerBlock): GdImage
     {
-        $invalidBlocks = [
-            BlockTypeIds::FERN,
-            BlockTypeIds::TALL_GRASS,
-            BlockTypeIds::DOUBLE_TALLGRASS
-        ];
-
         $textureSize = $totalBlocks * $pixelsPerBlock;
 
         $texture = imagecreatetruecolor($textureSize, $textureSize);
@@ -92,41 +88,26 @@ class AsyncChunkRenderTask extends AsyncRenderTask
         // this is to prevent rendering of only the upper left corner for rendering when <16 pixels are available for a chunk
         $diff = floor(16 / $totalBlocks);
 
+        $color = $terrainTextures->getOptions()->getHeightOverlayColor();
+        $alpha = $terrainTextures->getOptions()->getHeightOverlayAlpha();
+
+        $r = ($color >> 16) & 0xff;
+        $g = ($color >> 8) & 0xff;
+        $b = $color & 0xff;
+        $heightOverlay = $this->getHeightOverlay(imagecolorallocatealpha($texture, $r, $g, $b, 127 - $alpha), $pixelsPerBlock);
+
         // loop through all block indices that can be rendered
         for ($bdxI = 0; $bdxI < $totalBlocks; $bdxI++) {
             for ($bdzI = 0; $bdzI < $totalBlocks; $bdzI++) {
                 // get the real x and z positions from the indices
                 $bdx = $bdxI * $diff;
                 $bdz = $bdzI * $diff;
+                $highestY = $chunk->getHighestBlockAt($bdx, $bdz);
 
-                $y = $chunk->getHighestBlockAt($bdx, $bdz);
+                $blockTexture = $this->getBlockTexture($bdx, $bdz, $chunk, $terrainTextures, $pixelsPerBlock);
 
-                // there is no block on this position
-                if ($y === null) continue;
+                if ($highestY % 2 != 0) {
 
-                $blockStateId = $chunk->getBlockStateId($bdx, $y, $bdz);
-                $block = BlockStateParser::getBlockFromStateId($blockStateId);
-
-                while (in_array($block->getTypeId(), $invalidBlocks) && $y > World::Y_MIN) {
-                    $y--;
-                    $blockStateId = $chunk->getBlockStateId($bdx, $y, $bdz);
-                    $block = BlockStateParser::getBlockFromStateId($blockStateId);
-                }
-
-                $biomeId = $chunk->getBiomeId($bdx, $y, $bdz);
-                $biome = BiomeRegistry::getInstance()->getBiome($biomeId);
-
-                $blockTexture = TextureUtils::createCompressedBlockTexture($block, $biome, $terrainTextures, $pixelsPerBlock);
-                $blockTexture = TextureUtils::rotateToFacing($blockTexture, BlockStateParser::getBlockFace($block));
-
-                if ($y % 2 != 0 && ($alpha = $terrainTextures->getOptions()->getHeightOverlayAlpha()) > 0) {
-                    $color = $terrainTextures->getOptions()->getHeightOverlayColor();
-                    $r = ($color >> 16) & 0xff;
-                    $g = ($color >> 8) & 0xff;
-                    $b = $color & 0xff;
-
-                    $heightOverlay = imagecreatetruecolor($pixelsPerBlock, $pixelsPerBlock);
-                    imagefill($heightOverlay, 0, 0, imagecolorallocatealpha($heightOverlay, $r, $g, $b, 127 - $alpha));
                     imagecopy($blockTexture, $heightOverlay, 0, 0, 0, 0, $pixelsPerBlock, $pixelsPerBlock);
                 }
 
@@ -135,6 +116,95 @@ class AsyncChunkRenderTask extends AsyncRenderTask
 
                 imagecopy($texture, $blockTexture, $tx, $ty, 0, 0, $pixelsPerBlock, $pixelsPerBlock);
             }
+        }
+
+        imagedestroy($heightOverlay);
+
+        return $texture;
+    }
+
+    private function getHeightOverlay(int $color, int $pixelsPerBlock): GdImage
+    {
+
+
+        $heightOverlay = imagecreatetruecolor($pixelsPerBlock, $pixelsPerBlock);
+        imagefill($heightOverlay, 0, 0, $color);
+
+        return $heightOverlay;
+    }
+
+    private function getBlockTexture(int $x, int $z, Chunk $chunk, TerrainTextures $terrainTextures, int $pixelsPerBlock): ?GdImage
+    {
+        $y = $chunk->getHighestBlockAt($x, $z);
+
+        // there is no block on this position
+        if ($y === null) return null;
+
+        $blocks = [];
+        $blockIds = [];
+        $waterDepth = 0;
+        $height = 0;
+        while ($y > World::Y_MIN) {
+            $blockStateId = $chunk->getBlockStateId($x, $y, $z);
+            $block = BlockStateParser::getBlockFromStateId($blockStateId);
+
+            // it's a solid block
+            if ($block instanceof Opaque) {
+                $blocks[] = $block;
+                break;
+            }
+
+            // it's water
+            if ($block->getTypeId() === BlockTypeIds::WATER) {
+                if ($waterDepth == 0) $blocks[] = $block;
+                $waterDepth++;
+            } // it's air
+            else if ($block->getTypeId() === BlockTypeIds::AIR || in_array($block->getTypeId(), $blockIds)) {
+                $height++;
+            } // it's another transparent block
+            else {
+                $blockIds[] = $block->getTypeId();
+                $blocks[] = $block;
+            }
+
+            $y--;
+        }
+
+        $biomeId = $chunk->getBiomeId($x, $y, $z);
+        $biome = BiomeRegistry::getInstance()->getBiome($biomeId);
+
+        // loop from the bottom to the top in the blocks list
+        // the latest added block has to be rendered under the previous block
+        $texture = imagecreatetruecolor($pixelsPerBlock, $pixelsPerBlock);
+
+        for ($i = count($blocks) - 1; $i >= 0; $i--) {
+            $block = $blocks[$i];
+
+            $blockTexture = TextureUtils::createCompressedBlockTexture($block, $biome, $terrainTextures, $pixelsPerBlock);
+            $blockTexture = TextureUtils::rotateToFacing($blockTexture, BlockStateParser::getBlockFace($block));
+
+            if ($block->getTypeId() === BlockTypeIds::WATER) {
+                $waterAlpha = 32 - (4 * ColorMapParser::getWaterTransparency($biome, $terrainTextures) * $waterDepth);
+                TextureUtils::applyAlpha($blockTexture, $waterAlpha, $pixelsPerBlock);
+            }
+
+            // it's the latest texture and there is a height difference
+            if ($i == 0 && $height > 0) {
+                // apply the height overlay to the full texture excluding the top block
+
+                $heightAlpha = 96 - 8 * $height;
+                if ($heightAlpha < 0) $heightAlpha = 0;
+                $color = imagecolorallocatealpha($texture, 0, 0, 0, $heightAlpha);
+                $heightOverlay = $this->getHeightOverlay($color, $pixelsPerBlock);
+
+                imagealphablending($texture, true);
+                imagecopy($texture, $heightOverlay, 0, 0, 0, 0, $pixelsPerBlock, $pixelsPerBlock);
+            }
+
+            imagealphablending($blockTexture, true);
+            imagecopy($texture, $blockTexture, 0, 0, 0, 0, $pixelsPerBlock, $pixelsPerBlock);
+
+            imagedestroy($blockTexture);
         }
 
         return $texture;

@@ -67,11 +67,21 @@ final class ColorMapParser
      */
     public static function getWaterColor(Biome $biome, TerrainTextures $terrainTextures): int
     {
-        $biomes = json_decode(file_get_contents($terrainTextures->getVanillaPath() . self::BIOMES_CLIENT), true)["biomes"];
-        $biomeData = $biomes[self::getBiomeName($biome)] ?? $biomes["default"];
+        $biomeData = self::getBiomeData($biome, $terrainTextures);
+        $hexColor = $biomeData["water_surface_color"] ?? "#44AFF5";
+        return hexdec(str_replace("#", "", $hexColor));
+    }
 
-        $color = $biomeData["water_surface_color"];
-        return hexdec(str_replace("#", "", $color));
+    /**
+     * Get the biome data from biomes_client.json
+     * @param Biome $biome
+     * @param TerrainTextures $terrainTextures
+     * @return array
+     */
+    public static function getBiomeData(Biome $biome, TerrainTextures $terrainTextures): array
+    {
+        $biomes = json_decode(file_get_contents($terrainTextures->getVanillaPath() . self::BIOMES_CLIENT), true)["biomes"];
+        return $biomes[self::getBiomeName($biome)] ?? $biomes["default"] ?? [];
     }
 
     /**
@@ -220,6 +230,18 @@ final class ColorMapParser
         }
 
         return self::getColorFromMap($temp, $rain, $texture);
+    }
+
+    /**
+     * Get the water transparency in a given biome
+     * @param Biome $biome
+     * @param TerrainTextures $terrainTextures
+     * @return float
+     */
+    public static function getWaterTransparency(Biome $biome, TerrainTextures $terrainTextures): float
+    {
+        $biomeData = self::getBiomeData($biome, $terrainTextures);
+        return $biomeData["water_surface_transparency"] ?? 0.650;
     }
 
     /**
