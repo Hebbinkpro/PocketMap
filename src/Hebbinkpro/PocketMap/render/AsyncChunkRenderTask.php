@@ -184,7 +184,7 @@ class AsyncChunkRenderTask extends AsyncRenderTask
             $blockTexture = TextureUtils::rotateToFacing($blockTexture, BlockStateParser::getBlockFace($block));
 
             if ($block->getTypeId() === BlockTypeIds::WATER) {
-                $waterAlpha = 32 - (4 * ColorMapParser::getWaterTransparency($biome, $terrainTextures) * $waterDepth);
+                $waterAlpha = floor(32 - (4 * ColorMapParser::getWaterTransparency($biome, $terrainTextures) * $waterDepth));
                 TextureUtils::applyAlpha($blockTexture, $waterAlpha, $pixelsPerBlock);
             }
 
