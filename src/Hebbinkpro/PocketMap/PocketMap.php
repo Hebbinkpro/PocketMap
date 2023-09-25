@@ -120,7 +120,7 @@ class PocketMap extends PluginBase implements Listener
             case "reload":
                 $this->getLogger()->info("Reloading the plugin data");
 
-                if (isset($args[0]) && $args[0] === "web") Filesystem::recursiveUnlink($this->getDataFolder()."web");
+                if (isset($args[0]) && $args[0] === "web") Filesystem::recursiveUnlink($this->getDataFolder() . "web");
 
                 $this->loadConfig();
                 $this->generateFolderStructure();
@@ -165,45 +165,6 @@ class PocketMap extends PluginBase implements Listener
 
         // construct the config manager
         $this->configManager = ConfigManager::fromConfig($config);
-    }
-
-    protected function onEnable(): void
-    {
-        self::$instance = $this;
-
-        // load all resources
-        $this->loadConfig();
-        $this->generateFolderStructure();
-
-        // load the terrain textures
-        $this->loadTerrainTextures();
-
-        WebServer::register($this);
-
-        try {
-            // create the web server
-            $this->createWebServer();
-        } catch (Exception $e) {
-            $this->getLogger()->alert("Could not start the web server.");
-            $this->getLogger()->error($e);
-            $this->getServer()->getPluginManager()->disablePlugin($this);
-            return;
-        }
-
-        // start the render scheduler
-        $this->renderScheduler = new RenderSchedulerTask($this);
-        $this->getScheduler()->scheduleRepeatingTask($this->renderScheduler, $this->configManager->getInt("renderer.scheduler.run-period", 5));
-
-        // start the chunk update task, this check every period if regions have to be updated
-        $this->chunkRenderer = new ChunkSchedulerTask($this);
-        $this->getScheduler()->scheduleRepeatingTask($this->chunkRenderer, $this->configManager->getInt("renderer.chunk-renderer.run-period", 10));
-
-        // start the api update task
-        $updateApiTask = new UpdateApiTask($this, $this->getDataFolder() . "tmp/api/");
-        $this->getScheduler()->scheduleRepeatingTask($updateApiTask, $this->configManager->getInt("api.update-period", 20));
-
-        // register the event listener
-        $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
     }
 
     private function generateFolderStructure(): void
@@ -260,6 +221,45 @@ class PocketMap extends PluginBase implements Listener
         if (!is_dir($folder . "tmp/api/skin")) {
             mkdir($folder . "tmp/api/skin");
         }
+    }
+
+    protected function onEnable(): void
+    {
+        self::$instance = $this;
+
+        // load all resources
+        $this->loadConfig();
+        $this->generateFolderStructure();
+
+        // load the terrain textures
+        $this->loadTerrainTextures();
+
+        WebServer::register($this);
+
+        try {
+            // create the web server
+            $this->createWebServer();
+        } catch (Exception $e) {
+            $this->getLogger()->alert("Could not start the web server.");
+            $this->getLogger()->error($e);
+            $this->getServer()->getPluginManager()->disablePlugin($this);
+            return;
+        }
+
+        // start the render scheduler
+        $this->renderScheduler = new RenderSchedulerTask($this);
+        $this->getScheduler()->scheduleRepeatingTask($this->renderScheduler, $this->configManager->getInt("renderer.scheduler.run-period", 5));
+
+        // start the chunk update task, this check every period if regions have to be updated
+        $this->chunkRenderer = new ChunkSchedulerTask($this);
+        $this->getScheduler()->scheduleRepeatingTask($this->chunkRenderer, $this->configManager->getInt("renderer.chunk-renderer.run-period", 10));
+
+        // start the api update task
+        $updateApiTask = new UpdateApiTask($this, $this->getDataFolder() . "tmp/api/");
+        $this->getScheduler()->scheduleRepeatingTask($updateApiTask, $this->configManager->getInt("api.update-period", 20));
+
+        // register the event listener
+        $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
     }
 
     private function loadTerrainTextures(): void

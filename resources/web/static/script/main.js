@@ -3,10 +3,10 @@ const ICON_CACHE = [];
 const MARKER_CACHE = [];
 const bounds = [[Number.MIN_SAFE_INTEGER, Number.MIN_SAFE_INTEGER], [Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER]];
 
-window.addEventListener("load", () => {
+window.addEventListener("load", async () => {
 
     let urlQuery = new URLSearchParams(window.location.search);
-    let world = urlQuery.get("world") ?? "world";
+    let world = urlQuery.get("world") ?? (await getWorlds())?.[0]?.["name"] ?? "world";
 
     let mapLayer = L.tileLayer(API_URL + `render/${world}/{z}/{x},{y}.png`, {
         minZoom: -4,
@@ -27,7 +27,7 @@ window.addEventListener("load", () => {
         prefix: "PocketMap PMMP",
     }).addTo(map);
 
-     createElements();
+    createElements();
 
     let mousePosElements = {
         x: document.getElementById("pocketmap-pos-x"),
@@ -44,14 +44,15 @@ window.addEventListener("load", () => {
     });
 
 
-    update(1000, world, map).then(r => {});
+    update(1000, world, map).then(() => {
+    });
 });
 
 function createElements() {
     let coordinates = document.createElement("div");
     coordinates.classList.add("pocketmap-coords", "leaflet-control", "leaflet-bar")
     coordinates.innerHTML =
-    `<span>
+        `<span>
         x: <span id="pocketmap-pos-x">0</span>
         y: <span id="pocketmap-pos-y">64</span>
         z: <span id="pocketmap-pos-z">0</span>
@@ -89,7 +90,7 @@ async function update(updateTime, world, map) {
     // add markers for all online players
     for (let i in players) {
         let player = players[i]
-        updateMarker(player);
+        updateMarker(player, map);
     }
 
     for (let uuid in MARKER_CACHE) {
@@ -104,7 +105,7 @@ async function update(updateTime, world, map) {
     setTimeout(() => update(updateTime, world, map), updateTime)
 }
 
-function updateMarker(player) {
+function updateMarker(player, map) {
     let pos = player["pos"];
     let latLng = L.latLng(-pos.z, pos.x);
 

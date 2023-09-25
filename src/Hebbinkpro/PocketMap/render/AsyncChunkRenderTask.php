@@ -155,15 +155,15 @@ class AsyncChunkRenderTask extends AsyncRenderTask
                 break;
             }
 
-            // it's water
             if ($block->getTypeId() === BlockTypeIds::WATER) {
+                // it's water
                 if ($waterDepth == 0) $blocks[] = $block;
                 $waterDepth++;
-            } // it's air
-            else if ($block->getTypeId() === BlockTypeIds::AIR || in_array($block->getTypeId(), $blockIds) || $block instanceof Flowable) {
+            } else if ($block->getTypeId() === BlockTypeIds::AIR || in_array($block->getTypeId(), $blockIds) || $block instanceof Flowable) {
+                // it's air, already added, or flowable
                 $height++;
-            } // it's another transparent block
-            else {
+            } else {
+                // it's another transparent block
                 $blockIds[] = $block->getTypeId();
                 $blocks[] = $block;
             }
