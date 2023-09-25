@@ -118,9 +118,13 @@ class PocketMap extends PluginBase implements Listener
     {
         switch ($command->getName()) {
             case "reload":
-                $this->getLogger()->info("Reloading all config files...");
+                $this->getLogger()->info("Reloading the plugin data");
+
+                if (isset($args[0]) && $args[0] === "web") Filesystem::recursiveUnlink($this->getDataFolder()."web");
+
                 $this->loadConfig();
-                $this->getLogger()->info("All config files are reloaded");
+                $this->generateFolderStructure();
+                $this->getLogger()->info("The plugin data is reloaded");
                 break;
 
             default:

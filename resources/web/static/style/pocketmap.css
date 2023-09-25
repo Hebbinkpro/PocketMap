@@ -23,3 +23,17 @@ body {
     color: black;
     padding: 0 5px 0 5px;
 }
+
+.pocketmap-worlds {
+    width: auto;
+    display: block;
+    text-align: center;
+    right: 20px;
+}
+
+.pocketmap-worlds a {
+    min-width: 100%;
+    width: auto;
+    padding: 0 15px 0 10px;
+
+}
