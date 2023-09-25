@@ -44,7 +44,7 @@ window.addEventListener("load", () => {
     });
 
 
-    update(1000, world).then(r => {});
+    update(1000, world, map).then(r => {});
 });
 
 function createElements() {
@@ -81,7 +81,7 @@ function createElements() {
 }
 
 
-async function update(updateTime, world) {
+async function update(updateTime, world, map) {
 
     // get all online players
     let players = await getOnlinePlayers(world);
@@ -101,7 +101,7 @@ async function update(updateTime, world) {
         delete MARKER_CACHE[uuid];
     }
 
-    setTimeout(() => update(updateTime, world), updateTime)
+    setTimeout(() => update(updateTime, world, map), updateTime)
 }
 
 function updateMarker(player) {
