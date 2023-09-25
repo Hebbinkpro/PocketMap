@@ -6,7 +6,7 @@ use GdImage;
 use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
 use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
-use Hebbinkpro\PocketMap\utils\block\old\OldBlockTypeNames as OBTN;
+use Hebbinkpro\PocketMap\utils\block\OldBlockTypeNames as OBTN;
 use pocketmine\block\Block;
 use pocketmine\data\bedrock\block\BlockTypeNames as BTN;
 use pocketmine\math\Facing;

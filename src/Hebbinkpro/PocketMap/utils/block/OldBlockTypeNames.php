@@ -1,6 +1,6 @@
 <?php
 
-namespace Hebbinkpro\PocketMap\utils\block\old;
+namespace Hebbinkpro\PocketMap\utils\block;
 
 /**
  * Class containing all block type names that are removed/replaced in PMMP but still used in the blocks.json in the Minecraft resource packs.
