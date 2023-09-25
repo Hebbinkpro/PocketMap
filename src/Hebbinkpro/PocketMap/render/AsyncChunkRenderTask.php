@@ -10,6 +10,7 @@ use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
 use Hebbinkpro\PocketMap\utils\ColorMapParser;
 use Hebbinkpro\PocketMap\utils\TextureUtils;
 use pocketmine\block\BlockTypeIds;
+use pocketmine\block\Flowable;
 use pocketmine\block\Opaque;
 use pocketmine\world\biome\BiomeRegistry;
 use pocketmine\world\format\Chunk;
@@ -159,7 +160,7 @@ class AsyncChunkRenderTask extends AsyncRenderTask
                 if ($waterDepth == 0) $blocks[] = $block;
                 $waterDepth++;
             } // it's air
-            else if ($block->getTypeId() === BlockTypeIds::AIR || in_array($block->getTypeId(), $blockIds)) {
+            else if ($block->getTypeId() === BlockTypeIds::AIR || in_array($block->getTypeId(), $blockIds) || $block instanceof Flowable) {
                 $height++;
             } // it's another transparent block
             else {
