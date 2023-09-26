@@ -65,25 +65,35 @@ class TerrainTextures extends ResourcePackTextures
         if (!is_file($path . self::TERRAIN_TEXTURES)) return null;
 
         $textures = new TerrainTextures($path, $options);
-        $textures->loadFromFile();
+        if (!$textures->loadFromFile()) return null;
+
         return $textures;
     }
 
     /**
      * Loads all data from the terrain_textures file in memory
-     * @return void
+     * @return bool true if success, false otherwise
      */
-    private function loadFromFile(): void
+    private function loadFromFile(): bool
     {
-        if (!is_file($this->path . self::TERRAIN_TEXTURES)) return;
+        if (!is_file($this->path . self::TERRAIN_TEXTURES)) return false;
 
         $contents = json_decode(file_get_contents($this->path . self::TERRAIN_TEXTURES), true) ?? [];
-        if (empty($contents)) return;
+        if (empty($contents)) return false;
 
+        if (!array_key_exists("packs", $contents)) return false;
         $this->packs = $contents["packs"];
+
+        if (!array_key_exists("textures", $contents)) return false;
         $this->textures = $contents["textures"];
+
+        if (!array_key_exists("terrain_textures", $contents)) return false;
         $this->terrainTextures = $contents["terrain_textures"];
+
+        if (!array_key_exists("blocks", $contents)) return false;
         $this->blocks = $contents["blocks"];
+
+        return true;
     }
 
     /**
