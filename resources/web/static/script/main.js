@@ -20,25 +20,37 @@ const API_URL = "/api/pocketmap/";
 const ICON_CACHE = [];
 const MARKER_CACHE = [];
 const bounds = [[Number.MIN_SAFE_INTEGER, Number.MIN_SAFE_INTEGER], [Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER]];
+let urlQuery, world, map;
 
 window.addEventListener("load", async () => {
+    // TODO: get data from a config
 
-    let urlQuery = new URLSearchParams(window.location.search);
-    let world = urlQuery.get("world") ?? (await getWorlds())?.[0]?.["name"] ?? "world";
+    urlQuery = new URLSearchParams(window.location.search);
+    world = urlQuery.get("world") ?? (await getWorlds())?.[0]?.["name"] ?? "world";
+
+    let mapPos = {
+        x: Math.ceil(parseInt(urlQuery.get("x") ?? "0")/16),
+        z: Math.ceil(parseInt(urlQuery.get("z") ?? "0")/16),
+        zoom: parseInt(urlQuery.get("zoom") ?? "4"),
+    }
+    console.log(mapPos)
 
     let mapLayer = L.tileLayer(API_URL + `render/${world}/{z}/{x},{y}.png`, {
-        minZoom: -4,
-        maxZoom: 4,
+        minZoom: 0,
+        maxZoom: 8,
+        zoomReverse: true,
         attribution: "&copy; 2023 Hebbinkpro",
     });
 
-    let map = L.map("map", {
+    map = L.map("map", {
         crs: L.CRS.Simple,
-        attributionControl: false,
+        attributionControl: false
     });
 
     map.fitBounds(bounds);
     mapLayer.addTo(map);
+
+    map.setView(L.latLng(mapPos.z, mapPos.x), mapPos.zoom);
 
     L.control.attribution({
         position: "bottomright",
@@ -54,12 +66,23 @@ window.addEventListener("load", async () => {
     }
 
     map.addEventListener("mousemove", (e) => {
-        let x = Math.ceil(e.latlng.lng);
-        let z = Math.ceil(e.latlng.lat);
+        let x = Math.ceil(e.latlng.lng*16);
+        let z = Math.ceil(e.latlng.lat*16);
 
         mousePosElements.x.innerText = `${x}`;
         mousePosElements.z.innerText = `${-z}`;
     });
+
+    map.addEventListener("click", (e) => {
+        let x = Math.ceil(e.latlng.lng*16);
+        let z = Math.ceil(e.latlng.lat*16);
+
+        urlQuery.set("world", world);
+        urlQuery.set("x", x.toString());
+        urlQuery.set("z", z.toString());
+        urlQuery.set("zoom", map.getZoom())
+        window.history.pushState({path: "?"+urlQuery.toString()}, "", "?"+urlQuery.toString())
+    })
 
 
     update(1000, world, map).then(() => {
@@ -83,9 +106,13 @@ function createElements() {
         for (let i in worlds) {
             let world = worlds[i];
             let worldEl = document.createElement("a");
-            worldEl.href = `?world=${world["name"]}`;
             worldEl.innerText = world["name"];
             worldEl.setAttribute("role", "button")
+
+            worldEl.addEventListener("click", (event) => {
+               window.location.assign("?world="+world["name"]);
+               event.preventDefault();
+            });
 
             worldsDiv.appendChild(worldEl);
         }
@@ -100,7 +127,7 @@ function createElements() {
 }
 
 
-async function update(updateTime, world, map) {
+async function update(updateTime) {
 
     // get all online players
     let players = await getOnlinePlayers(world);
@@ -120,10 +147,10 @@ async function update(updateTime, world, map) {
         delete MARKER_CACHE[uuid];
     }
 
-    setTimeout(() => update(updateTime, world, map), updateTime)
+    setTimeout(() => update(updateTime), updateTime)
 }
 
-function updateMarker(player, map) {
+function updateMarker(player) {
     let pos = player["pos"];
     let latLng = L.latLng(-pos.z, pos.x);
 
@@ -142,7 +169,7 @@ function updateMarker(player, map) {
     }
 }
 
-async function getOnlinePlayers(world) {
+async function getOnlinePlayers() {
     let req = await fetch(API_URL + "players");
     return (await req.json())[world] ?? [];
 }

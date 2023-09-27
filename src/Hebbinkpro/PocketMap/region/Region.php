@@ -65,7 +65,7 @@ class Region
      */
     public function getTotalChunks(): int
     {
-        return WorldRenderer::ZOOM_LEVELS[$this->zoom];
+        return pow(2, $this->zoom);
     }
 
     /**
