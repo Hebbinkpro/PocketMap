@@ -23,12 +23,12 @@ use GdImage;
 use Hebbinkpro\PocketMap\region\Region;
 use Hebbinkpro\PocketMap\region\RegionChunks;
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
+use Hebbinkpro\PocketMap\utils\block\BlockModelUtils;
 use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
 use Hebbinkpro\PocketMap\utils\ColorMapParser;
 use Hebbinkpro\PocketMap\utils\TextureUtils;
 use pocketmine\block\Block;
 use pocketmine\block\BlockTypeIds;
-use pocketmine\block\Flowable;
 use pocketmine\block\Opaque;
 use pocketmine\world\biome\BiomeRegistry;
 use pocketmine\world\format\Chunk;
@@ -231,19 +231,14 @@ class AsyncChunkRenderTask extends AsyncRenderTask
         return $texture;
     }
 
-    private function canRenderBlock(Block $block): bool {
-        // we cannot render air
-        if ($block->getTypeId() == BlockTypeIds::AIR) return false;
+    private function canRenderBlock(Block $block): bool
+    {
+        if (BlockModelUtils::isHidden($block)) return false;
 
-        // it's a non-flowable block
-        if (!($block instanceof Flowable)) return true;
+        if ($block->isSolid() && !$block->isTransparent()) return true;
 
-        // we will allow some of them
-        return match ($block->getTypeId()) {
-            BlockTypeIds::SNOW_LAYER, BlockTypeIds::CARPET, BlockTypeIds::LILY_PAD, BlockTypeIds::RAIL,
-            BlockTypeIds::ACTIVATOR_RAIL, BlockTypeIds::DETECTOR_RAIL, BlockTypeIds::POWERED_RAIL, BlockTypeIds::PINK_PETALS => true,
-            default => false
-        };
-
+        // we will only render blocks without model for now
+        // but almost full blocks like chests, pressure plates and cakes will be rendered
+        return BlockModelUtils::isNotFullBlock($block) || !BlockModelUtils::hasModel($block);
     }
 }
