@@ -65,7 +65,7 @@ class Region
      */
     public function getTotalChunks(): int
     {
-        return pow(2, $this->zoom);
+        return intval(pow(2, $this->zoom));
     }
 
     /**
@@ -158,9 +158,9 @@ class Region
 
     public function getNextZoomRegion(): ?Region
     {
-        $nextZoom = $this->zoom - 1;
+        $nextZoom = $this->zoom + 1;
         // there is no smaller zoom available
-        if ($nextZoom < -4) return null;
+        if ($nextZoom > 8) return null;
 
         $nextX = floor($this->x / 2);
         $nextZ = floor($this->z / 2);

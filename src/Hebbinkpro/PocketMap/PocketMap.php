@@ -140,6 +140,7 @@ class PocketMap extends PluginBase implements Listener
                     $this->getLogger()->info("Reloading the web files");
                     Filesystem::recursiveUnlink($this->getDataFolder() . "web");
                     $this->loadWebFiles();
+                    $this->loadWebConfig();
                     $this->getLogger()->info("The web files are reloaded");
                     break;
                 }
@@ -232,6 +233,54 @@ class PocketMap extends PluginBase implements Listener
         Filesystem::recursiveCopy($this->getFile() . "resources/web", $folder);
     }
 
+    private function loadWebConfig(): void
+    {
+        $config = new Config($this->getDataFolder() . "web/config.json");
+
+        $validWorlds = self::getConfigManger()->getArray("api.worlds");
+        $worldSettings = $config->get("worlds", []);
+
+        foreach (self::$worldRenderers as $worldName => $renderer) {
+            // we aren't allowed to load this world
+            if (!empty($validWorlds) && !in_array($worldName, $validWorlds)) {
+                // remove from the world settings list
+                if (array_key_exists($worldName, $worldSettings)) unset($worldSettings[$worldName]);
+                continue;
+            }
+
+            // already loaded
+            if (array_key_exists($worldName, $worldSettings)) continue;
+
+            $spawnPos = $renderer->getWorld()->getSpawnLocation();
+
+            $worldSettings[$worldName] = [
+                "zoom" => [
+                    "min" => 0,
+                    "max" => 8
+                ],
+                "view" => [
+                    "x" => $spawnPos->getFloorX(),
+                    "z" => $spawnPos->getFloorZ(),
+                    "zoom" => 4
+                ]
+            ];
+        }
+
+        $defaultWorld = $config->get("default-world", "world");
+        // default world does not exist (anymore)
+        if (!array_key_exists($defaultWorld, $worldSettings)) {
+            // the default world of the server isn't allowed to be displayed, use the first world in the list
+            $defaultWorld = array_keys($worldSettings)[0] ?? null;
+        }
+
+        // set the values
+        $config->set("default-world", $defaultWorld);
+        $config->set("worlds", $worldSettings);
+
+        // save the config
+        $config->save();
+    }
+
     private function generateFolderStructure(): void
     {
         $folder = $this->getDataFolder();
@@ -289,23 +338,10 @@ class PocketMap extends PluginBase implements Listener
 
         // load all resources
         $this->loadConfig();
-        $this->loadWebFiles();
         $this->generateFolderStructure();
 
         // load the terrain textures
         $this->loadTerrainTextures();
-
-        WebServer::register($this);
-
-        try {
-            // create the web server
-            $this->createWebServer();
-        } catch (Exception $e) {
-            $this->getLogger()->alert("Could not start the web server.");
-            $this->getLogger()->error($e);
-            $this->getServer()->getPluginManager()->disablePlugin($this);
-            return;
-        }
 
         // start the render scheduler
         $this->renderScheduler = new RenderSchedulerTask($this);
@@ -321,6 +357,35 @@ class PocketMap extends PluginBase implements Listener
 
         // register the event listener
         $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
+
+        $this->loadAllWorlds();
+
+        WebServer::register($this);
+
+        try {
+            // create the web server
+            $this->createWebServer();
+        } catch (Exception $e) {
+            $this->getLogger()->alert("Could not start the web server.");
+            $this->getLogger()->error($e);
+            $this->getServer()->getPluginManager()->disablePlugin($this);
+            return;
+        }
+    }
+
+    /**
+     * Load all worlds
+     * @return void
+     */
+    private function loadAllWorlds(): void
+    {
+        $path = $this->getServer()->getDataPath() . "worlds/";
+        $folders = scandir($path);
+
+        foreach ($folders as $world) {
+            if (!is_dir($path . $world) || in_array($world, [".", ".."]) || !is_file($path . $world . "/level.dat")) continue;
+            $this->getServer()->getWorldManager()->loadWorld($world);
+        }
     }
 
     private function loadTerrainTextures(): void
@@ -349,6 +414,10 @@ class PocketMap extends PluginBase implements Listener
      */
     private function createWebServer(): void
     {
+        // load the required files
+        $this->loadWebFiles();
+        $this->loadWebConfig();
+
         $webSettings = $this->configManager->getManager("web-server", true, ["address" => "127.0.0.1", "port" => 3000]);
 
         // create the web server
@@ -377,6 +446,7 @@ class PocketMap extends PluginBase implements Listener
      */
     private function registerApiRoutes(): Router
     {
+        $webFolder = $this->getDataFolder() . "web/";
         $apiFolder = $this->getDataFolder() . "tmp/api/";
 
         $router = new Router();
@@ -385,6 +455,8 @@ class PocketMap extends PluginBase implements Listener
             $res->send("Hello World", "text/plain");
             $res->end();
         });
+
+        $router->getFile("/config", $webFolder . "config.json");
 
         // get the world data
         $router->getFile("/worlds", $apiFolder . "worlds.json", "[]");

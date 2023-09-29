@@ -26,6 +26,7 @@ use Hebbinkpro\PocketMap\textures\TerrainTextures;
 use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
 use Hebbinkpro\PocketMap\utils\ColorMapParser;
 use Hebbinkpro\PocketMap\utils\TextureUtils;
+use pocketmine\block\Block;
 use pocketmine\block\BlockTypeIds;
 use pocketmine\block\Flowable;
 use pocketmine\block\Opaque;
@@ -172,12 +173,14 @@ class AsyncChunkRenderTask extends AsyncRenderTask
                 break;
             }
 
+            // TODO: let snow layers, carpet and other kinds of those blocks render
+
             if ($block->getTypeId() === BlockTypeIds::WATER) {
                 // it's water
                 if ($waterDepth == 0) $blocks[] = $block;
                 $waterDepth++;
-            } else if ($block->getTypeId() === BlockTypeIds::AIR || in_array($block->getTypeId(), $blockIds) || $block instanceof Flowable) {
-                // it's air, already added, or flowable
+            } else if (!$this->canRenderBlock($block)) {
+                // it's a block we cannot (yet) render
                 $height++;
             } else {
                 // it's another transparent block
@@ -226,5 +229,21 @@ class AsyncChunkRenderTask extends AsyncRenderTask
         }
 
         return $texture;
+    }
+
+    private function canRenderBlock(Block $block): bool {
+        // we cannot render air
+        if ($block->getTypeId() == BlockTypeIds::AIR) return false;
+
+        // it's a non-flowable block
+        if (!($block instanceof Flowable)) return true;
+
+        // we will allow some of them
+        return match ($block->getTypeId()) {
+            BlockTypeIds::SNOW_LAYER, BlockTypeIds::CARPET, BlockTypeIds::LILY_PAD, BlockTypeIds::RAIL,
+            BlockTypeIds::ACTIVATOR_RAIL, BlockTypeIds::DETECTOR_RAIL, BlockTypeIds::POWERED_RAIL, BlockTypeIds::PINK_PETALS => true,
+            default => false
+        };
+
     }
 }

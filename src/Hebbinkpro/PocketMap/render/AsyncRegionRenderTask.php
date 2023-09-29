@@ -29,7 +29,7 @@ class AsyncRegionRenderTask extends AsyncRenderTask
     protected function render(Region $region, GdImage $image): mixed
     {
         // it's another zoom, so we can use existing images from the lower zoom level
-        $pZoom = $region->getZoom() + 1;
+        $pZoom = $region->getZoom() - 1;
         $px = $region->getX() * 2;
         $pz = $region->getZ() * 2;
         $size = WorldRenderer::RENDER_SIZE / 2;

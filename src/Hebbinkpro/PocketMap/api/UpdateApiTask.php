@@ -60,7 +60,7 @@ class UpdateApiTask extends Task
 
             $world = $wm->getWorldByName($name);
             $data = $world->getProvider()->getWorldData();
-            $worldData[] = [
+            $worldData[$name] = [
                 "name" => $name,
                 "generator" => $data->getGenerator(),
                 "time" => $world->getTime()

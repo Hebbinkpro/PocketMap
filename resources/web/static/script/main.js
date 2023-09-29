@@ -23,21 +23,33 @@ const bounds = [[Number.MIN_SAFE_INTEGER, Number.MIN_SAFE_INTEGER], [Number.MAX_
 let urlQuery, world, map;
 
 window.addEventListener("load", async () => {
-    // TODO: get data from a config
+    let config = await getConfig();
 
     urlQuery = new URLSearchParams(window.location.search);
-    world = urlQuery.get("world") ?? (await getWorlds())?.[0]?.["name"] ?? "world";
+    let worlds = await getWorlds();
+
+
+    let world = urlQuery.get("world");
+    if (world === null || !worlds[world]) {
+        world = config["default-world"];
+    }
+
+    let worldConfig = config["worlds"][world];
+    console.log(worldConfig)
 
     let mapPos = {
-        x: Math.ceil(parseInt(urlQuery.get("x") ?? "0")/16),
-        z: Math.ceil(parseInt(urlQuery.get("z") ?? "0")/16),
-        zoom: parseInt(urlQuery.get("zoom") ?? "4"),
+        x: worldConfig.view.x / 16,
+        z: -worldConfig.view.z / 16,
+        zoom: worldConfig.view.zoom,
     }
-    console.log(mapPos)
+
+    if (urlQuery.get("x") !== null) mapPos.x = parseFloat(urlQuery.get("x")) / 16;
+    if (urlQuery.get("z") !== null) mapPos.z = -parseFloat(urlQuery.get("z")) / 16;
+    if (urlQuery.get("zoom") !== null) mapPos.z = parseInt(urlQuery.get("zoom"));
 
     let mapLayer = L.tileLayer(API_URL + `render/${world}/{z}/{x},{y}.png`, {
-        minZoom: 0,
-        maxZoom: 8,
+        minZoom: worldConfig.zoom.min,
+        maxZoom: worldConfig.zoom.max,
         zoomReverse: true,
         attribution: "&copy; 2023 Hebbinkpro",
     });
@@ -66,16 +78,16 @@ window.addEventListener("load", async () => {
     }
 
     map.addEventListener("mousemove", (e) => {
-        let x = Math.ceil(e.latlng.lng*16);
-        let z = Math.ceil(e.latlng.lat*16);
+        let x = Math.ceil(e.latlng.lng * 16);
+        let z = -Math.ceil(e.latlng.lat * 16);
 
         mousePosElements.x.innerText = `${x}`;
-        mousePosElements.z.innerText = `${-z}`;
+        mousePosElements.z.innerText = `${z}`;
     });
 
     map.addEventListener("click", (e) => {
-        let x = Math.ceil(e.latlng.lng*16);
-        let z = Math.ceil(e.latlng.lat*16);
+        let x = Math.ceil(e.latlng.lng * 16);
+        let z = -Math.ceil(e.latlng.lat * 16);
 
         urlQuery.set("world", world);
         urlQuery.set("x", x.toString());
@@ -176,6 +188,11 @@ async function getOnlinePlayers() {
 
 async function getWorlds() {
     let req = await fetch(API_URL + "worlds");
+    return (await req.json());
+}
+
+async function getConfig() {
+    let req = await fetch(API_URL + "config");
     return (await req.json());
 }
 
