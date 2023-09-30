@@ -59,3 +59,4 @@ This is a list of all things that have to be added before the release of v1.0.0
 - The rendered textures are from the official [bedrock-samples](https://github.com/Mojang/bedrock-samples) resource
   pack.
 - The dynamic map is created using [leaflet.js](https://leafletjs.com/)
+- The player heads shown on the map are created using the [LibSkin](https://github.com/HimbeersaftLP/LibSkin) virion by HimbeersaftLP.
