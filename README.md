@@ -9,6 +9,7 @@ A dynamic web-based world map for PocketMine-MP servers.
 - It's now possible to see some blocks under the water surface
 - Faster rendering
 - Proper working custom resource packs
+- Better way to detect blocks with a special model (e.g. fences, crops, etc.) so that we don't render them.
 Go to the [changelogs](https://github.com/Hebbinkpro/PocketMap/blob/main/changelogs/v0.4.md)
 
 ## How to install
