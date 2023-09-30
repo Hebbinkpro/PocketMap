@@ -197,7 +197,7 @@ final class BlockDataValues
         $name = $bsd->getName();
 
         // block uses the ColoredTrait, so it's colored
-        if (in_array(ColoredTrait::class, class_uses($block))) {
+        if (BlockUtils::hasColor($block)) {
             // get the color of the block
             /** @var ColoredTrait $block */
             /** @var DyeColor $color */

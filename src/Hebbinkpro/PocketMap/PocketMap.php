@@ -37,6 +37,7 @@ use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\event\Listener;
 use pocketmine\item\StringToItemParser;
+use pocketmine\player\Player;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\Config;
 use pocketmine\utils\Filesystem;
@@ -137,19 +138,54 @@ class PocketMap extends PluginBase implements Listener
         switch ($command->getName()) {
             case "reload":
                 if (isset($args[0]) && $args[0] === "web") {
-                    $this->getLogger()->info("Reloading the web files");
+                    $sender->sendMessage("[PocketMap] Reloading the web files");
                     Filesystem::recursiveUnlink($this->getDataFolder() . "web");
                     $this->loadWebFiles();
                     $this->loadWebConfig();
-                    $this->getLogger()->info("The web files are reloaded");
+                    $sender->sendMessage("[PocketMap] The web files are reloaded");
                     break;
                 }
 
-                $this->getLogger()->info("Reloading the plugin data");
+                $sender->sendMessage("[PocketMap] Reloading the plugin data");
                 $this->loadConfig();
                 $this->generateFolderStructure();
-                $this->getLogger()->info("The plugin data is reloaded");
+                $sender->sendMessage("[PocketMap] The plugin data is reloaded");
                 break;
+
+            case "render":
+                if (count($args) < 3) {
+                    $sender->sendMessage("[PocketMap] Invalid amount of arguments: /render <x> <z> <zoom> [world]");
+                    return false;
+                }
+
+                $x = intval($args[0]);
+                $z = intval($args[1]);
+                $zoom = intval($args[2]);
+                $world = $args[3] ?? null;
+
+                if ($world === null) {
+                    if (!$sender instanceof Player) {
+                        $sender->sendMessage("[PocketMap] Invalid amount of arguments: /render <x> <z> <zoom> <world>");
+                        break;
+                    }
+                    $world = $sender->getWorld()->getFolderName();
+                }
+
+                $renderer = self::getWorldRenderer($world);
+                if ($renderer === null) {
+                    if (!$this->getServer()->getWorldManager()->loadWorld($world)) {
+                        $sender->sendMessage("[PocketMap] Cannot find the world: $world");
+                        break;
+                    }
+                    $renderer = self::getWorldRenderer($world);
+                }
+                $region = $renderer->getRegion($zoom, $x, $z);
+                $renderer->startRegionRender($region, true, true);
+
+                $sender->sendMessage("[PocketMap] Rendering region: " . $region->getName());
+
+                break;
+
 
             default:
                 return false;

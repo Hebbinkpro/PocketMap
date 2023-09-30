@@ -22,11 +22,15 @@ namespace Hebbinkpro\PocketMap\utils\block;
 use pocketmine\block\Block;
 use pocketmine\block\BlockTypeIds;
 use pocketmine\block\utils\AnyFacingTrait;
+use pocketmine\block\utils\ColoredTrait;
 use pocketmine\block\utils\HorizontalFacingTrait;
+use pocketmine\block\utils\PillarRotationTrait;
 use pocketmine\block\utils\SignLikeRotationTrait;
+use ReflectionClass;
+use ReflectionException;
 
 
-class BlockModelUtils
+class BlockUtils
 {
     public static function isHidden(Block $block): bool
     {
@@ -215,7 +219,8 @@ class BlockModelUtils
 
     public static function isNotFullBlock(Block $block): bool
     {
-        if (self::isChest($block) || self::isPressurePlate($block) || self::isCake($block)) return true;
+        if (self::isChest($block) || self::isPressurePlate($block) || self::isCake($block)
+            || self::isStairs($block) || self::isShulker($block)) return true;
 
         return false;
     }
@@ -250,24 +255,32 @@ class BlockModelUtils
 
     public static function hasHorizontalFacing(Block $block): bool
     {
-        return in_array(HorizontalFacingTrait::class, class_uses($block::class));
+        return in_array(HorizontalFacingTrait::class, self::getTraits($block));
     }
 
     public static function hasSignLikeRotation(Block $block): bool
     {
-        return in_array(SignLikeRotationTrait::class, class_uses($block::class));
+        return in_array(SignLikeRotationTrait::class, self::getTraits($block));
     }
 
     public static function hasAnyFacing(Block $block): bool
     {
-        if (self::isStairs($block) || self::isShulker($block)) return false;
-
-        if (in_array(AnyFacingTrait::class, class_uses($block::class))) return true;
+        if (in_array(AnyFacingTrait::class, self::getTraits($block))) return true;
 
         return match ($block->getTypeId()) {
             BlockTypeIds::LEVER => true,
             default => false
         };
+    }
+
+    public static function hasPillarRotation(Block $block): bool
+    {
+        return in_array(PillarRotationTrait::class, self::getTraits($block));
+    }
+
+    public static function hasColor(Block $block): bool
+    {
+        return in_array(ColoredTrait::class, self::getTraits($block));
     }
 
     public static function isStairs(Block $block): bool
@@ -297,5 +310,28 @@ class BlockModelUtils
             BlockTypeIds::SHULKER_BOX, BlockTypeIds::DYED_SHULKER_BOX => true,
             default => false
         };
+    }
+
+    /**
+     * Get a list of all traits a block (including traits in its parent classes) is using
+     * @param Block $block
+     * @return array the list of all traits
+     */
+    public static function getTraits(Block $block): array
+    {
+
+        try {
+            $reflection = new ReflectionClass($block::class);
+        } catch (ReflectionException) {
+            return [];
+        }
+
+        $traits = array_keys($reflection->getTraits());
+        while ($reflection->getParentClass() !== false) {
+            $reflection = $reflection->getParentClass();
+            $traits = array_merge($traits, array_keys($reflection->getTraits()));
+        }
+
+        return array_unique($traits);
     }
 }

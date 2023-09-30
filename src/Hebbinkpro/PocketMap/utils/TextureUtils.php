@@ -23,9 +23,8 @@ use GdImage;
 use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
 use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
-use Hebbinkpro\PocketMap\utils\block\OldBlockTypeNames as OBTN;
+use Hebbinkpro\PocketMap\utils\block\OldBlockTypeNames;
 use pocketmine\block\Block;
-use pocketmine\data\bedrock\block\BlockTypeNames as BTN;
 use pocketmine\math\Facing;
 use pocketmine\world\biome\Biome;
 
@@ -267,35 +266,10 @@ class TextureUtils
         $stateData = BlockStateParser::getBlockStateData($block);
         if ($stateData === null) return null;
 
-        $name = self::getBlockTypeName($stateData->getName());
+        $name = OldBlockTypeNames::getTypeName($stateData->getName());
 
         // replace _block_ with _
         return str_replace("_block_", "_", self::removeBlockTypeNamePrefix($name));
-    }
-
-    public static function getBlockTypeName(string $stateName): string
-    {
-        return match ($stateName) {
-            BTN::OAK_LOG, BTN::BIRCH_LOG, BTN::SPRUCE_LOG, BTN::JUNGLE_LOG
-            => OBTN::LOG,
-            BTN::ACACIA_LOG, BTN::DARK_OAK_LOG
-            => OBTN::LOG2,
-
-            BTN::WHITE_CONCRETE, BTN::ORANGE_CONCRETE, BTN::MAGENTA_CONCRETE, BTN::LIGHT_BLUE_CONCRETE,
-            BTN::YELLOW_CONCRETE, BTN::LIME_CONCRETE, BTN::PINK_CONCRETE, BTN::GRAY_CONCRETE,
-            BTN::LIGHT_GRAY_CONCRETE, BTN::CYAN_CONCRETE, BTN::PURPLE_CONCRETE, BTN::BLUE_CONCRETE,
-            BTN::BROWN_CONCRETE, BTN::GREEN_CONCRETE, BTN::RED_CONCRETE, BTN::BLACK_CONCRETE
-            => OBTN::CONCRETE,
-
-            BTN::WHITE_CONCRETE_POWDER, BTN::ORANGE_CONCRETE_POWDER, BTN::MAGENTA_CONCRETE_POWDER, BTN::LIGHT_BLUE_CONCRETE_POWDER,
-            BTN::YELLOW_CONCRETE_POWDER, BTN::LIME_CONCRETE_POWDER, BTN::PINK_CONCRETE_POWDER, BTN::GRAY_CONCRETE_POWDER,
-            BTN::LIGHT_GRAY_CONCRETE_POWDER, BTN::CYAN_CONCRETE_POWDER, BTN::PURPLE_CONCRETE_POWDER, BTN::BLUE_CONCRETE_POWDER,
-            BTN::BROWN_CONCRETE_POWDER, BTN::GREEN_CONCRETE_POWDER, BTN::RED_CONCRETE_POWDER, BTN::BLACK_CONCRETE_POWDER
-            => OBTN::CONCRETE_POWDER,
-
-            // just return the name
-            default => $stateName
-        };
     }
 
     public static function removeBlockTypeNamePrefix(string $name): string

@@ -76,14 +76,14 @@ final class BlockStateParser
     {
 
         // the block uses the AnyFacingTrait
-        if (in_array(AnyFacingTrait::class, class_uses($block::class))) {
+        if (BlockUtils::hasAnyFacing($block)) {
             /** @var AnyFacingTrait $block */
 
             return $block->getFacing();
         }
 
         // the block uses the PillarRotationTrait
-        if (in_array(PillarRotationTrait::class, class_uses($block::class))) {
+        if (BlockUtils::hasPillarRotation($block)) {
             /** @var PillarRotationTrait $block */
 
             // convert axis to facing

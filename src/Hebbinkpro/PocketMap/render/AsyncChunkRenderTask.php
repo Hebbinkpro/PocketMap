@@ -23,13 +23,12 @@ use GdImage;
 use Hebbinkpro\PocketMap\region\Region;
 use Hebbinkpro\PocketMap\region\RegionChunks;
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
-use Hebbinkpro\PocketMap\utils\block\BlockModelUtils;
 use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
+use Hebbinkpro\PocketMap\utils\block\BlockUtils;
 use Hebbinkpro\PocketMap\utils\ColorMapParser;
 use Hebbinkpro\PocketMap\utils\TextureUtils;
 use pocketmine\block\Block;
 use pocketmine\block\BlockTypeIds;
-use pocketmine\block\Opaque;
 use pocketmine\world\biome\BiomeRegistry;
 use pocketmine\world\format\Chunk;
 use pocketmine\world\World;
@@ -168,18 +167,14 @@ class AsyncChunkRenderTask extends AsyncRenderTask
             $block = BlockStateParser::getBlockFromStateId($blockStateId);
 
             // it's a solid block
-            if ($block instanceof Opaque) {
+            if ($block->isSolid() && !$block->isTransparent()) {
                 $blocks[] = $block;
                 break;
-            }
-
-            // TODO: let snow layers, carpet and other kinds of those blocks render
-
-            if ($block->getTypeId() === BlockTypeIds::WATER) {
+            } else if ($block->getTypeId() === BlockTypeIds::WATER) {
                 // it's water
                 if ($waterDepth == 0) $blocks[] = $block;
                 $waterDepth++;
-            } else if (!$this->canRenderBlock($block)) {
+            } else if (!$this->canRenderBlock($block) || in_array($block->getTypeId(), $blockIds)) {
                 // it's a block we cannot (yet) render
                 $height++;
             } else {
@@ -233,12 +228,12 @@ class AsyncChunkRenderTask extends AsyncRenderTask
 
     private function canRenderBlock(Block $block): bool
     {
-        if (BlockModelUtils::isHidden($block)) return false;
+        if (BlockUtils::isHidden($block)) return false;
 
         if ($block->isSolid() && !$block->isTransparent()) return true;
 
         // we will only render blocks without model for now
         // but almost full blocks like chests, pressure plates and cakes will be rendered
-        return BlockModelUtils::isNotFullBlock($block) || !BlockModelUtils::hasModel($block);
+        return BlockUtils::isNotFullBlock($block) || !BlockUtils::hasModel($block);
     }
 }
