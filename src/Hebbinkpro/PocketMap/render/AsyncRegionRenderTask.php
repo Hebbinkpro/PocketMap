@@ -62,7 +62,7 @@ class AsyncRegionRenderTask extends AsyncRenderTask
 
         try {
             return imagecreatefrompng($path);
-        } catch (Exception $e) {
+        } catch (Exception) {
             return null;
         }
     }

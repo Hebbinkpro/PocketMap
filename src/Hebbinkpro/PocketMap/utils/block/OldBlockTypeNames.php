@@ -31,10 +31,6 @@ final class OldBlockTypeNames
     public const LOG2 = "minecraft:log2";
     public const CONCRETE = "minecraft:concrete";
     public const CONCRETE_POWDER = "minecraft:concretePowder";
-//    public const WOODEN_BUTTON = "minecraft:wooden_button";
-//    public const WOODEN_DOOR = "minecraft:wooden_door";
-//    public const WOODEN_PRESSURE_PLATE = "minecraft:wooden_pressure_plate";
-//    public const WOODEN_SLAB = "minecraft:wooden_wooden_slab";
 
     /**
      * Get the type name of a block.

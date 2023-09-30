@@ -40,7 +40,7 @@ final class BlockStateParser
     {
         try {
             return GlobalBlockStateHandlers::getSerializer()->serializeBlock($block);
-        } catch (BlockStateSerializeException $e) {
+        } catch (BlockStateSerializeException) {
             // catch serialize exception, this only occurs when the block does not exist in the serializer
             return null;
         }

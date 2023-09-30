@@ -98,15 +98,6 @@ class RegionChunks
     }
 
     /**
-     * Get if the chunks list is completed
-     * @return bool
-     */
-    public function isCompleted(): bool
-    {
-        return $this->completed;
-    }
-
-    /**
      * If this instance is still valid
      * @return bool
      */
