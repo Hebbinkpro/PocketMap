@@ -19,13 +19,30 @@
 
 namespace Hebbinkpro\PocketMap\utils\block;
 
+use pocketmine\block\BaseCake;
+use pocketmine\block\BaseCoral;
+use pocketmine\block\BaseFire;
 use pocketmine\block\Block;
 use pocketmine\block\BlockTypeIds;
+use pocketmine\block\Candle;
+use pocketmine\block\Chest;
+use pocketmine\block\Crops;
+use pocketmine\block\Fence;
+use pocketmine\block\Flower;
+use pocketmine\block\GlassPane;
+use pocketmine\block\PressurePlate;
+use pocketmine\block\Sapling;
+use pocketmine\block\ShulkerBox;
+use pocketmine\block\Stair;
+use pocketmine\block\TallGrass;
+use pocketmine\block\Thin;
+use pocketmine\block\Torch;
 use pocketmine\block\utils\AnyFacingTrait;
 use pocketmine\block\utils\ColoredTrait;
 use pocketmine\block\utils\HorizontalFacingTrait;
 use pocketmine\block\utils\PillarRotationTrait;
 use pocketmine\block\utils\SignLikeRotationTrait;
+use pocketmine\block\Wall;
 use ReflectionClass;
 use ReflectionException;
 
@@ -63,9 +80,8 @@ class BlockUtils
     {
         return match ($block->getTypeId()) {
             BlockTypeIds::TALL_GRASS, BlockTypeIds::DOUBLE_TALLGRASS, BlockTypeIds::FERN, BlockTypeIds::LARGE_FERN => true,
-            default => false
+            default => $block instanceof TallGrass
         };
-
     }
 
     public static function isSapling(Block $block): bool
@@ -73,7 +89,7 @@ class BlockUtils
         return match ($block->getTypeId()) {
             BlockTypeIds::OAK_SAPLING, BlockTypeIds::BIRCH_SAPLING, BlockTypeIds::SPRUCE_SAPLING, BlockTypeIds::ACACIA_SAPLING,
             BlockTypeIds::DARK_OAK_SAPLING, BlockTypeIds::JUNGLE_SAPLING, BlockTypeIds::CHERRY_SAPLING => true,
-            default => false
+            default => $block instanceof Sapling
         };
     }
 
@@ -83,7 +99,7 @@ class BlockUtils
         return match ($block->getTypeId()) {
             BlockTypeIds::WHEAT, BlockTypeIds::BEETROOTS, BlockTypeIds::CARROTS, BlockTypeIds::POTATOES,
             BlockTypeIds::MELON_STEM, BlockTypeIds::PUMPKIN_STEM => true,
-            default => false
+            default => $block instanceof Crops
         };
     }
 
@@ -95,7 +111,7 @@ class BlockUtils
             BlockTypeIds::PINK_TULIP, BlockTypeIds::OXEYE_DAISY, BlockTypeIds::CORNFLOWER, BlockTypeIds::LILY_OF_THE_VALLEY,
             BlockTypeIds::WITHER_ROSE, BlockTypeIds::SUNFLOWER, BlockTypeIds::LILAC, BlockTypeIds::ROSE_BUSH,
             BlockTypeIds::PEONY => true,
-            default => false
+            default => $block instanceof Flower
         };
     }
 
@@ -103,7 +119,7 @@ class BlockUtils
     {
         return match ($block->getTypeId()) {
             BlockTypeIds::CORAL, BlockTypeIds::CORAL_FAN, BlockTypeIds::WALL_CORAL_FAN => true,
-            default => false
+            default => $block instanceof BaseCoral
         };
     }
 
@@ -127,18 +143,32 @@ class BlockUtils
     {
         return match ($block->getTypeId()) {
             BlockTypeIds::FIRE, BlockTypeIds::SOUL_FIRE => true,
-            default => false
+            default => $block instanceof BaseFire
         };
     }
 
     public static function hasConnections(Block $block): bool
     {
-        if (self::isFence($block) || self::isFenceGate($block) || self::isGlassPane($block) || self::isWall($block)) return true;
+        if (self::isFence($block) || self::isThin($block) || self::isWall($block)) return true;
 
-        return match ($block->getTypeId()) {
-            BlockTypeIds::IRON_BARS => true,
-            default => false
-        };
+        return false;
+    }
+
+    public static function hasPost(Block $block): bool
+    {
+        return self::isWall($block);
+    }
+
+    /**
+     * @param Block $block
+     * @return array
+     */
+    public static function getConnections(Block $block): array
+    {
+        if (!self::hasConnections($block)) return [];
+
+        /** @var Fence|GlassPane|Wall $block */
+        return $block->getConnections();
     }
 
     public static function isFence(Block $block): bool
@@ -147,25 +177,16 @@ class BlockUtils
             BlockTypeIds::OAK_FENCE, BlockTypeIds::SPRUCE_FENCE, BlockTypeIds::BIRCH_FENCE, BlockTypeIds::JUNGLE_FENCE,
             BlockTypeIds::ACACIA_FENCE, BlockTypeIds::DARK_OAK_FENCE, BlockTypeIds::MANGROVE_FENCE, BlockTypeIds::CHERRY_FENCE,
             BlockTypeIds::CRIMSON_FENCE, BlockTypeIds::WARPED_FENCE, BlockTypeIds::NETHER_BRICK_FENCE => true,
-            default => false
+            default => $block instanceof Fence
         };
     }
 
-    public static function isFenceGate(Block $block): bool
+    public static function isThin(Block $block): bool
     {
         return match ($block->getTypeId()) {
-            BlockTypeIds::OAK_FENCE_GATE, BlockTypeIds::SPRUCE_FENCE_GATE, BlockTypeIds::BIRCH_FENCE_GATE, BlockTypeIds::JUNGLE_FENCE_GATE,
-            BlockTypeIds::ACACIA_FENCE_GATE, BlockTypeIds::DARK_OAK_FENCE_GATE, BlockTypeIds::MANGROVE_FENCE_GATE, BlockTypeIds::CHERRY_FENCE_GATE,
-            BlockTypeIds::CRIMSON_FENCE_GATE, BlockTypeIds::WARPED_FENCE_GATE => true,
-            default => false
-        };
-    }
-
-    public static function isGlassPane(Block $block): bool
-    {
-        return match ($block->getTypeId()) {
-            BlockTypeIds::GLASS_PANE, BlockTypeIds::HARDENED_GLASS_PANE, BlockTypeIds::STAINED_HARDENED_GLASS_PANE, BlockTypeIds::STAINED_GLASS_PANE => true,
-            default => false
+            BlockTypeIds::GLASS_PANE, BlockTypeIds::HARDENED_GLASS_PANE, BlockTypeIds::STAINED_HARDENED_GLASS_PANE, BlockTypeIds::STAINED_GLASS_PANE,
+            BlockTypeIds::IRON_BARS => true,
+            default => $block instanceof Thin
         };
     }
 
@@ -197,7 +218,7 @@ class BlockUtils
         return match ($block->getTypeId()) {
             BlockTypeIds::TORCH, BlockTypeIds::SOUL_TORCH, BlockTypeIds::REDSTONE_TORCH, BlockTypeIds::UNDERWATER_TORCH,
             BlockTypeIds::BLUE_TORCH, BlockTypeIds::RED_TORCH, BlockTypeIds::PURPLE_TORCH, BlockTypeIds::GREEN_TORCH => true,
-            default => false
+            default => $block instanceof Torch
         };
     }
 
@@ -205,7 +226,7 @@ class BlockUtils
     {
         return match ($block->getTypeId()) {
             BlockTypeIds::CANDLE, BlockTypeIds::DYED_CANDLE => true,
-            default => false
+            default => $block instanceof Candle
         };
     }
 
@@ -229,7 +250,7 @@ class BlockUtils
     {
         return match ($block->getTypeId()) {
             BlockTypeIds::CHEST, BlockTypeIds::TRAPPED_CHEST, BlockTypeIds::ENDER_CHEST => true,
-            default => false
+            default => $block instanceof Chest
         };
     }
 
@@ -241,7 +262,7 @@ class BlockUtils
             BlockTypeIds::BIRCH_PRESSURE_PLATE, BlockTypeIds::JUNGLE_PRESSURE_PLATE, BlockTypeIds::ACACIA_PRESSURE_PLATE,
             BlockTypeIds::DARK_OAK_PRESSURE_PLATE, BlockTypeIds::MANGROVE_PRESSURE_PLATE, BlockTypeIds::CHERRY_PRESSURE_PLATE,
             BlockTypeIds::CRIMSON_PRESSURE_PLATE, BlockTypeIds::WARPED_PRESSURE_PLATE => true,
-            default => false
+            default => $block instanceof PressurePlate
         };
     }
 
@@ -249,7 +270,7 @@ class BlockUtils
     {
         return match ($block->getTypeId()) {
             BlockTypeIds::CAKE, BlockTypeIds::CAKE_WITH_CANDLE, BlockTypeIds::CAKE_WITH_DYED_CANDLE => true,
-            default => false
+            default => $block instanceof BaseCake
         };
     }
 
@@ -300,7 +321,7 @@ class BlockUtils
             BlockTypeIds::POLISHED_BLACKSTONE_BRICK_STAIRS, BlockTypeIds::CUT_COPPER_STAIRS, BlockTypeIds::COBBLED_DEEPSLATE_STAIRS,
             BlockTypeIds::POLISHED_DEEPSLATE_STAIRS, BlockTypeIds::DEEPSLATE_BRICK_STAIRS, BlockTypeIds::DEEPSLATE_TILE_STAIRS,
             BlockTypeIds::MUD_BRICK_STAIRS => true,
-            default => false
+            default => $block instanceof Stair
         };
     }
 
@@ -308,7 +329,7 @@ class BlockUtils
     {
         return match ($block->getTypeId()) {
             BlockTypeIds::SHULKER_BOX, BlockTypeIds::DYED_SHULKER_BOX => true,
-            default => false
+            default => $block instanceof ShulkerBox
         };
     }
 

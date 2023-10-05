@@ -124,6 +124,9 @@ class AsyncChunkRenderTask extends AsyncRenderTask
 
                 $blockTexture = $this->getBlockTexture($bdx, $bdz, $chunk, $terrainTextures, $pixelsPerBlock);
 
+                // the block doesn't have a texture for some reason
+                if ($blockTexture === null) continue;
+
                 if ($highestY % 2 != 0) {
 
                     imagecopy($blockTexture, $heightOverlay, 0, 0, 0, 0, $pixelsPerBlock, $pixelsPerBlock);
