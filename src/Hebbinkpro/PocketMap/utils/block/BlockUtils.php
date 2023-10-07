@@ -28,6 +28,7 @@ use pocketmine\block\Candle;
 use pocketmine\block\Chest;
 use pocketmine\block\Crops;
 use pocketmine\block\Fence;
+use pocketmine\block\FenceGate;
 use pocketmine\block\Flower;
 use pocketmine\block\GlassPane;
 use pocketmine\block\PressurePlate;
@@ -42,7 +43,11 @@ use pocketmine\block\utils\ColoredTrait;
 use pocketmine\block\utils\HorizontalFacingTrait;
 use pocketmine\block\utils\PillarRotationTrait;
 use pocketmine\block\utils\SignLikeRotationTrait;
+use pocketmine\block\utils\SupportType;
 use pocketmine\block\Wall;
+use pocketmine\math\Facing;
+use pocketmine\math\Vector3;
+use pocketmine\world\format\Chunk;
 use ReflectionClass;
 use ReflectionException;
 
@@ -161,14 +166,53 @@ class BlockUtils
 
     /**
      * @param Block $block
+     * @param Chunk $chunk
      * @return array
      */
-    public static function getConnections(Block $block): array
+    public static function getConnections(Block $block, Chunk $chunk): array
     {
         if (!self::hasConnections($block)) return [];
 
-        /** @var Fence|GlassPane|Wall $block */
-        return $block->getConnections();
+        if ($block instanceof Wall) return array_keys($block->getConnections());
+
+        // TODO get the correct connections of fences and thin blocks (e.g. glass pane).
+
+        $blockPos = $block->getPosition();
+        $blockChunk = [
+            floor($blockPos->getX() / 16),
+            floor($blockPos->getZ() / 16)
+        ];
+
+        $connections = [];
+
+        foreach (Facing::HORIZONTAL as $facing) {
+            $offset = Facing::OFFSET[$facing];
+            $pos = $block->getPosition()->add($offset[0], $offset[1], $offset[2]);
+            $posChunk = [
+                floor($pos->getX() / 16),
+                floor($pos->getZ() / 16)
+            ];
+
+            // outside the chunk
+            if ($posChunk != $blockChunk) continue;
+
+            $stateId = $chunk->getBlockStateId($pos->x%16, $pos->y, $pos->z%16);
+            $side = BlockStateParser::getBlockFromStateId($stateId);
+            var_dump($side->getName());
+
+            if ($block instanceof Fence
+                && ($side instanceof Fence || $side instanceof FenceGate || $side->getSupportType(Facing::opposite($facing))->equals(SupportType::FULL()))) {
+                $connections[] = $facing;
+            } else if ($block instanceof Thin
+                && ($side instanceof Thin || $side instanceof Wall || $side->getSupportType(Facing::opposite($facing))->equals(SupportType::FULL()))) {
+                $connections[] = $facing;
+            }
+                    }
+
+        var_dump($connections);
+        // why do we always get [3,5] as coords with both corresponding to bedrock??
+
+        return $connections;
     }
 
     public static function isFence(Block $block): bool

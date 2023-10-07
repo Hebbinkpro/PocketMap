@@ -19,7 +19,6 @@
 
 namespace Hebbinkpro\PocketMap\utils\block;
 
-use Hebbinkpro\PocketMap\utils\block\OldBlockTypeNames as OBTN;
 use pocketmine\data\bedrock\block\BlockTypeNames as BTN;
 
 /**
@@ -31,6 +30,7 @@ final class OldBlockTypeNames
     public const LOG2 = "minecraft:log2";
     public const CONCRETE = "minecraft:concrete";
     public const CONCRETE_POWDER = "minecraft:concretePowder";
+    public const FENCE = "minecraft:fence";
 
     /**
      * Get the type name of a block.
@@ -43,21 +43,23 @@ final class OldBlockTypeNames
     {
         return match ($typeName) {
             BTN::OAK_LOG, BTN::BIRCH_LOG, BTN::SPRUCE_LOG, BTN::JUNGLE_LOG
-            => OBTN::LOG,
+            => self::LOG,
             BTN::ACACIA_LOG, BTN::DARK_OAK_LOG
-            => OBTN::LOG2,
+            => self::LOG2,
 
             BTN::WHITE_CONCRETE, BTN::ORANGE_CONCRETE, BTN::MAGENTA_CONCRETE, BTN::LIGHT_BLUE_CONCRETE,
             BTN::YELLOW_CONCRETE, BTN::LIME_CONCRETE, BTN::PINK_CONCRETE, BTN::GRAY_CONCRETE,
             BTN::LIGHT_GRAY_CONCRETE, BTN::CYAN_CONCRETE, BTN::PURPLE_CONCRETE, BTN::BLUE_CONCRETE,
             BTN::BROWN_CONCRETE, BTN::GREEN_CONCRETE, BTN::RED_CONCRETE, BTN::BLACK_CONCRETE
-            => OBTN::CONCRETE,
+            => self::CONCRETE,
 
             BTN::WHITE_CONCRETE_POWDER, BTN::ORANGE_CONCRETE_POWDER, BTN::MAGENTA_CONCRETE_POWDER, BTN::LIGHT_BLUE_CONCRETE_POWDER,
             BTN::YELLOW_CONCRETE_POWDER, BTN::LIME_CONCRETE_POWDER, BTN::PINK_CONCRETE_POWDER, BTN::GRAY_CONCRETE_POWDER,
             BTN::LIGHT_GRAY_CONCRETE_POWDER, BTN::CYAN_CONCRETE_POWDER, BTN::PURPLE_CONCRETE_POWDER, BTN::BLUE_CONCRETE_POWDER,
             BTN::BROWN_CONCRETE_POWDER, BTN::GREEN_CONCRETE_POWDER, BTN::RED_CONCRETE_POWDER, BTN::BLACK_CONCRETE_POWDER
-            => OBTN::CONCRETE_POWDER,
+            => self::CONCRETE_POWDER,
+
+            BTN::OAK_FENCE => self::FENCE,
 
             // just return the name
             default => $typeName

@@ -22,13 +22,19 @@ namespace Hebbinkpro\PocketMap\render;
 use GdImage;
 use Hebbinkpro\PocketMap\region\Region;
 use Hebbinkpro\PocketMap\region\RegionChunks;
+use Hebbinkpro\PocketMap\textures\model\BlockModel;
+use Hebbinkpro\PocketMap\textures\model\BlockModels;
+use Hebbinkpro\PocketMap\textures\model\DefaultBlockModel;
+use Hebbinkpro\PocketMap\textures\model\FenceModel;
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
+use Hebbinkpro\PocketMap\utils\block\BlockDataValues;
 use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
 use Hebbinkpro\PocketMap\utils\block\BlockUtils;
 use Hebbinkpro\PocketMap\utils\ColorMapParser;
 use Hebbinkpro\PocketMap\utils\TextureUtils;
 use pocketmine\block\Block;
 use pocketmine\block\BlockTypeIds;
+use pocketmine\block\Fence;
 use pocketmine\world\biome\BiomeRegistry;
 use pocketmine\world\format\Chunk;
 use pocketmine\world\World;
@@ -161,6 +167,8 @@ class AsyncChunkRenderTask extends AsyncRenderTask
         // there is no block on this position
         if ($y === null) return null;
 
+        $models = BlockModels::getInstance();
+
         $blocks = [];
         $blockIds = [];
         $waterDepth = 0;
@@ -177,7 +185,7 @@ class AsyncChunkRenderTask extends AsyncRenderTask
                 // it's water
                 if ($waterDepth == 0) $blocks[] = $block;
                 $waterDepth++;
-            } else if (!$this->canRenderBlock($block) || in_array($block->getTypeId(), $blockIds)) {
+            } else if ($models->get($block) instanceof DefaultBlockModel || in_array($block->getTypeId(), $blockIds)) {
                 // it's a block we cannot (yet) render
                 $height++;
             } else {
@@ -200,6 +208,7 @@ class AsyncChunkRenderTask extends AsyncRenderTask
             $block = $blocks[$i];
 
             $blockTexture = TextureUtils::createCompressedBlockTexture($block, $biome, $terrainTextures, $pixelsPerBlock);
+            $blockTexture = $models->get($block)->getModelTexture($block, $chunk, $blockTexture);
             $blockTexture = TextureUtils::rotateToFacing($blockTexture, BlockStateParser::getBlockFace($block));
 
             if ($block->getTypeId() === BlockTypeIds::WATER) {
@@ -227,16 +236,5 @@ class AsyncChunkRenderTask extends AsyncRenderTask
         }
 
         return $texture;
-    }
-
-    private function canRenderBlock(Block $block): bool
-    {
-        if (BlockUtils::isHidden($block)) return false;
-
-        if ($block->isSolid() && !$block->isTransparent()) return true;
-
-        // we will only render blocks without model for now
-        // but almost full blocks like chests, pressure plates and cakes will be rendered
-        return BlockUtils::isNotFullBlock($block) || !BlockUtils::hasModel($block);
     }
 }

@@ -137,8 +137,8 @@ class WorldRenderer
         return new PartialRegion($this->world->getFolderName(), self::MIN_ZOOM, $x, $z, $this->terrainTextures);
     }
 
-    public function getRegion(int $zoom, int $x, int $z): Region
+    public function getRegion(int $zoom, int $x, int $z, bool $renderChunks = false): Region
     {
-        return new Region($this->world->getFolderName(), $zoom, $x, $z, $this->terrainTextures);
+        return new Region($this->world->getFolderName(), $zoom, $x, $z, $this->terrainTextures, $renderChunks);
     }
 }

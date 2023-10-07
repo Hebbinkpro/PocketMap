@@ -179,7 +179,7 @@ class PocketMap extends PluginBase implements Listener
                     }
                     $renderer = self::getWorldRenderer($world);
                 }
-                $region = $renderer->getRegion($zoom, $x, $z);
+                $region = $renderer->getRegion($zoom, $x, $z, true);
                 $renderer->startRegionRender($region, true, true);
 
                 $sender->sendMessage("[PocketMap] Rendering region: " . $region->getName());
