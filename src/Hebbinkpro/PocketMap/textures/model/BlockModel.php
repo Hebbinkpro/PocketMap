@@ -35,6 +35,7 @@ abstract class BlockModel {
     /**
      * Get the block model texture from the block texture
      * @param Block $block
+     * @param Chunk $chunk
      * @param GdImage $texture
      * @return GdImage
      */

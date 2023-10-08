@@ -19,8 +19,6 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
-use GdImage;
-use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\utils\block\BlockUtils;
 use pocketmine\block\Block;
 use pocketmine\block\Cake;
@@ -50,7 +48,7 @@ final class BlockModels
         $this->default = new DefaultBlockModel();
 
         $this->register(VanillaBlocks::SEA_LANTERN(), new FullBlockModel());
-        //$this->registerFromBlockType(Fence::class, new FenceModel());
+        $this->registerFromBlockType(Fence::class, new FenceModel());
         $this->registerFromBlockType(Wall::class, new WallModel());
         $this->registerFromBlockType(Chest::class, new FullBlockModel());
         $this->registerFromBlockType(PressurePlate::class, new FullBlockModel());

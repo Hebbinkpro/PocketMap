@@ -22,19 +22,13 @@ namespace Hebbinkpro\PocketMap\render;
 use GdImage;
 use Hebbinkpro\PocketMap\region\Region;
 use Hebbinkpro\PocketMap\region\RegionChunks;
-use Hebbinkpro\PocketMap\textures\model\BlockModel;
 use Hebbinkpro\PocketMap\textures\model\BlockModels;
 use Hebbinkpro\PocketMap\textures\model\DefaultBlockModel;
-use Hebbinkpro\PocketMap\textures\model\FenceModel;
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
-use Hebbinkpro\PocketMap\utils\block\BlockDataValues;
 use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
-use Hebbinkpro\PocketMap\utils\block\BlockUtils;
 use Hebbinkpro\PocketMap\utils\ColorMapParser;
 use Hebbinkpro\PocketMap\utils\TextureUtils;
-use pocketmine\block\Block;
 use pocketmine\block\BlockTypeIds;
-use pocketmine\block\Fence;
 use pocketmine\world\biome\BiomeRegistry;
 use pocketmine\world\format\Chunk;
 use pocketmine\world\World;
@@ -176,6 +170,11 @@ class AsyncChunkRenderTask extends AsyncRenderTask
         while ($y > World::Y_MIN) {
             $blockStateId = $chunk->getBlockStateId($x, $y, $z);
             $block = BlockStateParser::getBlockFromStateId($blockStateId);
+
+            // set the correct position of the block, otherwise it's 0,0,0
+            $block->getPosition()->x = $x;
+            $block->getPosition()->y = $y;
+            $block->getPosition()->z = $z;
 
             // it's a solid block
             if ($block->isSolid() && !$block->isTransparent()) {
