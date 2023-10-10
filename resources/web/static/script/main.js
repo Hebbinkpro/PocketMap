@@ -29,13 +29,12 @@ window.addEventListener("load", async () => {
     let worlds = await getWorlds();
 
 
-    let world = urlQuery.get("world");
+    world = urlQuery.get("world");
     if (world === null || !worlds[world]) {
         world = config["default-world"];
     }
 
     let worldConfig = config["worlds"][world];
-    console.log(worldConfig)
 
     let mapPos = {
         x: worldConfig.view.x / 16,
@@ -45,7 +44,7 @@ window.addEventListener("load", async () => {
 
     if (urlQuery.get("x") !== null) mapPos.x = parseFloat(urlQuery.get("x")) / 16;
     if (urlQuery.get("z") !== null) mapPos.z = -parseFloat(urlQuery.get("z")) / 16;
-    if (urlQuery.get("zoom") !== null) mapPos.z = parseInt(urlQuery.get("zoom"));
+    if (urlQuery.get("zoom") !== null) mapPos.zoom = parseInt(urlQuery.get("zoom"));
 
     let mapLayer = L.tileLayer(API_URL + `render/${world}/{z}/{x},{y}.png`, {
         minZoom: worldConfig.zoom.min,
@@ -164,7 +163,7 @@ async function update(updateTime) {
 
 function updateMarker(player) {
     let pos = player["pos"];
-    let latLng = L.latLng(-pos.z, pos.x);
+    let latLng = L.latLng(-pos.z / 16, pos.x / 16);
 
     if (MARKER_CACHE[player["uuid"]]) {
         MARKER_CACHE[player["uuid"]].setLatLng(latLng);
