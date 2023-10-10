@@ -26,8 +26,10 @@ use pocketmine\block\BlockTypeIds;
 use pocketmine\block\Cake;
 use pocketmine\block\Chest;
 use pocketmine\block\Crops;
+use pocketmine\block\Door;
 use pocketmine\block\DoublePlant;
 use pocketmine\block\Fence;
+use pocketmine\block\FenceGate;
 use pocketmine\block\Fire;
 use pocketmine\block\Flower;
 use pocketmine\block\PressurePlate;
@@ -66,6 +68,8 @@ final class BlockModels
         $this->registerFromBlockType(Fence::class, new FenceModel());
         $this->registerFromBlockType(Wall::class, new WallModel());
         $this->registerFromBlockType(Thin::class, new ThinConnectionModel());
+        $this->registerFromBlockType(FenceGate::class, new FenceGateModel());
+        $this->registerFromBlockType(Door::class, new DoorModel());
 
         $this->register(VanillaBlocks::TALL_GRASS(), new CrossModel());
         $this->register(VanillaBlocks::FERN(), new CrossModel());

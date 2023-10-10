@@ -28,6 +28,7 @@ use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
 use Hebbinkpro\PocketMap\utils\block\BlockUtils;
 use Hebbinkpro\PocketMap\utils\block\OldBlockTypeNames;
 use pocketmine\block\Block;
+use pocketmine\block\Door;
 use pocketmine\math\Facing;
 use pocketmine\world\biome\Biome;
 use pocketmine\world\biome\BiomeRegistry;
@@ -141,6 +142,10 @@ class TextureUtils
     }
 
     public static function getBlockTexture(Block $block, Chunk $chunk, TerrainTextures $terrainTextures, int $size): ?GdImage {
+        if ($block instanceof Door) {
+            var_dump($terrainTextures->getTextureByBlock($block));
+        }
+
         if (($model = BlockModels::getInstance()->get($block)) === null) return null;
 
         $differentModel = BlockUtils::hasDifferentModelForSameState($block);

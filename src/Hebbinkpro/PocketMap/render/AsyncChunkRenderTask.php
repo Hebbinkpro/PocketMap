@@ -185,8 +185,8 @@ class AsyncChunkRenderTask extends AsyncRenderTask
                 if ($waterDepth == 0) $blocks[] = $block;
                 $waterDepth++;
             } else if (in_array($block->getTypeId(), $blockIds) || $models->get($block) === null) {
-                // it's a block we cannot (yet) render
-                $height++;
+                // only if the block is a full cube, add the height (for blocks under e.g. leaves)
+                if ($block->isFullCube()) $height++;
             } else {
                 // it's another transparent block
                 $blockIds[] = $block->getTypeId();
@@ -208,7 +208,6 @@ class AsyncChunkRenderTask extends AsyncRenderTask
             $block = $blocks[$i];
 
             $blockTexture = TextureUtils::getBlockTexture($block, $chunk, $terrainTextures, $pixelsPerBlock);
-            if ($block instanceof Thin) var_dump($terrainTextures->getTextureByBlock($block));
             if ($blockTexture === null) continue;
 
             if ($block->getTypeId() === BlockTypeIds::WATER) {

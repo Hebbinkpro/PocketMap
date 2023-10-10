@@ -21,6 +21,7 @@ namespace Hebbinkpro\PocketMap\utils\block;
 
 use pocketmine\block\Block;
 use pocketmine\block\BlockTypeIds;
+use pocketmine\block\Door;
 use pocketmine\block\RuntimeBlockStateRegistry;
 use pocketmine\block\utils\AnyFacingTrait;
 use pocketmine\block\utils\PillarRotationTrait;
@@ -91,12 +92,14 @@ final class BlockStateParser
             return ($block->getAxis() << 1) | Facing::FLAG_AXIS_POSITIVE;
         }
 
+        // east is the upper door part
+        if ($block instanceof Door) return Facing::EAST;
+
         // the block does not have an axis, default is +Y
         return match ($block->getTypeId()) {
-            // for some reason, the top texture of glass panes is east...
+            // top textures is made of the east texture
             BlockTypeIds::GLASS_PANE, BlockTypeIds::STAINED_GLASS_PANE,
             BlockTypeIds::HARDENED_GLASS_PANE, BlockTypeIds::STAINED_HARDENED_GLASS_PANE => Facing::EAST,
-            // for default, we use up
             default => Facing::UP
         };
     }
