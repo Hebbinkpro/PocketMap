@@ -20,13 +20,20 @@
 namespace Hebbinkpro\PocketMap\textures\model;
 
 use Hebbinkpro\PocketMap\utils\block\BlockUtils;
+use PhpParser\Node\Expr\Cast\Double;
 use pocketmine\block\Block;
+use pocketmine\block\BlockTypeIds;
 use pocketmine\block\Cake;
 use pocketmine\block\Chest;
+use pocketmine\block\Crops;
+use pocketmine\block\DoublePlant;
 use pocketmine\block\Fence;
+use pocketmine\block\Fire;
+use pocketmine\block\Flower;
 use pocketmine\block\PressurePlate;
-use pocketmine\block\ShulkerBox;
+use pocketmine\block\Sapling;
 use pocketmine\block\Stair;
+use pocketmine\block\Thin;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\block\Wall;
 use pocketmine\utils\SingletonTrait;
@@ -38,36 +45,66 @@ final class BlockModels
     private BlockModel $default;
     private array $blockModels;
 
+    /** @var array<string, string> */
+    private array $blockTypeModels;
+
     public function __construct()
     {
         $this->blockModels = [];
+        $this->blockTypeModels = [];
+
         $this->registerAll();
     }
 
-    private function registerAll(): void {
+    private function registerAll(): void
+    {
         $this->default = new DefaultBlockModel();
 
-        $this->register(VanillaBlocks::SEA_LANTERN(), new FullBlockModel());
+        $this->register(VanillaBlocks::WATER(), new DefaultBlockModel());
+        $this->register(VanillaBlocks::LAVA(), new DefaultBlockModel());
+
         $this->registerFromBlockType(Fence::class, new FenceModel());
         $this->registerFromBlockType(Wall::class, new WallModel());
-        $this->registerFromBlockType(Chest::class, new FullBlockModel());
-        $this->registerFromBlockType(PressurePlate::class, new FullBlockModel());
-        $this->registerFromBlockType(Cake::class, new FullBlockModel());
-        $this->registerFromBlockType(Stair::class, new FullBlockModel());
-        $this->registerFromBlockType(ShulkerBox::class, new FullBlockModel());
+        $this->registerFromBlockType(Thin::class, new ThinConnectionModel());
+
+        $this->register(VanillaBlocks::TALL_GRASS(), new CrossModel());
+        $this->register(VanillaBlocks::FERN(), new CrossModel());
+        $this->register(VanillaBlocks::DOUBLE_TALLGRASS(), new CrossModel());
+        $this->register(VanillaBlocks::LARGE_FERN(), new CrossModel());
+        $this->registerFromBlockType(DoublePlant::class, new CrossModel());
+        $this->registerFromBlockType(Sapling::class, new CrossModel());
+        $this->registerFromBlockType(Crops::class, new CrossModel());
+        $this->registerFromBlockType(Flower::class, new CrossModel());
+
+        $this->register(VanillaBlocks::CORAL(), new CrossModel());
+        $this->register(VanillaBlocks::RED_MUSHROOM(), new CrossModel());
+        $this->register(VanillaBlocks::BROWN_MUSHROOM(), new CrossModel());
+        $this->register(VanillaBlocks::TWISTING_VINES(), new CrossModel());
+        $this->register(VanillaBlocks::WEEPING_VINES(), new CrossModel());
+        $this->register(VanillaBlocks::CAVE_VINES(), new CrossModel());
+        $this->register(VanillaBlocks::FIRE(), new CrossModel());
+        $this->register(VanillaBlocks::SOUL_FIRE(), new CrossModel());
+        $this->register(VanillaBlocks::CHAIN(), new CrossModel());
+        $this->register(VanillaBlocks::BIG_DRIPLEAF_STEM(), new CrossModel());
+        $this->register(VanillaBlocks::BREWING_STAND(), new CrossModel());
+        $this->register(VanillaBlocks::COBWEB(), new CrossModel());
+        $this->register(VanillaBlocks::SWEET_BERRY_BUSH(), new CrossModel());
+        $this->register(VanillaBlocks::DEAD_BUSH(), new CrossModel());
+        $this->register(VanillaBlocks::HANGING_ROOTS(), new CrossModel());
+
+        // TODO scaled down textures
+        $this->registerFromBlockType(PressurePlate::class, new DefaultBlockModel());
+        $this->register(VanillaBlocks::CHEST(), new DefaultBlockModel());
+        $this->register(VanillaBlocks::ENDER_CHEST(), new DefaultBlockModel());
+        $this->register(VanillaBlocks::TRAPPED_CHEST(), new DefaultBlockModel());
+        $this->register(VanillaBlocks::CAKE(), new DefaultBlockModel());
+        $this->register(VanillaBlocks::CAKE_WITH_CANDLE(), new DefaultBlockModel());
+        $this->register(VanillaBlocks::CAKE_WITH_DYED_CANDLE(), new DefaultBlockModel());
+
+        // TODO height difference
+        $this->registerFromBlockType(Stair::class, new DefaultBlockModel());
     }
 
-    /**
-     * Register a model for all blocks with a given trait
-     * @param string $blockTrait
-     * @param BlockModel $model
-     * @return void
-     */
-    public function registerFromBlockTrait(string $blockTrait, BlockModel $model): void {
-        foreach (VanillaBlocks::getAll() as $block) {
-            if (in_array($blockTrait, BlockUtils::getTraits($block))) $this->register($block, $model);
-        }
-    }
 
     /**
      * Register a model for all blocks of the same type
@@ -75,10 +112,9 @@ final class BlockModels
      * @param BlockModel $model
      * @return void
      */
-    public function registerFromBlockType(string $blockType, BlockModel $model): void {
-        foreach (VanillaBlocks::getAll() as $block) {
-            if ($block instanceof $blockType) $this->register($block, $model);
-        }
+    private function registerFromBlockType(string $blockType, BlockModel $model): void
+    {
+        $this->blockTypeModels[$blockType] = $model;
     }
 
     /**
@@ -87,16 +123,43 @@ final class BlockModels
      * @param BlockModel $model
      * @return void
      */
-    public function register(Block $block, BlockModel $model): void {
+    public function register(Block $block, BlockModel $model): void
+    {
         $this->blockModels[$block->getTypeId()] = $model;
     }
 
-    public function get(Block $block): ?BlockModel {
-        return $this->blockModels[$block->getTypeId()] ?? $this->default;
+    public function get(Block $block): ?BlockModel
+    {
+        $model = $this->blockModels[$block->getTypeId()] ?? $this->getByType($block) ?? null;
+        if ($model !== null) return $model;
+
+        if ($block->isFullCube() || BlockUtils::hasFullTop($block)) return $this->default;
+
+        return null;
+    }
+
+    public function getByType(Block $block): ?BlockModel
+    {
+        $model = $this->blockTypeModels[$block::class] ?? null;
+        if ($model !== null) return $model;
+
+        $parents = BlockUtils::getParents($block);
+
+        // test the parents
+        foreach ($parents as $parent) {
+            $model = $this->blockTypeModels[$parent->getName()] ?? null;
+            if ($model !== null) return $model;
+        }
+
+        return null;
     }
 
 
-
-
-
+    /**
+     * @return BlockModel
+     */
+    public function getDefault(): BlockModel
+    {
+        return $this->default;
+    }
 }

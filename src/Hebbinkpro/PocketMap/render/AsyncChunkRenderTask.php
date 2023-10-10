@@ -23,12 +23,12 @@ use GdImage;
 use Hebbinkpro\PocketMap\region\Region;
 use Hebbinkpro\PocketMap\region\RegionChunks;
 use Hebbinkpro\PocketMap\textures\model\BlockModels;
-use Hebbinkpro\PocketMap\textures\model\DefaultBlockModel;
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
 use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
 use Hebbinkpro\PocketMap\utils\ColorMapParser;
 use Hebbinkpro\PocketMap\utils\TextureUtils;
 use pocketmine\block\BlockTypeIds;
+use pocketmine\block\Thin;
 use pocketmine\world\biome\BiomeRegistry;
 use pocketmine\world\format\Chunk;
 use pocketmine\world\World;
@@ -184,7 +184,7 @@ class AsyncChunkRenderTask extends AsyncRenderTask
                 // it's water
                 if ($waterDepth == 0) $blocks[] = $block;
                 $waterDepth++;
-            } else if ($models->get($block) instanceof DefaultBlockModel || in_array($block->getTypeId(), $blockIds)) {
+            } else if (in_array($block->getTypeId(), $blockIds) || $models->get($block) === null) {
                 // it's a block we cannot (yet) render
                 $height++;
             } else {
@@ -196,19 +196,20 @@ class AsyncChunkRenderTask extends AsyncRenderTask
             $y--;
         }
 
-        $biomeId = $chunk->getBiomeId($x, $y, $z);
-        $biome = BiomeRegistry::getInstance()->getBiome($biomeId);
-
         // loop from the bottom to the top in the blocks list
         // the latest added block has to be rendered under the previous block
         $texture = imagecreatetruecolor($pixelsPerBlock, $pixelsPerBlock);
 
+        // get the biome
+        $biomeId = $chunk->getBiomeId($x, $y, $z);
+        $biome = BiomeRegistry::getInstance()->getBiome($biomeId);
+
         for ($i = count($blocks) - 1; $i >= 0; $i--) {
             $block = $blocks[$i];
 
-            $blockTexture = TextureUtils::createCompressedBlockTexture($block, $biome, $terrainTextures, $pixelsPerBlock);
-            $blockTexture = $models->get($block)->getModelTexture($block, $chunk, $blockTexture);
-            $blockTexture = TextureUtils::rotateToFacing($blockTexture, BlockStateParser::getBlockFace($block));
+            $blockTexture = TextureUtils::getBlockTexture($block, $chunk, $terrainTextures, $pixelsPerBlock);
+            if ($block instanceof Thin) var_dump($terrainTextures->getTextureByBlock($block));
+            if ($blockTexture === null) continue;
 
             if ($block->getTypeId() === BlockTypeIds::WATER) {
                 $waterAlpha = floor(32 - (4 * ColorMapParser::getWaterTransparency($biome, $terrainTextures) * $waterDepth));

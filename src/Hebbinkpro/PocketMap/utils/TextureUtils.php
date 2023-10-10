@@ -21,12 +21,17 @@ namespace Hebbinkpro\PocketMap\utils;
 
 use GdImage;
 use Hebbinkpro\PocketMap\PocketMap;
+use Hebbinkpro\PocketMap\textures\model\BlockModel;
+use Hebbinkpro\PocketMap\textures\model\BlockModels;
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
 use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
+use Hebbinkpro\PocketMap\utils\block\BlockUtils;
 use Hebbinkpro\PocketMap\utils\block\OldBlockTypeNames;
 use pocketmine\block\Block;
 use pocketmine\math\Facing;
 use pocketmine\world\biome\Biome;
+use pocketmine\world\biome\BiomeRegistry;
+use pocketmine\world\format\Chunk;
 
 class TextureUtils
 {
@@ -61,42 +66,28 @@ class TextureUtils
     }
 
     /**
-     * Create a block texture compressed to the given size
-     * @param Block $block the block
-     * @param Biome $biome the biome the block is in
-     * @param TerrainTextures $terrainTextures the resource pack
-     * @param int $newSize the new size of the block texture
-     * @return GdImage the block texture compressed to the $newSize
-     */
-    public static function createCompressedBlockTexture(Block $block, Biome $biome, TerrainTextures $terrainTextures, int $newSize): GdImage
-    {
-        $img = self::createBlockTexture($block, $biome, $terrainTextures);
-        $compressedImg = self::getCompressedImage($img, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE, $newSize, $newSize);
-
-        imagedestroy($img);
-
-        return $compressedImg;
-    }
-
-    /**
      * Get a block texture as an GdImage
      * @param Block $block
-     * @param Biome $biome
+     * @param BlockModel|null $model
+     * @param Chunk $chunk
      * @param TerrainTextures $terrainTextures
-     * @return GdImage the texture of the block
+     * @return GdImage|null the texture of the block
      */
-    public static function createBlockTexture(Block $block, Biome $biome, TerrainTextures $terrainTextures): GdImage
+    private static function createBlockTexture(Block $block, ?BlockModel $model, Chunk $chunk, TerrainTextures $terrainTextures): ?GdImage
     {
-        if (!array_key_exists($terrainTextures->getPath(), self::$blockTextureMap)) {
-            self::$blockTextureMap[$terrainTextures->getPath()] = [];
-        }
-        if (!array_key_exists($block->getTypeId(), self::$blockTextureMap[$terrainTextures->getPath()])) {
-            self::$blockTextureMap[$terrainTextures->getPath()][$block->getTypeId()] = [];
+        $pos = $block->getPosition();
+
+        // get the biome
+        $biomeId = $chunk->getBiomeId($pos->getX(), $pos->getY(), $pos->getZ());
+        $biome = BiomeRegistry::getInstance()->getBiome($biomeId);
+
+        if (!array_key_exists($biome->getId(), self::$blockTextureMap)) {
+            self::$blockTextureMap[$biome->getId()] = [];
         }
 
         // texture exists in the cache, return it
-        if (array_key_exists($biome->getId(), self::$blockTextureMap[$terrainTextures->getPath()][$block->getTypeId()])) {
-            $cacheImg = self::$blockTextureMap[$terrainTextures->getPath()][$block->getTypeId()][$biome->getId()];
+        if (array_key_exists($block->getStateId(), self::$blockTextureMap[$biome->getId()])) {
+            $cacheImg = self::$blockTextureMap[$biome->getId()][$block->getStateId()];
 
             // create image and copy the cache data to it
             $img = imagecreatetruecolor(PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
@@ -122,20 +113,51 @@ class TextureUtils
         }
         imagealphablending($img, false);
 
-        self::applyColorMap($img, $block, $biome, $terrainTextures);
-        imagesavealpha($img, true);
+        // set the model
+        $modelImg = $img;
+        if ($model !== null) {
+            $modelImg = $model->getModelTexture($block, $chunk, $img);
+            imagedestroy($img);
+        }
+
+        // set the color map
+        self::applyColorMap($modelImg, $block, $biome, $terrainTextures);
+        imagesavealpha($modelImg, true);
+
+        // set the rotation
+        $rotatedImg = TextureUtils::rotateToFacing($modelImg, BlockStateParser::getBlockFace($block));
+        imagedestroy($modelImg);
 
         // create a cache image
         $cacheImg = imagecreatetruecolor(PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
         imagealphablending($cacheImg, false);
-        imagecopy($cacheImg, $img, 0, 0, 0, 0, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
+        imagecopy($cacheImg, $rotatedImg, 0, 0, 0, 0, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
         imagesavealpha($cacheImg, true);
 
         // store the cache image
-        self::$blockTextureMap[$terrainTextures->getPath()][$block->getTypeId()][$biome->getId()] = $cacheImg;
+        self::$blockTextureMap[$biome->getId()][$block->getStateId()] = $cacheImg;
 
+        return $rotatedImg;
+    }
 
-        return $img;
+    public static function getBlockTexture(Block $block, Chunk $chunk, TerrainTextures $terrainTextures, int $size): ?GdImage {
+        if (($model = BlockModels::getInstance()->get($block)) === null) return null;
+
+        $differentModel = BlockUtils::hasDifferentModelForSameState($block);
+        $texture = self::createBlockTexture($block, $differentModel ? null : $model, $chunk, $terrainTextures);
+
+        // if block can have different models for the same state, apply the model here
+        if ($differentModel) {
+            $modelTexture = $model->getModelTexture($block, $chunk, $texture);
+            imagedestroy($texture);
+            $texture = $modelTexture;
+        }
+
+        // resize the img
+        $resized = self::getCompressedImage($texture, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE, $size, $size);
+        imagedestroy($texture);
+
+        return $resized;
     }
 
     /**
@@ -285,20 +307,15 @@ class TextureUtils
      */
     public static function clearCache(): void
     {
-        // destroy all stored images
+        // destroy all images
         foreach (self::$blockTextureMap as $blocks) {
-            foreach ($blocks as $biomes) {
-                foreach ($biomes as $img) {
-                    imagedestroy($img);
-                }
+            foreach ($blocks as $texture) {
+                imagedestroy($texture);
             }
         }
 
-        // clear cache of all resource packs
-        $textures = array_keys(self::$blockTextureMap);
-        foreach ($textures as $path) {
-            unset(self::$blockTextureMap[$path]);
-        }
+        // make the list empty
+        self::$blockTextureMap = [];
     }
 
     public static function getBlockFaceTexture(Block $block, array $availableFaces): ?string
