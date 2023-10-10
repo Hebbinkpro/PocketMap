@@ -59,19 +59,19 @@ class ResourcePackTextures
         $this->textures = [];
 
         foreach (scandir($path) as $block) {
+            $blockPrefix = $prefix . ResourcePackUtils::BLOCK_TEXTURES;
             $blocks = [$block];
 
             if (is_dir($path . $block)) {
                 $blocks = scandir($path . $block);
-                // if there is for some reason another dir in this list, it's the texture pack makers own fault.
-                // It will probably not break anything.
+                $blockPrefix .= $block . "/";
             } else if (!is_file($path . $block)) continue;
 
             foreach ($blocks as $file) {
                 if (str_ends_with($file, ".png") || str_ends_with($file, ".tga")) {
                     $name = str_replace([".png", ".tga"], "", $file);
                     if (!array_key_exists($name, $this->textures)) {
-                        $this->textures[$name] = $prefix . ResourcePackUtils::BLOCK_TEXTURES . $name;
+                        $this->textures[$name] = $blockPrefix . $name;
                     }
                 }
             }
