@@ -20,7 +20,7 @@
 namespace Hebbinkpro\PocketMap\textures\model;
 
 use GdImage;
-use Hebbinkpro\PocketMap\PocketMap;
+use Hebbinkpro\PocketMap\utils\TextureUtils;
 use pocketmine\block\Block;
 use pocketmine\world\format\Chunk;
 
@@ -41,16 +41,15 @@ abstract class BlockModel {
      */
     public function getModelTexture(Block $block, Chunk $chunk, GdImage $texture): GdImage {
 
-        $modelTexture = imagecreatetruecolor(PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
-        imagefill($modelTexture, 0, 0, imagecolorexactalpha($modelTexture, 0,0,0,127));
-        imagesavealpha($modelTexture, true);
+        $modelTexture = TextureUtils::getEmptyTexture();
 
         $geo = $this->getGeometry($block, $chunk);
         foreach ($geo as $parts) {
-            $start = $parts[0];
+            $srcStart = $parts[0];
             $width = $parts[1];
+            $dstStart = $parts[2] ?? $srcStart;
             imagealphablending($texture, true);
-            imagecopy($modelTexture, $texture, $start[0], $start[1], $start[0], $start[1], $width[0], $width[1]);
+            imagecopy($modelTexture, $texture, $dstStart[0], $dstStart[1], $srcStart[0], $srcStart[1], $width[0], $width[1]);
             imagesavealpha($texture, true);
 
         }

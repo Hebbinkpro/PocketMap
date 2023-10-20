@@ -154,21 +154,28 @@ class PocketMap extends PluginBase implements Listener
 
             case "render":
                 if (count($args) < 3) {
-                    $sender->sendMessage("[PocketMap] Invalid amount of arguments: /render <x> <z> <zoom> [world]");
-                    return false;
-                }
-
-                $x = intval($args[0]);
-                $z = intval($args[1]);
-                $zoom = intval($args[2]);
-                $world = $args[3] ?? null;
-
-                if ($world === null) {
                     if (!$sender instanceof Player) {
-                        $sender->sendMessage("[PocketMap] Invalid amount of arguments: /render <x> <z> <zoom> <world>");
-                        break;
+
+                        $sender->sendMessage("[PocketMap] Invalid amount of arguments: /render <x> <z> <zoom> [world]");
+                        return false;
                     }
-                    $world = $sender->getWorld()->getFolderName();
+                    $x = $sender->getPosition()->getFloorX();
+                    $z = $sender->getPosition()->getFloorZ();
+                    $zoom = 0;
+                    $world = $sender->getWorld();
+                } else {
+                    $x = intval($args[0]);
+                    $z = intval($args[1]);
+                    $zoom = intval($args[2]);
+                    $world = $args[3] ?? null;
+
+                    if ($world === null) {
+                        if (!$sender instanceof Player) {
+                            $sender->sendMessage("[PocketMap] Invalid amount of arguments: /render <x> <z> <zoom> <world>");
+                            break;
+                        }
+                        $world = $sender->getWorld()->getFolderName();
+                    }
                 }
 
                 $renderer = self::getWorldRenderer($world);

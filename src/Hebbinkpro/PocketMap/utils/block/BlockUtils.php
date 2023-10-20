@@ -21,6 +21,7 @@ namespace Hebbinkpro\PocketMap\utils\block;
 
 use pocketmine\block\Block;
 use pocketmine\block\BlockTypeIds;
+use pocketmine\block\Chest;
 use pocketmine\block\Fence;
 use pocketmine\block\FenceGate;
 use pocketmine\block\Thin;
@@ -102,7 +103,7 @@ class BlockUtils
     }
 
     public static function hasDifferentModelForSameState(Block $block): bool {
-        return $block instanceof Fence || $block instanceof Thin;
+        return $block instanceof Fence || $block instanceof Thin || $block instanceof Chest;
     }
 
     /**

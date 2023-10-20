@@ -20,17 +20,13 @@
 namespace Hebbinkpro\PocketMap\textures\model;
 
 use Hebbinkpro\PocketMap\utils\block\BlockUtils;
-use PhpParser\Node\Expr\Cast\Double;
 use pocketmine\block\Block;
-use pocketmine\block\BlockTypeIds;
-use pocketmine\block\Cake;
-use pocketmine\block\Chest;
+use pocketmine\block\Button;
 use pocketmine\block\Crops;
 use pocketmine\block\Door;
 use pocketmine\block\DoublePlant;
 use pocketmine\block\Fence;
 use pocketmine\block\FenceGate;
-use pocketmine\block\Fire;
 use pocketmine\block\Flower;
 use pocketmine\block\PressurePlate;
 use pocketmine\block\Sapling;
@@ -96,14 +92,19 @@ final class BlockModels
         $this->register(VanillaBlocks::DEAD_BUSH(), new CrossModel());
         $this->register(VanillaBlocks::HANGING_ROOTS(), new CrossModel());
 
-        // TODO scaled down textures
-        $this->registerFromBlockType(PressurePlate::class, new DefaultBlockModel());
-        $this->register(VanillaBlocks::CHEST(), new DefaultBlockModel());
+        $this->registerFromBlockType(PressurePlate::class, new PressurePlateModel());
+        $this->registerFromBlockType(Button::class, new ButtonModel());
+
+        $this->register(VanillaBlocks::CHEST(), new ChestModel());
+        $this->register(VanillaBlocks::TRAPPED_CHEST(), new ChestModel());
         $this->register(VanillaBlocks::ENDER_CHEST(), new DefaultBlockModel());
-        $this->register(VanillaBlocks::TRAPPED_CHEST(), new DefaultBlockModel());
+        $this->register(VanillaBlocks::BARREL(), new DefaultBlockModel());
+
         $this->register(VanillaBlocks::CAKE(), new DefaultBlockModel());
         $this->register(VanillaBlocks::CAKE_WITH_CANDLE(), new DefaultBlockModel());
         $this->register(VanillaBlocks::CAKE_WITH_DYED_CANDLE(), new DefaultBlockModel());
+
+        $this->register(VanillaBlocks::END_ROD(), new EndRodModel());
 
         // TODO height difference
         $this->registerFromBlockType(Stair::class, new DefaultBlockModel());

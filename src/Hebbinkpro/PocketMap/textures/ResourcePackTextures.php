@@ -59,7 +59,9 @@ class ResourcePackTextures
         $this->textures = [];
 
         foreach (scandir($path) as $block) {
-            $blockPrefix = $prefix . ResourcePackUtils::BLOCK_TEXTURES;
+            if (in_array($block, [".", ".."])) continue;
+
+            $blockPrefix = "";
             $blocks = [$block];
 
             if (is_dir($path . $block)) {
@@ -71,7 +73,7 @@ class ResourcePackTextures
                 if (str_ends_with($file, ".png") || str_ends_with($file, ".tga")) {
                     $name = str_replace([".png", ".tga"], "", $file);
                     if (!array_key_exists($name, $this->textures)) {
-                        $this->textures[$name] = $blockPrefix . $name;
+                        $this->textures[$name] = $prefix . ResourcePackUtils::BLOCK_TEXTURES . $blockPrefix . $name;
                     }
                 }
             }

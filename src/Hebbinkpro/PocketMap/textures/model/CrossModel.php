@@ -21,6 +21,7 @@ namespace Hebbinkpro\PocketMap\textures\model;
 
 use GdImage;
 use Hebbinkpro\PocketMap\PocketMap;
+use Hebbinkpro\PocketMap\utils\TextureUtils;
 use pocketmine\block\Block;
 use pocketmine\world\format\Chunk;
 
@@ -37,9 +38,7 @@ class CrossModel extends BlockModel
 
     public function getModelTexture(Block $block, Chunk $chunk, GdImage $texture): GdImage
     {
-        $modelTexture = imagecreatetruecolor(PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
-        imagefill($modelTexture, 0, 0, imagecolorexactalpha($modelTexture, 0,0,0,127));
-        imagesavealpha($modelTexture, true);
+        $modelTexture = TextureUtils::getEmptyTexture();
 
         $colors = $this->getTopColors($texture);
         $size = PocketMap::TEXTURE_SIZE - 1;

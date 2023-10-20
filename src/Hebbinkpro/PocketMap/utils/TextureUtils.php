@@ -91,7 +91,7 @@ class TextureUtils
             $cacheImg = self::$blockTextureMap[$biome->getId()][$block->getStateId()];
 
             // create image and copy the cache data to it
-            $img = imagecreatetruecolor(PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
+            $img = self::getEmptyTexture();
             imagealphablending($img, false);
             imagecopy($img, $cacheImg, 0, 0, 0, 0, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
             imagesavealpha($img, true);
@@ -109,8 +109,7 @@ class TextureUtils
         else if (is_file($path . ".tga")) $img = imagecreatefromtga($path . ".tga");
         else {
             // the path is null, return empty image
-            $img = imagecreatetruecolor(PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
-            imagecolorallocatealpha($img, 0, 0, 0, 127);
+            $img = self::getEmptyTexture();
         }
         imagealphablending($img, false);
 
@@ -130,7 +129,7 @@ class TextureUtils
         imagedestroy($modelImg);
 
         // create a cache image
-        $cacheImg = imagecreatetruecolor(PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
+        $cacheImg = self::getEmptyTexture();
         imagealphablending($cacheImg, false);
         imagecopy($cacheImg, $rotatedImg, 0, 0, 0, 0, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
         imagesavealpha($cacheImg, true);
@@ -141,7 +140,17 @@ class TextureUtils
         return $rotatedImg;
     }
 
-    public static function getBlockTexture(Block $block, Chunk $chunk, TerrainTextures $terrainTextures, int $size): ?GdImage {
+    public static function getEmptyTexture(int $size = PocketMap::TEXTURE_SIZE): GdImage
+    {
+        $texture = imagecreatetruecolor($size, $size);
+        imagefill($texture, 0, 0, imagecolorexactalpha($texture, 0, 0, 0, 127));
+        imagesavealpha($texture, true);
+
+        return $texture;
+    }
+
+    public static function getBlockTexture(Block $block, Chunk $chunk, TerrainTextures $terrainTextures, int $size): ?GdImage
+    {
         if ($block instanceof Door) {
             var_dump($terrainTextures->getTextureByBlock($block));
         }
