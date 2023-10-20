@@ -151,10 +151,6 @@ class TextureUtils
 
     public static function getBlockTexture(Block $block, Chunk $chunk, TerrainTextures $terrainTextures, int $size): ?GdImage
     {
-        if ($block instanceof Door) {
-            var_dump($terrainTextures->getTextureByBlock($block));
-        }
-
         if (($model = BlockModels::getInstance()->get($block)) === null) return null;
 
         $differentModel = BlockUtils::hasDifferentModelForSameState($block);
