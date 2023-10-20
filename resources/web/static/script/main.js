@@ -92,7 +92,7 @@ window.addEventListener("load", async () => {
         urlQuery.set("x", x.toString());
         urlQuery.set("z", z.toString());
         urlQuery.set("zoom", map.getZoom())
-        window.history.pushState({path: "?"+urlQuery.toString()}, "", "?"+urlQuery.toString())
+        window.history.pushState({path: "?" + urlQuery.toString()}, "", "?" + urlQuery.toString())
     })
 
 
@@ -121,8 +121,8 @@ function createElements() {
             worldEl.setAttribute("role", "button")
 
             worldEl.addEventListener("click", (event) => {
-               window.location.assign("?world="+world["name"]);
-               event.preventDefault();
+                window.location.assign("?world=" + world["name"]);
+                event.preventDefault();
             });
 
             worldsDiv.appendChild(worldEl);

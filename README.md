@@ -3,14 +3,17 @@
 A dynamic web-based world map for PocketMine-MP servers.
 
 ## Update 4 is here
-**IMPORTANT: if you update the plugin, please remove your existing `web`, `renders` and `tmp` folders to make use of the newest features**
+
+**IMPORTANT: if you update the plugin, please remove your existing `web`, `renders` and `tmp` folders to make use of the
+newest features**
+
 - Multiple worlds support for the webpage, now you can see all your worlds :D
 - Transparent blocks are now transparent instead of textures with black backgrounds, now you can see blocks under glass.
 - It's now possible to see some blocks under the water surface
 - Faster rendering
 - Proper working custom resource packs
-- Better way to detect blocks with a special model (e.g. fences, crops, etc.) so that we don't render them.
-Go to the [changelogs](https://github.com/Hebbinkpro/PocketMap/blob/main/changelogs/v0.4.md)
+- Correct models for some blocks
+  Go to the [changelogs](https://github.com/Hebbinkpro/PocketMap/blob/main/changelogs/v0.4.md)
 
 ## How to install
 
@@ -59,4 +62,5 @@ This is a list of all things that have to be added before the release of v1.0.0
 - The rendered textures are from the official [bedrock-samples](https://github.com/Mojang/bedrock-samples) resource
   pack.
 - The dynamic map is created using [leaflet.js](https://leafletjs.com/)
-- The player heads shown on the map are created using the [LibSkin](https://github.com/HimbeersaftLP/LibSkin) virion by HimbeersaftLP.
+- The player heads shown on the map are created using the [LibSkin](https://github.com/HimbeersaftLP/LibSkin) virion by
+  HimbeersaftLP.
