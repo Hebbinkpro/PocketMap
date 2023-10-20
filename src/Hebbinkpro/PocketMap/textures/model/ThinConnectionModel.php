@@ -19,10 +19,8 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
-use GdImage;
 use Hebbinkpro\PocketMap\utils\block\BlockUtils;
 use pocketmine\block\Block;
-use pocketmine\block\Thin;
 use pocketmine\math\Facing;
 use pocketmine\world\format\Chunk;
 

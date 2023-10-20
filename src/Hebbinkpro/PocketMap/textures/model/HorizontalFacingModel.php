@@ -20,43 +20,40 @@
 namespace Hebbinkpro\PocketMap\textures\model;
 
 use GdImage;
-use Hebbinkpro\PocketMap\utils\TextureUtils;
+use Hebbinkpro\PocketMap\utils\block\BlockUtils;
 use pocketmine\block\Block;
+use pocketmine\block\FenceGate;
+use pocketmine\math\Facing;
 use pocketmine\world\format\Chunk;
 
-abstract class BlockModel
+abstract class HorizontalFacingModel extends BlockModel
 {
 
-    /**
-     * Get the block model texture from the block texture
-     * @param Block $block
-     * @param Chunk $chunk
-     * @param GdImage $texture
-     * @return GdImage
-     */
     public function getModelTexture(Block $block, Chunk $chunk, GdImage $texture): GdImage
     {
+        $model = parent::getModelTexture($block, $chunk, $texture);
 
-        $modelTexture = TextureUtils::getEmptyTexture();
-
-        $geo = $this->getGeometry($block, $chunk);
-        foreach ($geo as $parts) {
-            $srcStart = $parts[0];
-            $width = $parts[1];
-            $dstStart = $parts[2] ?? $srcStart;
-            imagealphablending($texture, true);
-            imagecopy($modelTexture, $texture, $dstStart[0], $dstStart[1], $srcStart[0], $srcStart[1], $width[0], $width[1]);
-            imagesavealpha($texture, true);
-
+        $rotation = $this->getRotation($block);
+        if ($rotation != 0) {
+            // rotate the model
+            $rotated = imagerotate($model, $rotation, imagecolorallocatealpha($model, 0, 0, 0, 127));
+            imagedestroy($model);
+            $model = $rotated;
         }
 
-        imagedestroy($texture);
-        return $modelTexture;
+        return $model;
     }
 
-    /**
-     * Get the block geometry
-     * @return int[][][][]
-     */
-    public abstract function getGeometry(Block $block, Chunk $chunk): array;
+    public function getRotation(Block $block): int
+    {
+        if (!BlockUtils::hasHorizontalFacing($block)) return 0;
+        /** @type FenceGate $block */
+
+        return match ($block->getFacing()) {
+            Facing::NORTH => 0,
+            Facing::EAST => 90,
+            Facing::SOUTH => 180,
+            Facing::WEST => 270,
+        };
+    }
 }

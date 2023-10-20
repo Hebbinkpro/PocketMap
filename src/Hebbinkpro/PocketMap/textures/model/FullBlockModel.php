@@ -28,8 +28,8 @@ class FullBlockModel extends BlockModel
     {
         return [
             [
-                [0,0],
-                [16,16]
+                [0, 0],
+                [16, 16]
             ]
         ];
     }

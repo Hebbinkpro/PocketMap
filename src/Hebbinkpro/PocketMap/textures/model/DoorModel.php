@@ -20,17 +20,33 @@
 namespace Hebbinkpro\PocketMap\textures\model;
 
 use pocketmine\block\Block;
+use pocketmine\block\Door;
+use pocketmine\math\Facing;
 use pocketmine\world\format\Chunk;
 
-class DoorModel extends BlockModel
+class DoorModel extends HorizontalFacingModel
 {
+
+    public function getRotation(Block $block): int
+    {
+        if (!($block instanceof Door)) return parent::getRotation($block);
+
+        $open = $block->isOpen() ? ($block->isHingeRight() ? 90 : -90) : 0;
+
+        return match ($block->getFacing()) {
+            Facing::NORTH => 270 + $open,
+            Facing::EAST => 180 + $open,
+            Facing::SOUTH => 90 + $open,
+            Facing::WEST => $open,
+        };
+    }
 
     public function getGeometry(Block $block, Chunk $chunk): array
     {
         return [
             [
-                [0,0],
-                [16,3]
+                [0, 0],
+                [16, 3]
             ]
         ];
     }

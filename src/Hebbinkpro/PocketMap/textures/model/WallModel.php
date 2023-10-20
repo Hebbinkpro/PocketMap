@@ -32,16 +32,16 @@ class WallModel extends ConnectionModel
         if (!$block instanceof Wall || $block->isPost()) {
             return [
                 [
-                    [4,4],
-                    [8,8]
+                    [4, 4],
+                    [8, 8]
                 ]
             ];
         }
 
         return [
             [
-                [5,5],
-                [6,6]
+                [5, 5],
+                [6, 6]
             ]
         ];
     }

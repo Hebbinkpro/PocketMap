@@ -45,7 +45,7 @@ class CrossModel extends BlockModel
 
         // skip the corners, otherwise these textures are dominant in larger zoom levels
         // and can cause ugly dark spots in e.g. a grass field
-        for ($i = 1; $i < count($colors)-1; $i++) {
+        for ($i = 1; $i < count($colors) - 1; $i++) {
             $color = $colors[$i];
 
             imagealphablending($modelTexture, false);

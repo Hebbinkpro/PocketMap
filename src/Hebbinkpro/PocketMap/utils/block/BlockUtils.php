@@ -48,13 +48,6 @@ class BlockUtils
         };
     }
 
-    public static function hasConnections(Block $block): bool
-    {
-        if ($block instanceof Fence || $block instanceof Thin || $block instanceof Wall) return true;
-
-        return false;
-    }
-
     /**
      * @param Block $block
      * @param Chunk $chunk
@@ -102,7 +95,15 @@ class BlockUtils
         return $connections;
     }
 
-    public static function hasDifferentModelForSameState(Block $block): bool {
+    public static function hasConnections(Block $block): bool
+    {
+        if ($block instanceof Fence || $block instanceof Thin || $block instanceof Wall) return true;
+
+        return false;
+    }
+
+    public static function hasDifferentModelForSameState(Block $block): bool
+    {
         return $block instanceof Fence || $block instanceof Thin || $block instanceof Chest;
     }
 
@@ -125,31 +126,6 @@ class BlockUtils
     public static function hasHorizontalFacing(Block $block): bool
     {
         return in_array(HorizontalFacingTrait::class, self::getTraits($block));
-    }
-
-    public static function hasSignLikeRotation(Block $block): bool
-    {
-        return in_array(SignLikeRotationTrait::class, self::getTraits($block));
-    }
-
-    public static function hasAnyFacing(Block $block): bool
-    {
-        if (in_array(AnyFacingTrait::class, self::getTraits($block))) return true;
-
-        return match ($block->getTypeId()) {
-            BlockTypeIds::LEVER => true,
-            default => false
-        };
-    }
-
-    public static function hasPillarRotation(Block $block): bool
-    {
-        return in_array(PillarRotationTrait::class, self::getTraits($block));
-    }
-
-    public static function hasColor(Block $block): bool
-    {
-        return in_array(ColoredTrait::class, self::getTraits($block));
     }
 
     /**
@@ -194,6 +170,31 @@ class BlockUtils
         }
 
         return $parents;
+    }
+
+    public static function hasSignLikeRotation(Block $block): bool
+    {
+        return in_array(SignLikeRotationTrait::class, self::getTraits($block));
+    }
+
+    public static function hasAnyFacing(Block $block): bool
+    {
+        if (in_array(AnyFacingTrait::class, self::getTraits($block))) return true;
+
+        return match ($block->getTypeId()) {
+            BlockTypeIds::LEVER => true,
+            default => false
+        };
+    }
+
+    public static function hasPillarRotation(Block $block): bool
+    {
+        return in_array(PillarRotationTrait::class, self::getTraits($block));
+    }
+
+    public static function hasColor(Block $block): bool
+    {
+        return in_array(ColoredTrait::class, self::getTraits($block));
     }
 
     public static function hasFullTop(Block $block, float $epsilon = 0.000001): bool

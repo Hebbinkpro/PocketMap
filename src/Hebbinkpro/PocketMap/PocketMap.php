@@ -60,27 +60,9 @@ class PocketMap extends PluginBase implements Listener
     private RenderSchedulerTask $renderScheduler;
     private ChunkSchedulerTask $chunkRenderer;
 
-    public static function getConfigManger(): ConfigManager
-    {
-        return self::$instance->configManager;
-    }
-
     public static function getFolder(): string
     {
         return self::$instance->getDataFolder();
-    }
-
-    /**
-     * Get a world renderer by its world or the name of the world
-     * @param World|string $world The world or the name of the world
-     * @return WorldRenderer|null the WorldRenderer or null when it wasn't found
-     */
-    public static function getWorldRenderer(World|string $world): ?WorldRenderer
-    {
-        if (is_string($world)) $worldName = $world;
-        else $worldName = $world->getFolderName();
-
-        return self::$worldRenderers[$worldName] ?? null;
     }
 
     /**
@@ -159,8 +141,8 @@ class PocketMap extends PluginBase implements Listener
                         $sender->sendMessage("[PocketMap] Invalid amount of arguments: /render <x> <z> <zoom> [world]");
                         return false;
                     }
-                    $x = $sender->getPosition()->getFloorX();
-                    $z = $sender->getPosition()->getFloorZ();
+                    $x = floor($sender->getPosition()->getX() / 16);
+                    $z = floor($sender->getPosition()->getZ() / 16);
                     $zoom = 0;
                     $world = $sender->getWorld();
                 } else {
@@ -199,40 +181,6 @@ class PocketMap extends PluginBase implements Listener
         }
 
         return true;
-    }
-
-    /**
-     * Load the config
-     * @return void
-     */
-    private function loadConfig(): void
-    {
-        $folder = $this->getDataFolder();
-
-        // save the config file
-        $this->saveDefaultConfig();
-
-        $config = $this->getConfig();
-        $version = $config->get("version", -1.0);
-        if ($version != self::CONFIG_VERSION) {
-            $this->getLogger()->warning("The current version of PocketMap is using another config version. Your current config will be replaced. Expected: v" . self::CONFIG_VERSION . ", Found: v$version");
-            $this->getLogger()->warning("You can find your old config in 'backup/config_v$version.yml'");
-
-            if (!is_dir($folder . "backup")) mkdir($folder . "backup");
-
-            // clone all contents from config.yml inside the backup config
-            file_put_contents($folder . "backup/config_v$version.yml",
-                file_get_contents($folder . "config.yml"));
-
-            // save the new config
-            $this->saveResource("config.yml", true);
-            // update the config to use it in the config manager
-            // don't use $this->getConfig(), because that will result in the OLD config
-            $config = new Config($folder . "config.yml");
-        }
-
-        // construct the config manager
-        $this->configManager = ConfigManager::fromConfig($config);
     }
 
     private function loadWebFiles(): void
@@ -274,6 +222,76 @@ class PocketMap extends PluginBase implements Listener
         // create the web folder and copy the contents
         mkdir($folder);
         Filesystem::recursiveCopy($this->getFile() . "resources/web", $folder);
+    }
+
+    /**
+     * Updates all renders folders to the new system.
+     * Zoom levels 4 to -4 is now replaced with levels 0 to 8.
+     * To prevent already created renders from messing things up, this function will rename all render folders to their new level.
+     * @return void
+     * @deprecated will be removed in version 0.5
+     */
+    private function updateRendersToWebV1(): void
+    {
+        $rendersFolder = $this->getDataFolder() . "renders/";
+        // there are no renders
+        if (!is_dir($rendersFolder)) return;
+
+        $levelUpdateMap = [
+            8 => -4,
+            7 => -3,
+            6 => -2,
+            5 => -1,
+            4 => 0,
+            3 => 1,
+            2 => 2,
+            1 => 3,
+            0 => 4
+        ];
+
+        // loop through all worlds
+        foreach (scandir($rendersFolder) as $world) {
+            if (in_array($world, [".", ".."])) continue;
+
+            $folder = $rendersFolder . $world . "/";
+            if (!is_dir($folder)) continue;
+
+            $isUpdated = false;
+            // make sure we really aren't already updated
+            foreach (scandir($folder) as $levelFolder) {
+                $level = intval($levelFolder);
+
+                // we still have negative levels!!!
+                if ($level < 0) break;
+                // we have levels higher than 4, so we are updated
+                if ($level > 4) {
+                    $isUpdated = true;
+                    break;
+                }
+
+                // all levels in the range [0, 4] don't say anything useful because they are in both versions
+            }
+
+            if ($isUpdated) continue;
+            $this->getLogger()->debug("Updating renders of world '$world' to the new system...");
+
+            $updatedLevels = [];
+            // rename all existing renders to level-tmp so that there cannot exist any duplicates
+            foreach ($levelUpdateMap as $newLevel => $oldLevel) {
+                if (!is_dir($folder . "$oldLevel")) continue;
+                $updatedLevels[] = $newLevel;
+                // rename the folder to the new level-tmp, when renaming to level it can happen that a folder occurs twice...
+                rename($folder . "$oldLevel", $folder . "$newLevel-tmp");
+            }
+
+            foreach ($updatedLevels as $newLevel) {
+                // remove the -tmp prefix
+                rename($folder . "$newLevel-tmp", $folder . "$newLevel");
+            }
+
+            $this->getLogger()->debug("World '$world' is updated.");
+
+        }
     }
 
     private function loadWebConfig(): void
@@ -322,6 +340,45 @@ class PocketMap extends PluginBase implements Listener
 
         // save the config
         $config->save();
+    }
+
+    public static function getConfigManger(): ConfigManager
+    {
+        return self::$instance->configManager;
+    }
+
+    /**
+     * Load the config
+     * @return void
+     */
+    private function loadConfig(): void
+    {
+        $folder = $this->getDataFolder();
+
+        // save the config file
+        $this->saveDefaultConfig();
+
+        $config = $this->getConfig();
+        $version = $config->get("version", -1.0);
+        if ($version != self::CONFIG_VERSION) {
+            $this->getLogger()->warning("The current version of PocketMap is using another config version. Your current config will be replaced. Expected: v" . self::CONFIG_VERSION . ", Found: v$version");
+            $this->getLogger()->warning("You can find your old config in 'backup/config_v$version.yml'");
+
+            if (!is_dir($folder . "backup")) mkdir($folder . "backup");
+
+            // clone all contents from config.yml inside the backup config
+            file_put_contents($folder . "backup/config_v$version.yml",
+                file_get_contents($folder . "config.yml"));
+
+            // save the new config
+            $this->saveResource("config.yml", true);
+            // update the config to use it in the config manager
+            // don't use $this->getConfig(), because that will result in the OLD config
+            $config = new Config($folder . "config.yml");
+        }
+
+        // construct the config manager
+        $this->configManager = ConfigManager::fromConfig($config);
     }
 
     private function generateFolderStructure(): void
@@ -375,6 +432,19 @@ class PocketMap extends PluginBase implements Listener
         }
     }
 
+    /**
+     * Get a world renderer by its world or the name of the world
+     * @param World|string $world The world or the name of the world
+     * @return WorldRenderer|null the WorldRenderer or null when it wasn't found
+     */
+    public static function getWorldRenderer(World|string $world): ?WorldRenderer
+    {
+        if (is_string($world)) $worldName = $world;
+        else $worldName = $world->getFolderName();
+
+        return self::$worldRenderers[$worldName] ?? null;
+    }
+
     protected function onEnable(): void
     {
         self::$instance = $this;
@@ -416,21 +486,6 @@ class PocketMap extends PluginBase implements Listener
         }
     }
 
-    /**
-     * Load all worlds
-     * @return void
-     */
-    private function loadAllWorlds(): void
-    {
-        $path = $this->getServer()->getDataPath() . "worlds/";
-        $folders = scandir($path);
-
-        foreach ($folders as $world) {
-            if (!is_dir($path . $world) || in_array($world, [".", ".."]) || !is_file($path . $world . "/level.dat")) continue;
-            $this->getServer()->getWorldManager()->loadWorld($world);
-        }
-    }
-
     private function loadTerrainTextures(): void
     {
         $textureSettings = $this->configManager->getManager("textures");
@@ -448,6 +503,21 @@ class PocketMap extends PluginBase implements Listener
         $path = $this->getDataFolder() . "resource_packs/";
 
         $this->terrainTextures = TerrainTextures::generate($this, $path, $options);
+    }
+
+    /**
+     * Load all worlds
+     * @return void
+     */
+    private function loadAllWorlds(): void
+    {
+        $path = $this->getServer()->getDataPath() . "worlds/";
+        $folders = scandir($path);
+
+        foreach ($folders as $world) {
+            if (!is_dir($path . $world) || in_array($world, [".", ".."]) || !is_file($path . $world . "/level.dat")) continue;
+            $this->getServer()->getWorldManager()->loadWorld($world);
+        }
     }
 
     /**
@@ -520,75 +590,5 @@ class PocketMap extends PluginBase implements Listener
     {
         // close the socket
         if ($this->webServer->isStarted()) $this->webServer->close();
-    }
-
-    /**
-     * Updates all renders folders to the new system.
-     * Zoom levels 4 to -4 is now replaced with levels 0 to 8.
-     * To prevent already created renders from messing things up, this function will rename all render folders to their new level.
-     * @return void
-     * @deprecated will be removed in a future version when most servers are updated to web v1.0
-     */
-    private function updateRendersToWebV1(): void
-    {
-        $rendersFolder = $this->getDataFolder() . "renders/";
-        // there are no renders
-        if (!is_dir($rendersFolder)) return;
-
-        $levelUpdateMap = [
-            8 => -4,
-            7 => -3,
-            6 => -2,
-            5 => -1,
-            4 => 0,
-            3 => 1,
-            2 => 2,
-            1 => 3,
-            0 => 4
-        ];
-
-        // loop through all worlds
-        foreach (scandir($rendersFolder) as $world) {
-            if (in_array($world, [".", ".."])) continue;
-
-            $folder = $rendersFolder.$world."/";
-            if (!is_dir($folder)) continue;
-
-            $isUpdated = false;
-            // make sure we really aren't already updated
-            foreach (scandir($folder) as $levelFolder) {
-                $level = intval($levelFolder);
-
-                // we still have negative levels!!!
-                if ($level < 0) break;
-                // we have levels higher than 4, so we are updated
-                if ($level > 4) {
-                    $isUpdated = true;
-                    break;
-                }
-
-                // all levels in the range [0, 4] don't say anything useful because they are in both versions
-            }
-
-            if ($isUpdated) continue;
-            $this->getLogger()->debug("Updating renders of world '$world' to the new system...");
-
-            $updatedLevels = [];
-            // rename all existing renders to level-tmp so that there cannot exist any duplicates
-            foreach ($levelUpdateMap as $newLevel => $oldLevel) {
-                if (!is_dir($folder . "$oldLevel")) continue;
-                $updatedLevels[] = $newLevel;
-                // rename the folder to the new level-tmp, when renaming to level it can happen that a folder occurs twice...
-                rename($folder . "$oldLevel", $folder . "$newLevel-tmp");
-            }
-
-            foreach ($updatedLevels as $newLevel) {
-                // remove the -tmp prefix
-                rename($folder . "$newLevel-tmp", $folder . "$newLevel");
-            }
-
-            $this->getLogger()->debug("World '$world' is updated.");
-
-        }
     }
 }

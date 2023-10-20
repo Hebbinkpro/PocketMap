@@ -136,7 +136,7 @@ class ConfigManager
             $mngr = new ConfigManager($this, true, $value, $nameParts[0]);
             try {
                 $mngr->save();
-            } catch (JsonException $e) {
+            } catch (JsonException) {
                 // something went wrong while saving
                 return null;
             }
@@ -176,7 +176,7 @@ class ConfigManager
 
             // find the value inside this manager
             return $mngr->getValue(implode(".", $nameParts));
-        } catch (Exception $e) {
+        } catch (Exception) {
             return $default;
         }
     }

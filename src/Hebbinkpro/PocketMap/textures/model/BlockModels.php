@@ -95,8 +95,8 @@ final class BlockModels
         $this->registerFromBlockType(PressurePlate::class, new PressurePlateModel());
         $this->registerFromBlockType(Button::class, new ButtonModel());
 
-        $this->register(VanillaBlocks::CHEST(), new ChestModel());
-        $this->register(VanillaBlocks::TRAPPED_CHEST(), new ChestModel());
+        $this->register(VanillaBlocks::CHEST(), new DefaultBlockModel());
+        $this->register(VanillaBlocks::TRAPPED_CHEST(), new DefaultBlockModel());
         $this->register(VanillaBlocks::ENDER_CHEST(), new DefaultBlockModel());
         $this->register(VanillaBlocks::BARREL(), new DefaultBlockModel());
 
@@ -110,6 +110,16 @@ final class BlockModels
         $this->registerFromBlockType(Stair::class, new DefaultBlockModel());
     }
 
+    /**
+     * Register a block model
+     * @param Block $block
+     * @param BlockModel $model
+     * @return void
+     */
+    public function register(Block $block, BlockModel $model): void
+    {
+        $this->blockModels[$block->getTypeId()] = $model;
+    }
 
     /**
      * Register a model for all blocks of the same type
@@ -120,17 +130,6 @@ final class BlockModels
     private function registerFromBlockType(string $blockType, BlockModel $model): void
     {
         $this->blockTypeModels[$blockType] = $model;
-    }
-
-    /**
-     * Register a block model
-     * @param Block $block
-     * @param BlockModel $model
-     * @return void
-     */
-    public function register(Block $block, BlockModel $model): void
-    {
-        $this->blockModels[$block->getTypeId()] = $model;
     }
 
     public function get(Block $block): ?BlockModel

@@ -19,16 +19,15 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
-use GdImage;
 use Hebbinkpro\PocketMap\utils\block\BlockUtils;
 use pocketmine\block\Block;
-use pocketmine\block\Fence;
 use pocketmine\math\Facing;
 use pocketmine\world\format\Chunk;
 
 class FenceModel extends ConnectionModel
 {
-    public function getCenterGeometry(Block $block): array {
+    public function getCenterGeometry(Block $block): array
+    {
         return [
             [
                 [6, 6],

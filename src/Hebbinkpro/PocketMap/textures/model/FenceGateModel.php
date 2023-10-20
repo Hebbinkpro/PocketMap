@@ -23,7 +23,7 @@ use pocketmine\block\Block;
 use pocketmine\block\FenceGate;
 use pocketmine\world\format\Chunk;
 
-class FenceGateModel extends BlockModel
+class FenceGateModel extends HorizontalFacingModel
 {
 
     /**
@@ -34,21 +34,21 @@ class FenceGateModel extends BlockModel
         if ($block instanceof FenceGate && $block->isOpen()) {
             return [
                 [
-                    [0,0],
-                    [2,9]
+                    [0, 0],
+                    [2, 9]
                 ],
                 [
-                    [14,0],
-                    [2,9]
+                    [14, 0],
+                    [2, 9]
                 ]
             ];
         }
 
         return [
-          [
-              [0,7],
-              [16,2]
-          ]
+            [
+                [0, 7],
+                [16, 2]
+            ]
         ];
     }
 }

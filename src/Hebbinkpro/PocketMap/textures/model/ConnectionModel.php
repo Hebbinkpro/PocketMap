@@ -24,7 +24,8 @@ use pocketmine\world\format\Chunk;
 
 abstract class ConnectionModel extends BlockModel
 {
-    public function getGeometry(Block $block, Chunk $chunk): array {
+    public function getGeometry(Block $block, Chunk $chunk): array
+    {
         $center = $this->getCenterGeometry($block);
         $connections = $this->getConnectionsGeometry($block, $chunk);
         return array_merge($center, $connections);

@@ -28,7 +28,6 @@ use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
 use Hebbinkpro\PocketMap\utils\block\BlockUtils;
 use Hebbinkpro\PocketMap\utils\block\OldBlockTypeNames;
 use pocketmine\block\Block;
-use pocketmine\block\Door;
 use pocketmine\math\Facing;
 use pocketmine\world\biome\Biome;
 use pocketmine\world\biome\BiomeRegistry;
@@ -64,6 +63,27 @@ class TextureUtils
     public static function getPixelsPerBlock(int $totalPixels, int $blocks): int
     {
         return floor(max($totalPixels / $blocks, 1));
+    }
+
+    public static function getBlockTexture(Block $block, Chunk $chunk, TerrainTextures $terrainTextures, int $size): ?GdImage
+    {
+        if (($model = BlockModels::getInstance()->get($block)) === null) return null;
+
+        $differentModel = BlockUtils::hasDifferentModelForSameState($block);
+        $texture = self::createBlockTexture($block, $differentModel ? null : $model, $chunk, $terrainTextures);
+
+        // if block can have different models for the same state, apply the model here
+        if ($differentModel) {
+            $modelTexture = $model->getModelTexture($block, $chunk, $texture);
+            imagedestroy($texture);
+            $texture = $modelTexture;
+        }
+
+        // resize the img
+        $resized = self::getCompressedImage($texture, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE, $size, $size);
+        imagedestroy($texture);
+
+        return $resized;
     }
 
     /**
@@ -149,27 +169,6 @@ class TextureUtils
         return $texture;
     }
 
-    public static function getBlockTexture(Block $block, Chunk $chunk, TerrainTextures $terrainTextures, int $size): ?GdImage
-    {
-        if (($model = BlockModels::getInstance()->get($block)) === null) return null;
-
-        $differentModel = BlockUtils::hasDifferentModelForSameState($block);
-        $texture = self::createBlockTexture($block, $differentModel ? null : $model, $chunk, $terrainTextures);
-
-        // if block can have different models for the same state, apply the model here
-        if ($differentModel) {
-            $modelTexture = $model->getModelTexture($block, $chunk, $texture);
-            imagedestroy($texture);
-            $texture = $modelTexture;
-        }
-
-        // resize the img
-        $resized = self::getCompressedImage($texture, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE, $size, $size);
-        imagedestroy($texture);
-
-        return $resized;
-    }
-
     /**
      * Apply a color map to the given block texture
      * @param GdImage $texture the texture to apply the color map on
@@ -223,6 +222,29 @@ class TextureUtils
     }
 
     /**
+     * Rotate an image on the given axis
+     * @param GdImage $image
+     * @param int $facing
+     * @return GdImage
+     */
+    public static function rotateToFacing(GdImage $image, int $facing): GdImage
+    {
+        $angle = match ($facing) {
+            Facing::DOWN, Facing::SOUTH => 180,     // -y, +z
+            Facing::EAST => 270,                    // +x
+            Facing::WEST => 90,                     // -x
+            default => 0                            // +y, -z
+        };
+
+        // angle of 0 does not have to be rotated
+        if ($angle == 0) return $image;
+
+        // rotate the image
+        return imagerotate($image, $angle, 0);
+
+    }
+
+    /**
      * Get a compressed image
      * @param GdImage $src the image to compress
      * @param int $srcWidth the width of the image
@@ -261,29 +283,6 @@ class TextureUtils
                 imagesetpixel($image, $x, $y, imagecolorexactalpha($image, $c["red"], $c["green"], $c["blue"], $c["alpha"]));
             }
         }
-    }
-
-    /**
-     * Rotate an image on the given axis
-     * @param GdImage $image
-     * @param int $facing
-     * @return GdImage
-     */
-    public static function rotateToFacing(GdImage $image, int $facing): GdImage
-    {
-        $angle = match ($facing) {
-            Facing::DOWN, Facing::SOUTH => 180,     // -y, +z
-            Facing::EAST => 270,                    // +x
-            Facing::WEST => 90,                     // -x
-            default => 0                            // +y, -z
-        };
-
-        // angle of 0 does not have to be rotated
-        if ($angle == 0) return $image;
-
-        // rotate the image
-        return imagerotate($image, $angle, 0);
-
     }
 
     /**
