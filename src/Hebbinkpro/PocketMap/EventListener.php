@@ -123,15 +123,18 @@ class EventListener implements Listener
         $chunkX = floor($pos->getX() / 16);
         $chunkZ = floor($pos->getZ() / 16);
 
+        if ($this->hasChunkCooldown($chunkX, $chunkZ)) return;
+
         // get the chunk
         $chunk = $world->getChunk($chunkX, $chunkZ);
         $renderer = PocketMap::getWorldRenderer($world->getFolderName());
         if ($chunk === null || $renderer === null) return;
 
-        if ($this->hasChunkCooldown($chunkX, $chunkZ)) return;
-
+        // save the chunk, otherwise it will not be rendered
+        $renderer->saveChunk($chunkX, $chunkZ);
         // add the chunk as updated to the update task
         $this->plugin->getChunkRenderer()->addChunk($renderer, $chunkX, $chunkZ);
+        // set the chunk cooldown
         $this->setChunkCooldown($chunkX, $chunkZ);
     }
 

@@ -24,6 +24,9 @@ use Hebbinkpro\PocketMap\region\Region;
 use Hebbinkpro\PocketMap\scheduler\ChunkSchedulerTask;
 use Hebbinkpro\PocketMap\scheduler\RenderSchedulerTask;
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
+use pocketmine\block\tile\Tile;
+use pocketmine\entity\Entity;
+use pocketmine\world\format\io\ChunkData;
 use pocketmine\world\World;
 
 class WorldRenderer
@@ -140,5 +143,27 @@ class WorldRenderer
     public function getRegion(int $zoom, int $x, int $z, bool $renderChunks = false): Region
     {
         return new Region($this->world->getFolderName(), $zoom, $x, $z, $this->terrainTextures, $renderChunks);
+    }
+
+    /**
+     * Saves a chunk to the world provider.
+     * @param int $chunkX
+     * @param int $chunkZ
+     * @return void
+     */
+    public function saveChunk(int $chunkX, int $chunkZ): void
+    {
+        // chunk isn't loaded, so it is already saved
+        if (!$this->world->isChunkLoaded($chunkX, $chunkZ)) return;
+
+        $chunk = $this->world->getChunk($chunkX, $chunkZ);
+
+        // store the chunk, logic from pocketmine\world\World->saveChunks()
+        $this->world->getProvider()->saveChunk($chunkX, $chunkZ, new ChunkData(
+            $chunk->getSubChunks(),
+            $chunk->isPopulated(),
+            array_map(fn(Entity $e) => $e->saveNBT(), array_filter($this->world->getChunkEntities($chunkX, $chunkZ), fn(Entity $e) => $e->canSaveWithChunk())),
+            array_map(fn(Tile $t) => $t->saveNBT(), $chunk->getTiles()),
+        ), $chunk->getTerrainDirtyFlags());
     }
 }
