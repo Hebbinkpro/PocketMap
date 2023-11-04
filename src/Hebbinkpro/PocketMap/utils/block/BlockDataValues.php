@@ -24,16 +24,19 @@ use pocketmine\block\Candle;
 use pocketmine\block\ChemistryTable;
 use pocketmine\block\Crops;
 use pocketmine\block\Door;
+use pocketmine\block\DoublePitcherCrop;
 use pocketmine\block\DoublePlant;
 use pocketmine\block\Flower;
 use pocketmine\block\Furnace;
 use pocketmine\block\Leaves;
 use pocketmine\block\Opaque;
+use pocketmine\block\PitcherCrop;
 use pocketmine\block\Planks;
 use pocketmine\block\RedMushroomBlock;
 use pocketmine\block\Sapling;
 use pocketmine\block\Slab;
 use pocketmine\block\Torch;
+use pocketmine\block\TorchflowerCrop;
 use pocketmine\block\utils\ColoredTrait;
 use pocketmine\block\utils\DyeColor;
 use pocketmine\block\utils\WoodType;
@@ -253,7 +256,12 @@ final class BlockDataValues
                 return self::DATA_VALUES[BTN::CHEMISTRY_TABLE][BlockStateParser::getStateValue($bsd, BSN::CHEMISTRY_TABLE_TYPE)];
 
             case Crops::class:
+            case PitcherCrop::class:
+            case TorchflowerCrop::class:
                 return $block->getAge();
+
+            case DoublePitcherCrop::class:
+                return $block->getAge() + 1 + PitcherCrop::MAX_AGE;
 
             case Torch::class:
                 return self::DATA_VALUES[BTN::TORCH][BlockStateParser::getStateValue($bsd, BSN::COLOR_BIT)];

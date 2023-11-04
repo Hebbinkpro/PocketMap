@@ -81,6 +81,8 @@ final class BlockModels
         $this->register(VanillaBlocks::BROWN_MUSHROOM(), new CrossModel());
         $this->register(VanillaBlocks::TWISTING_VINES(), new CrossModel());
         $this->register(VanillaBlocks::WEEPING_VINES(), new CrossModel());
+        $this->register(VanillaBlocks::CRIMSON_ROOTS(), new CrossModel());
+        $this->register(VanillaBlocks::WARPED_ROOTS(), new CrossModel());
         $this->register(VanillaBlocks::CAVE_VINES(), new CrossModel());
         $this->register(VanillaBlocks::FIRE(), new CrossModel());
         $this->register(VanillaBlocks::SOUL_FIRE(), new CrossModel());
@@ -91,23 +93,31 @@ final class BlockModels
         $this->register(VanillaBlocks::SWEET_BERRY_BUSH(), new CrossModel());
         $this->register(VanillaBlocks::DEAD_BUSH(), new CrossModel());
         $this->register(VanillaBlocks::HANGING_ROOTS(), new CrossModel());
+        $this->register(VanillaBlocks::AMETHYST_CLUSTER(), new CrossModel());
 
         $this->registerFromBlockType(PressurePlate::class, new PressurePlateModel());
         $this->registerFromBlockType(Button::class, new ButtonModel());
 
-        $this->register(VanillaBlocks::CHEST(), new DefaultBlockModel());
+        $this->register(VanillaBlocks::PITCHER_CROP(), new DefaultBlockModel());
+        $this->register(VanillaBlocks::DOUBLE_PITCHER_CROP(), new CrossModel());
+        $this->register(VanillaBlocks::TORCHFLOWER_CROP(), new CrossModel());
+
+        $this->register(VanillaBlocks::END_ROD(), new EndRodModel());
+
+        $this->register(VanillaBlocks::CHEST(), new DefaultBlockModel()); // TODO double chests
         $this->register(VanillaBlocks::TRAPPED_CHEST(), new DefaultBlockModel());
         $this->register(VanillaBlocks::ENDER_CHEST(), new DefaultBlockModel());
-        $this->register(VanillaBlocks::BARREL(), new DefaultBlockModel());
+        $this->register(VanillaBlocks::BARREL(), new DefaultBlockModel()); // TODO rotation
 
         $this->register(VanillaBlocks::CAKE(), new DefaultBlockModel());
         $this->register(VanillaBlocks::CAKE_WITH_CANDLE(), new DefaultBlockModel());
         $this->register(VanillaBlocks::CAKE_WITH_DYED_CANDLE(), new DefaultBlockModel());
 
-        $this->register(VanillaBlocks::END_ROD(), new EndRodModel());
+        $this->register(VanillaBlocks::PINK_PETALS(), new DefaultBlockModel());
 
-        // TODO height difference
-        $this->registerFromBlockType(Stair::class, new DefaultBlockModel());
+        $this->registerFromBlockType(Stair::class, new DefaultBlockModel()); // TODO height difference
+
+
     }
 
     /**
