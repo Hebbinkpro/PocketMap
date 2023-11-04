@@ -36,6 +36,7 @@ use pocketmine\block\Slab;
 use pocketmine\block\Torch;
 use pocketmine\block\utils\ColoredTrait;
 use pocketmine\block\utils\DyeColor;
+use pocketmine\block\utils\WoodType;
 use pocketmine\block\Wall;
 use pocketmine\block\Wood;
 use pocketmine\block\WoodenDoor;
@@ -186,6 +187,8 @@ final class BlockDataValues
         ]
     ];
 
+
+
     /**
      * Get the data value of a given block
      * @param Block $block the block to get the data value of
@@ -223,20 +226,20 @@ final class BlockDataValues
             case WoodenDoor::class:
             case WoodenFence::class:
                 // get the wood type data value, if the wood type is not from the legacy kind, its just 0
-                return self::DATA_VALUES[BTN::WOOD][$block->getWoodType()->name()] ?? 0;
+                return self::getWoodDataValue($block->getWoodType());
 
             case Wood::class:
                 // it's a wood block
                 if ($name === BTN::WOOD) {
                     // textures are like: unstripped,stripped,unstripped,stripped,etc
                     // so this beautiful formula gives you the right data value
-                    return self::DATA_VALUES[BTN::WOOD][$block->getWoodType()->name()] * 2 + intval($block->isStripped());
+                    return self::getWoodDataValue($block->getWoodType()) * 2 + intval($block->isStripped());
                 }
 
                 // it's a non stripped log
                 if (!$block->isStripped()) {
                     // this is the one where we have log and log2, in log there are only 4 entries, so that's why we use %4
-                    return self::DATA_VALUES[BTN::WOOD][$block->getWoodType()->name()] % 4;
+                    return self::getWoodDataValue($block->getWoodType()) % 4;
                 }
 
                 // everything else
@@ -324,6 +327,18 @@ final class BlockDataValues
             default:
                 return 0;
         }
+    }
+
+    public static function getWoodDataValue(WoodType $wood): int {
+        return match($wood) {
+            WoodType::OAK => self::DATA_VALUES[BTN::WOOD][BSV::WOOD_TYPE_OAK],
+            WoodType::SPRUCE => self::DATA_VALUES[BTN::WOOD][BSV::WOOD_TYPE_SPRUCE],
+            WoodType::BIRCH => self::DATA_VALUES[BTN::WOOD][BSV::WOOD_TYPE_BIRCH],
+            WoodType::JUNGLE => self::DATA_VALUES[BTN::WOOD][BSV::WOOD_TYPE_JUNGLE],
+            WoodType::ACACIA => self::DATA_VALUES[BTN::WOOD][BSV::WOOD_TYPE_ACACIA],
+            WoodType::DARK_OAK => self::DATA_VALUES[BTN::WOOD][BSV::WOOD_TYPE_DARK_OAK],
+            default => 0
+        };
     }
 
     /**
