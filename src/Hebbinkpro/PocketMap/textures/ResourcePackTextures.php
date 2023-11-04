@@ -165,14 +165,12 @@ class ResourcePackTextures
                 // check if it is a valid terrain texture
                 if (self::isValidTerrainTexture($texture)) {
                     $this->blocks[$name] = $texture;
-                }
-                // check if the texture has stages but is not included in the terrain_texture.json
+                } // check if the texture has stages but is not included in the terrain_texture.json
                 elseif (!empty(($stages = $this->getTextureStages($texture)))) {
                     // add the stages to the terrain textures
                     $this->terrainTextures[$texture] = $stages;
                     $this->blocks[$name] = $texture;
-                }
-                // check if the texture is just a valid block texture
+                } // check if the texture is just a valid block texture
                 elseif (self::isValidTexture($texture)) {
                     $this->blocks[$name] = $texture;
                 }
@@ -184,14 +182,12 @@ class ResourcePackTextures
                     // check if it is a valid terrain texture
                     if (self::isValidTerrainTexture($directionAlias)) {
                         $this->blocks[$name][$direction] = $directionAlias;
-                    }
-                    // check if the texture has stages but is not included in the terrain_texture.json
+                    } // check if the texture has stages but is not included in the terrain_texture.json
                     elseif (!empty(($stages = $this->getTextureStages($directionAlias)))) {
                         // add the stages to the terrain textures
                         $this->terrainTextures[$directionAlias] = $stages;
                         $this->blocks[$name][$direction] = $directionAlias;
-                    }
-                    // check if the texture is just a valid block texture
+                    } // check if the texture is just a valid block texture
                     elseif (self::isValidTexture($directionAlias)) {
                         $this->blocks[$name][$direction] = $directionAlias;
                     }
@@ -205,12 +201,18 @@ class ResourcePackTextures
 
     }
 
-    public function getTextureStages(string $texture): ?array {
+    public function isValidTerrainTexture(string $alias): bool
+    {
+        return array_key_exists($alias, $this->terrainTextures);
+    }
+
+    public function getTextureStages(string $texture): ?array
+    {
         $stages = [];
 
         $stage = 0;
         while (true) {
-            $stageTexture = $texture."_stage_".$stage;
+            $stageTexture = $texture . "_stage_" . $stage;
             // check if the stage texture exists
             if (array_key_exists($stageTexture, $this->textures)) $stages[$stage] = $stageTexture;
             // We need to have at least checked 8 stages (e.g. pitcher_crop_top starts at stage 3)
@@ -219,7 +221,7 @@ class ResourcePackTextures
             }
 
             // increase the stage
-            $stage ++;
+            $stage++;
         }
 
         // no stages found
@@ -227,7 +229,7 @@ class ResourcePackTextures
 
         if (sizeof($stages) < $stage && array_key_exists($texture, $this->textures)) {
             $placeholder = $texture;
-            $toFill = array_diff(array_keys(array_fill(0, $stage-1, 0)), array_keys($stages));
+            $toFill = array_diff(array_keys(array_fill(0, $stage - 1, 0)), array_keys($stages));
             foreach ($toFill as $i) {
                 $stages[$i] = $placeholder;
             }
@@ -236,12 +238,6 @@ class ResourcePackTextures
         sort($stages);
 
         return $stages;
-    }
-
-
-    public function isValidTerrainTexture(string $alias): bool
-    {
-        return array_key_exists($alias, $this->terrainTextures);
     }
 
     /**

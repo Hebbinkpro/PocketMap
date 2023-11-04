@@ -191,7 +191,6 @@ final class BlockDataValues
     ];
 
 
-
     /**
      * Get the data value of a given block
      * @param Block $block the block to get the data value of
@@ -337,18 +336,6 @@ final class BlockDataValues
         }
     }
 
-    public static function getWoodDataValue(WoodType $wood): int {
-        return match($wood) {
-            WoodType::OAK => self::DATA_VALUES[BTN::WOOD][BSV::WOOD_TYPE_OAK],
-            WoodType::SPRUCE => self::DATA_VALUES[BTN::WOOD][BSV::WOOD_TYPE_SPRUCE],
-            WoodType::BIRCH => self::DATA_VALUES[BTN::WOOD][BSV::WOOD_TYPE_BIRCH],
-            WoodType::JUNGLE => self::DATA_VALUES[BTN::WOOD][BSV::WOOD_TYPE_JUNGLE],
-            WoodType::ACACIA => self::DATA_VALUES[BTN::WOOD][BSV::WOOD_TYPE_ACACIA],
-            WoodType::DARK_OAK => self::DATA_VALUES[BTN::WOOD][BSV::WOOD_TYPE_DARK_OAK],
-            default => 0
-        };
-    }
-
     /**
      * Get the color data value of a block (0-15)
      * @param DyeColor $color the color to get the value of
@@ -358,5 +345,18 @@ final class BlockDataValues
     {
         return DyeColorIdMap::getInstance()->toId($color);
 
+    }
+
+    public static function getWoodDataValue(WoodType $wood): int
+    {
+        return match ($wood) {
+            WoodType::OAK => self::DATA_VALUES[BTN::WOOD][BSV::WOOD_TYPE_OAK],
+            WoodType::SPRUCE => self::DATA_VALUES[BTN::WOOD][BSV::WOOD_TYPE_SPRUCE],
+            WoodType::BIRCH => self::DATA_VALUES[BTN::WOOD][BSV::WOOD_TYPE_BIRCH],
+            WoodType::JUNGLE => self::DATA_VALUES[BTN::WOOD][BSV::WOOD_TYPE_JUNGLE],
+            WoodType::ACACIA => self::DATA_VALUES[BTN::WOOD][BSV::WOOD_TYPE_ACACIA],
+            WoodType::DARK_OAK => self::DATA_VALUES[BTN::WOOD][BSV::WOOD_TYPE_DARK_OAK],
+            default => 0
+        };
     }
 }
