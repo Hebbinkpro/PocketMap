@@ -84,10 +84,10 @@ class BlockUtils
             $side = BlockStateParser::getBlockFromStateId($stateId);
 
             if ($block instanceof Fence
-                && ($side instanceof Fence || $side instanceof FenceGate || $side->getSupportType(Facing::opposite($facing))->equals(SupportType::FULL()))) {
+                && ($side instanceof Fence || $side instanceof FenceGate || $block->getSupportType(Facing::opposite($facing)) === SupportType::FULL)) {
                 $connections[] = $facing;
             } else if ($block instanceof Thin
-                && ($side instanceof Thin || $side instanceof Wall || $side->getSupportType(Facing::opposite($facing))->equals(SupportType::FULL()))) {
+                && ($side instanceof Thin || $side instanceof Wall || $block->getSupportType(Facing::opposite($facing)) === SupportType::FULL)) {
                 $connections[] = $facing;
             }
         }
@@ -105,22 +105,6 @@ class BlockUtils
     public static function hasDifferentModelForSameState(Block $block): bool
     {
         return $block instanceof Fence || $block instanceof Thin || $block instanceof Chest;
-    }
-
-    /**
-     * TODO implement in BlockModels
-     * @param Block $block
-     * @return bool
-     * @deprecated
-     */
-    public static function hasStickModel(Block $block): bool
-    {
-//        if (self::isTorch($block) || self::isCandle($block) || self::isBamboo($block)) return true;
-
-        return match ($block->getTypeId()) {
-            BlockTypeIds::LIGHTNING_ROD, BlockTypeIds::END_ROD => true,
-            default => false
-        };
     }
 
     public static function hasHorizontalFacing(Block $block): bool
