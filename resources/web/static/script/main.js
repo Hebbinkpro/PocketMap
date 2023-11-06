@@ -20,7 +20,7 @@ const API_URL = "/api/pocketmap/";
 const ICON_CACHE = [];
 const MARKER_CACHE = [];
 const bounds = [[Number.MIN_SAFE_INTEGER, Number.MIN_SAFE_INTEGER], [Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER]];
-let urlQuery, world, map;
+let urlQuery, world, worldConfig, map;
 
 window.addEventListener("load", async () => {
     let config = await getConfig();
@@ -34,7 +34,7 @@ window.addEventListener("load", async () => {
         world = config["default-world"];
     }
 
-    let worldConfig = config["worlds"][world];
+    worldConfig = config["worlds"][world];
 
     let mapPos = {
         x: worldConfig.view.x / 16,
@@ -69,6 +69,9 @@ window.addEventListener("load", async () => {
     }).addTo(map);
 
     createElements();
+    loadMarkers().then(() => {
+        console.log("The markers are loaded")
+    });
 
     let mousePosElements = {
         x: document.getElementById("pocketmap-pos-x"),
@@ -96,7 +99,7 @@ window.addEventListener("load", async () => {
     })
 
 
-    update(1000, world, map).then(() => {
+    update(1000).then(() => {
     });
 });
 
@@ -146,7 +149,7 @@ async function update(updateTime) {
     // add markers for all online players
     for (let i in players) {
         let player = players[i]
-        updateMarker(player, map);
+        updatePlayerMarker(player, map);
     }
 
     for (let uuid in MARKER_CACHE) {
@@ -161,15 +164,14 @@ async function update(updateTime) {
     setTimeout(() => update(updateTime), updateTime)
 }
 
-function updateMarker(player) {
-    let pos = player["pos"];
-    let latLng = L.latLng(-pos.z / 16, pos.x / 16);
+function updatePlayerMarker(player) {
+    let latLng = getLatLngPos(player["pos"]);
 
     if (MARKER_CACHE[player["uuid"]]) {
         MARKER_CACHE[player["uuid"]].setLatLng(latLng);
     } else {
-        let icon = getIcon(player);
-        let marker = L.marker(latLng, {icon});
+        let head = getPlayerHead(player);
+        let marker = L.marker(latLng, {head});
         marker.bindTooltip(`${player["name"]}<br>${getCoordString(player)}`, {
             permanent: false,
             direction: "right"
@@ -195,7 +197,7 @@ async function getConfig() {
     return (await req.json());
 }
 
-function getIcon(player) {
+function getPlayerHead(player) {
     let skinId = player["skin"]["id"];
     let icon = ICON_CACHE[skinId] ?? null;
 
@@ -214,7 +216,75 @@ function getIcon(player) {
     return icon;
 }
 
+function getLatLngPos(pos, offsetX = 0, offsetZ = 0) {
+    return L.latLng(-(pos.z+offsetZ) / 16, (pos.x+offsetX) / 16);
+}
+
+
 function getCoordString(player) {
     let pos = player["pos"];
     return `${pos["x"]}, ${pos["y"] ?? "64"}, ${pos["z"]}`;
+}
+
+async function loadMarkers() {
+    let req = await fetch(API_URL + "markers");
+    let markers = await req.json();
+    if (!markers) return;
+
+    let icons = await getMarkerIcons()
+
+    let worldData = (await getWorlds())[world]
+    let worldSpawnMarker = L.marker(getLatLngPos(worldData["spawn"]), {icon: icons["compass"]})
+    worldSpawnMarker.bindPopup("World Spawn")
+    worldSpawnMarker.addTo(map)
+
+
+    // load the other markers
+    for (let i in markers) {
+        let marker = markers[i];
+
+        let leafletMarker = L.marker(getLatLngPos(marker.pos, -0.5, 0.5), {icon: icons[marker.icon]})
+        leafletMarker.bindPopup(marker.name)
+
+        leafletMarker.addTo(map)
+    }
+
+}
+
+async function getIcons() {
+    let req = await fetch(API_URL + "markers/icons");
+    return (await req.json());
+}
+
+async function getMarkerIcons() {
+    let icons = await getIcons() ?? []
+
+    let iconSize = 32;
+    let MarkerIcon = L.Icon.extend({
+        options: {
+            iconSize: [iconSize, iconSize],
+            iconAnchor: [iconSize/2, iconSize/2],
+            popupAnchor: [0, 0]
+        }
+    })
+
+    let markerIcons = {}
+    for (let i in icons) {
+        let iconData = icons[i]
+        if (!iconData.name) continue;
+
+        let name = iconData.name;
+
+        let iconUrl;
+        if (iconData.path) {
+            if (!iconData.path.includes(".")) iconData.path += ".png";
+            iconUrl = API_URL + "markers/icons/" + iconData.path;
+        }
+        else if (iconData.url) iconUrl = iconData.url;
+        else continue;
+
+        markerIcons[name] = new MarkerIcon({iconUrl})
+    }
+
+    return markerIcons;
 }

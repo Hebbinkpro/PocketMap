@@ -27,3 +27,5 @@
 /resources/resource_packs/*/textures/flipbook_textures.json
 /resources/resource_packs/*/textures/forcefield_atlas.png
 /resources/resource_packs/*/textures/item_texture.json
+/resources/markers/icons_table.md
+/resources/markers/openmoji_extractor.py

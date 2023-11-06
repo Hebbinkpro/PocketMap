@@ -28,8 +28,6 @@ use Hebbinkpro\PocketMap\textures\TerrainTextures;
 use Hebbinkpro\PocketMap\textures\TerrainTexturesOptions;
 use Hebbinkpro\PocketMap\utils\ConfigManager;
 use Hebbinkpro\WebServer\exception\WebServerException;
-use Hebbinkpro\WebServer\http\HttpRequest;
-use Hebbinkpro\WebServer\http\HttpResponse;
 use Hebbinkpro\WebServer\libs\Laravel\SerializableClosure\Exceptions\PhpVersionNotSupportedException;
 use Hebbinkpro\WebServer\route\Router;
 use Hebbinkpro\WebServer\WebServer;
@@ -46,7 +44,7 @@ use pocketmine\world\World;
 class PocketMap extends PluginBase implements Listener
 {
     public const CONFIG_VERSION = 1.5;
-    public const WEB_VERSION = 1.1;
+    public const WEB_VERSION = 1.2;
 
     public const RESOURCE_PACK_NAME = "v1.20.40.1";
     public const TEXTURE_SIZE = 16;
@@ -200,12 +198,6 @@ class PocketMap extends PluginBase implements Listener
             $this->getLogger()->warning("The current version of PocketMap is using another web version. The web files will be replaced. Expected: " . self::WEB_VERSION . ", Found: v$version");
             $this->getLogger()->warning("You can find your old web files in 'backup/web_v$version/'");
 
-            if (empty($webConfig->getAll()) || $version < self::WEB_VERSION) {
-                $this->getLogger()->warning("You are using an old version of the web files. Updating the map renders to support the new system...");
-                $this->updateRendersToWebV1();
-                $this->getLogger()->notice("The map renders are updated to the new system!");
-            }
-
             if (!is_dir($this->getDataFolder() . "backup")) mkdir($this->getDataFolder() . "backup");
 
             // place files in the backup folder
@@ -222,76 +214,6 @@ class PocketMap extends PluginBase implements Listener
         // create the web folder and copy the contents
         mkdir($folder);
         Filesystem::recursiveCopy($this->getFile() . "resources/web", $folder);
-    }
-
-    /**
-     * Updates all renders folders to the new system.
-     * Zoom levels 4 to -4 is now replaced with levels 0 to 8.
-     * To prevent already created renders from messing things up, this function will rename all render folders to their new level.
-     * @return void
-     * @deprecated will be removed in version 0.5
-     */
-    private function updateRendersToWebV1(): void
-    {
-        $rendersFolder = $this->getDataFolder() . "renders/";
-        // there are no renders
-        if (!is_dir($rendersFolder)) return;
-
-        $levelUpdateMap = [
-            8 => -4,
-            7 => -3,
-            6 => -2,
-            5 => -1,
-            4 => 0,
-            3 => 1,
-            2 => 2,
-            1 => 3,
-            0 => 4
-        ];
-
-        // loop through all worlds
-        foreach (scandir($rendersFolder) as $world) {
-            if (in_array($world, [".", ".."])) continue;
-
-            $folder = $rendersFolder . $world . "/";
-            if (!is_dir($folder)) continue;
-
-            $isUpdated = false;
-            // make sure we really aren't already updated
-            foreach (scandir($folder) as $levelFolder) {
-                $level = intval($levelFolder);
-
-                // we still have negative levels!!!
-                if ($level < 0) break;
-                // we have levels higher than 4, so we are updated
-                if ($level > 4) {
-                    $isUpdated = true;
-                    break;
-                }
-
-                // all levels in the range [0, 4] don't say anything useful because they are in both versions
-            }
-
-            if ($isUpdated) continue;
-            $this->getLogger()->debug("Updating renders of world '$world' to the new system...");
-
-            $updatedLevels = [];
-            // rename all existing renders to level-tmp so that there cannot exist any duplicates
-            foreach ($levelUpdateMap as $newLevel => $oldLevel) {
-                if (!is_dir($folder . "$oldLevel")) continue;
-                $updatedLevels[] = $newLevel;
-                // rename the folder to the new level-tmp, when renaming to level it can happen that a folder occurs twice...
-                rename($folder . "$oldLevel", $folder . "$newLevel-tmp");
-            }
-
-            foreach ($updatedLevels as $newLevel) {
-                // remove the -tmp prefix
-                rename($folder . "$newLevel-tmp", $folder . "$newLevel");
-            }
-
-            $this->getLogger()->debug("World '$world' is updated.");
-
-        }
     }
 
     private function loadWebConfig(): void
@@ -398,6 +320,11 @@ class PocketMap extends PluginBase implements Listener
         // create the renders folder
         if (!is_dir($folder . "renders")) {
             mkdir($folder . "renders");
+        }
+
+        // create the markers folder
+        if (!is_dir($folder . "markers")) {
+            Filesystem::recursiveCopy($file . "markers", $folder . "markers");
         }
 
         if (!is_dir($folder . "tmp")) {
@@ -564,11 +491,6 @@ class PocketMap extends PluginBase implements Listener
 
         $router = new Router();
 
-        $router->get("/", function (HttpRequest $req, HttpResponse $res) {
-            $res->send("Hello World", "text/plain");
-            $res->end();
-        });
-
         $router->getFile("/config", $webFolder . "config.json");
 
         // get the world data
@@ -582,6 +504,12 @@ class PocketMap extends PluginBase implements Listener
 
         // get image renders
         $router->getStatic("/render", $this->getDataFolder() . "renders");
+
+        // get markers
+        $router->getFile("/markers", $this->getDataFolder()."markers/markers.json", "[]");
+        // get marker icons
+        $router->getFile("/markers/icons", $this->getDataFolder()."markers/icons.json", "[]");
+        $router->getStatic("/markers/icons", $this->getDataFolder()."markers/icons");
 
         return $router;
     }
