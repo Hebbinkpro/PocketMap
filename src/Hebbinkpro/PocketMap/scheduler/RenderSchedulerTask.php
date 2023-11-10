@@ -99,6 +99,7 @@ class RenderSchedulerTask extends Task
      * @param Region $region the region to render
      * @param bool $force if the render has to be added no matter how full the queue is
      * @return bool if the region is scheduled, if false, you have to manually schedule it again!
+     * @internal
      */
     public function scheduleRegionRender(string $path, Region $region, bool $replace = false, bool $force = false): bool
     {

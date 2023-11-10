@@ -10,13 +10,10 @@ website: https://github.com/Hebbinkpro/PocketMap
 permissions:
   pocketmap.cmd:
     description: Allows to execute pocketmap commands
+    default: true
+  pocketmap.cmd.render:
+    description: Allows to render the world map
     default: op
-
-commands:
-  reload:
-    description: Reloads the PocketMap config and web files
-    permission: pocketmap.cmd
-
-  render:
-    description: Render a specific region
-    permission: pocketmap.cmd
+  pocketmap.cmd.reload:
+    description: Allows to reload some parts of the plugin
+    default: op

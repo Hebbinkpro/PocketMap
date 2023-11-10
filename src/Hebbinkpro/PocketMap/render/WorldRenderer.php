@@ -41,26 +41,6 @@ class WorldRenderer
      */
     public const RENDER_SIZE = 256;
 
-    /**
-     * Zoom levels with the amount of chunks (in 1 direction) inside the zoom.
-     * Large zoom value => large amount of chunks per render (low render resolution)
-     * Low zoom value => small amount of chunks per render (high render resolution)
-     * @var array<integer, integer>
-     * @deprecated since the system is updated from 4 => -4 to 0 => 8 we can now use 2^zoom for the same result.
-     *             In a future update it will also be possible to set a level higher than 8 because of this :D
-     */
-    public const ZOOM_LEVELS = [
-        8 => 256,
-        7 => 128,
-        6 => 64,
-        5 => 32,
-        4 => 16,
-        3 => 8,
-        2 => 4,
-        1 => 2,
-        0 => 1
-    ];
-
     private World $world;
     private TerrainTextures $terrainTextures;
     private string $renderPath;
@@ -86,11 +66,12 @@ class WorldRenderer
     }
 
     /**
-     * Schedule a render of the given region
+     * Schedule a render of the given region.
      * @param Region $region
      * @param bool $replace
      * @param bool $force
      * @return bool
+     * @internal
      */
     public function startRegionRender(Region $region, bool $replace = false, bool $force = false): bool
     {

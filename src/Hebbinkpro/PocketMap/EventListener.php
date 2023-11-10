@@ -105,7 +105,7 @@ class EventListener implements Listener
             }
 
             $this->plugin->getLogger()->debug("Found a not rendered chunk: $cx,$cz in world: " . $world->getFolderName());
-            $this->plugin->getChunkRenderer()->addChunk($renderer, $cx, $cz);
+            $this->plugin->getChunkScheduler()->addChunk($renderer, $cx, $cz);
         }
     }
 
@@ -133,7 +133,7 @@ class EventListener implements Listener
         // save the chunk, otherwise it will not be rendered
         $renderer->saveChunk($chunkX, $chunkZ);
         // add the chunk as updated to the update task
-        $this->plugin->getChunkRenderer()->addChunk($renderer, $chunkX, $chunkZ);
+        $this->plugin->getChunkScheduler()->addChunk($renderer, $chunkX, $chunkZ);
         // set the chunk cooldown
         $this->setChunkCooldown($chunkX, $chunkZ);
     }

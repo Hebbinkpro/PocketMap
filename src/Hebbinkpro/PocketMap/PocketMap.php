@@ -21,6 +21,7 @@ namespace Hebbinkpro\PocketMap;
 
 use Exception;
 use Hebbinkpro\PocketMap\api\UpdateApiTask;
+use Hebbinkpro\PocketMap\commands\PocketMapCommand;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
 use Hebbinkpro\PocketMap\scheduler\ChunkSchedulerTask;
 use Hebbinkpro\PocketMap\scheduler\RenderSchedulerTask;
@@ -56,7 +57,7 @@ class PocketMap extends PluginBase implements Listener
     private TerrainTextures $terrainTextures;
     private WebServer $webServer;
     private RenderSchedulerTask $renderScheduler;
-    private ChunkSchedulerTask $chunkRenderer;
+    private ChunkSchedulerTask $chunkScheduler;
 
     public static function getFolder(): string
     {
@@ -71,7 +72,7 @@ class PocketMap extends PluginBase implements Listener
     public function createWorldRenderer(World $world): WorldRenderer
     {
         $path = $this->getDataFolder() . "renders/" . $world->getFolderName() . "/";
-        $renderer = new WorldRenderer($world, $this->getTerrainTextures(), $path, $this->getRenderScheduler(), $this->chunkRenderer);
+        $renderer = new WorldRenderer($world, $this->getTerrainTextures(), $path, $this->getRenderScheduler(), $this->chunkScheduler);
         self::$worldRenderers[$world->getFolderName()] = $renderer;
         return $renderer;
     }
@@ -95,12 +96,12 @@ class PocketMap extends PluginBase implements Listener
     }
 
     /**
-     * Get the chunk renderer
+     * Get the chunk scheduler
      * @return ChunkSchedulerTask
      */
-    public function getChunkRenderer(): ChunkSchedulerTask
+    public function getChunkScheduler(): ChunkSchedulerTask
     {
-        return $this->chunkRenderer;
+        return $this->chunkScheduler;
     }
 
     /**
@@ -111,74 +112,6 @@ class PocketMap extends PluginBase implements Listener
     public function removeWorldRenderer(World $world): void
     {
         unset(self::$worldRenderers[$world->getFolderName()]);
-    }
-
-    public function onCommand(CommandSender $sender, Command $command, string $label, array $args): bool
-    {
-        switch ($command->getName()) {
-            case "reload":
-                if (isset($args[0]) && $args[0] === "web") {
-                    $sender->sendMessage("[PocketMap] Reloading the web files");
-                    Filesystem::recursiveUnlink($this->getDataFolder() . "web");
-                    $this->loadWebFiles();
-                    $this->loadWebConfig();
-                    $sender->sendMessage("[PocketMap] The web files are reloaded");
-                    break;
-                }
-
-                $sender->sendMessage("[PocketMap] Reloading the plugin data");
-                $this->loadConfig();
-                $this->generateFolderStructure();
-                $sender->sendMessage("[PocketMap] The plugin data is reloaded");
-                break;
-
-            case "render":
-                if (count($args) < 3) {
-                    if (!$sender instanceof Player) {
-
-                        $sender->sendMessage("[PocketMap] Invalid amount of arguments: /render <x> <z> <zoom> [world]");
-                        return false;
-                    }
-                    $x = floor($sender->getPosition()->getX() / 16);
-                    $z = floor($sender->getPosition()->getZ() / 16);
-                    $zoom = 0;
-                    $world = $sender->getWorld();
-                } else {
-                    $x = intval($args[0]);
-                    $z = intval($args[1]);
-                    $zoom = intval($args[2]);
-                    $world = $args[3] ?? null;
-
-                    if ($world === null) {
-                        if (!$sender instanceof Player) {
-                            $sender->sendMessage("[PocketMap] Invalid amount of arguments: /render <x> <z> <zoom> <world>");
-                            break;
-                        }
-                        $world = $sender->getWorld()->getFolderName();
-                    }
-                }
-
-                $renderer = self::getWorldRenderer($world);
-                if ($renderer === null) {
-                    if (!$this->getServer()->getWorldManager()->loadWorld($world)) {
-                        $sender->sendMessage("[PocketMap] Cannot find the world: $world");
-                        break;
-                    }
-                    $renderer = self::getWorldRenderer($world);
-                }
-                $region = $renderer->getRegion($zoom, $x, $z, true);
-                $renderer->startRegionRender($region, true, true);
-
-                $sender->sendMessage("[PocketMap] Rendering region: " . $region->getName());
-
-                break;
-
-
-            default:
-                return false;
-        }
-
-        return true;
     }
 
     private function loadWebFiles(): void
@@ -216,7 +149,7 @@ class PocketMap extends PluginBase implements Listener
         Filesystem::recursiveCopy($this->getFile() . "resources/web", $folder);
     }
 
-    private function loadWebConfig(): void
+    public function loadWebConfig(): void
     {
         $config = new Config($this->getDataFolder() . "web/config.json");
 
@@ -273,7 +206,7 @@ class PocketMap extends PluginBase implements Listener
      * Load the config
      * @return void
      */
-    private function loadConfig(): void
+    public function loadConfig(): void
     {
         $folder = $this->getDataFolder();
 
@@ -303,7 +236,7 @@ class PocketMap extends PluginBase implements Listener
         $this->configManager = ConfigManager::fromConfig($config);
     }
 
-    private function generateFolderStructure(): void
+    public function generateFolderStructure(): void
     {
         $folder = $this->getDataFolder();
         $file = $this->getFile() . "resources/";
@@ -383,20 +316,13 @@ class PocketMap extends PluginBase implements Listener
         // load the terrain textures
         $this->loadTerrainTextures();
 
-        // start the render scheduler
-        $this->renderScheduler = new RenderSchedulerTask($this);
-        $this->getScheduler()->scheduleRepeatingTask($this->renderScheduler, $this->configManager->getInt("renderer.scheduler.run-period", 5));
-
-        // start the chunk update task, this check every period if regions have to be updated
-        $this->chunkRenderer = new ChunkSchedulerTask($this);
-        $this->getScheduler()->scheduleRepeatingTask($this->chunkRenderer, $this->configManager->getInt("renderer.chunk-renderer.run-period", 10));
-
-        // start the api update task
-        $updateApiTask = new UpdateApiTask($this, $this->getDataFolder() . "tmp/api/");
-        $this->getScheduler()->scheduleRepeatingTask($updateApiTask, $this->configManager->getInt("api.update-period", 20));
+        // start all tasks
+        $this->startTasks();
 
         // register the event listener
         $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
+
+        $this->getServer()->getCommandMap()->register("pocketmap", new PocketMapCommand($this, "pocketmap", "PocketMap command", ["pmap"]));
 
         $this->loadAllWorlds();
 
@@ -411,6 +337,21 @@ class PocketMap extends PluginBase implements Listener
             $this->getServer()->getPluginManager()->disablePlugin($this);
             return;
         }
+    }
+
+    private function startTasks(): void {
+        // start the render scheduler
+        $this->renderScheduler = new RenderSchedulerTask($this);
+        $this->getScheduler()->scheduleRepeatingTask($this->renderScheduler, $this->configManager->getInt("renderer.scheduler.run-period", 5));
+
+        // start the chunk update task, this check every period if regions have to be updated
+        $this->chunkScheduler = new ChunkSchedulerTask($this);
+        $this->getScheduler()->scheduleRepeatingTask($this->chunkScheduler, $this->configManager->getInt("renderer.chunk-renderer.run-period", 10));
+
+        // start the api update task
+        $updateApiTask = new UpdateApiTask($this, $this->getDataFolder() . "tmp/api/");
+        $this->getScheduler()->scheduleRepeatingTask($updateApiTask, $this->configManager->getInt("api.update-period", 20));
+
     }
 
     private function loadTerrainTextures(): void

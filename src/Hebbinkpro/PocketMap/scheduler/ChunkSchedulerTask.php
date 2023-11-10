@@ -27,6 +27,9 @@ use pocketmine\scheduler\Task;
 
 class ChunkSchedulerTask extends Task
 {
+    public const CHUNK_GENERATOR_KEY = 0;
+    public const CHUNK_GENERATOR_CURRENT = 1;
+
     public const CACHE_FILE = "tmp/regions/render.txt";
 
 
@@ -36,7 +39,7 @@ class ChunkSchedulerTask extends Task
     private array $queuedRegions;
 
     /**
-     * @var array{renderer: WorldRenderer, chunks: Generator}[]
+     * @var array{renderer: WorldRenderer, chunks: Generator, type: int}[]
      */
     private array $chunkGenerators;
 
@@ -75,14 +78,16 @@ class ChunkSchedulerTask extends Task
      * Add a list of chunks to the render queue
      * @param WorldRenderer $renderer
      * @param Generator $chunks
+     * @param int $type
      * @return void
      */
-    public function addChunks(WorldRenderer $renderer, Generator $chunks): void
+    public function addChunks(WorldRenderer $renderer, Generator $chunks, int $type = self::CHUNK_GENERATOR_KEY): void
     {
         $this->pocketMap->getLogger()->debug("Adding chunks generator for world: {$renderer->getWorld()->getFolderName()}");
         $this->chunkGenerators[$renderer->getWorld()->getFolderName()] = [
             "renderer" => $renderer,
-            "chunks" => $chunks
+            "chunks" => $chunks,
+            "type" => $type
         ];
     }
 
@@ -144,9 +149,14 @@ class ChunkSchedulerTask extends Task
             $renderer = $worldChunks["renderer"];
             /** @var Generator $chunks */
             $chunks = $worldChunks["chunks"];
+            /** @var int $type */
+            $type = $worldChunks["type"];
 
             while ($chunks->valid() && $loaded < $maxLoad && count($this->queuedRegions) < $this->maxQueueSize) {
-                [$cx, $cz] = $chunks->key();
+                if ($type == self::CHUNK_GENERATOR_KEY) [$cx, $cz] = $chunks->key();
+                else if ($type == self::CHUNK_GENERATOR_CURRENT) [$cx, $cz] = $chunks->current();
+                else continue;
+
                 $this->addChunk($renderer, $cx, $cz);
                 $chunks->next();
                 $loaded++;
