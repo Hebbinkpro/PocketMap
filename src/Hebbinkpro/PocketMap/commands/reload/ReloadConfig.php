@@ -17,22 +17,26 @@
  * (at your option) any later version.
  */
 
-namespace Hebbinkpro\PocketMap\commands;
+namespace Hebbinkpro\PocketMap\commands\reload;
 
 use CortexPE\Commando\BaseSubCommand;
+use Hebbinkpro\PocketMap\PocketMap;
 use pocketmine\command\CommandSender;
 
-class HelpCommand extends BaseSubCommand
+class ReloadConfig extends BaseSubCommand
 {
 
     protected function prepare(): void
     {
-        $this->setPermissions(["pocketmap.cmd"]);
+        $this->setPermissions(["pocketmap.cmd.reload.config"]);
     }
 
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
-        $sender->sendMessage("--- PocketMap Commands ---");
-        $sender->sendMessage($this->parent->getUsageMessage());
+
+        /** @var PocketMap $plugin */
+        $plugin = $this->getOwningPlugin();
+        $plugin->loadConfig();
+        $sender->sendMessage("[PocketMap] The config is reloaded");
     }
 }

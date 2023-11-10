@@ -228,7 +228,7 @@ function getCoordString(player) {
 
 async function loadMarkers() {
     let req = await fetch(API_URL + "markers");
-    let markers = await req.json();
+    let markers = (await req.json())[world];
     if (!markers) return;
 
     let icons = await getMarkerIcons()

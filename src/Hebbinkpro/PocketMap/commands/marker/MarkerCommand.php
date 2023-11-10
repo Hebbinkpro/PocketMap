@@ -17,22 +17,29 @@
  * (at your option) any later version.
  */
 
-namespace Hebbinkpro\PocketMap\commands;
+namespace Hebbinkpro\PocketMap\commands\marker;
 
 use CortexPE\Commando\BaseSubCommand;
+use CortexPE\Commando\exception\ArgumentOrderException;
+use Hebbinkpro\PocketMap\PocketMap;
 use pocketmine\command\CommandSender;
 
-class HelpCommand extends BaseSubCommand
+class MarkerCommand extends BaseSubCommand
 {
 
     protected function prepare(): void
     {
-        $this->setPermissions(["pocketmap.cmd"]);
+
+        /** @var PocketMap $plugin */
+        $plugin = $this->getOwningPlugin();
+
+        $this->setPermissions(["pocketmap.cmd.marker"]);
+
+        $this->registerSubCommand(new MarkerAddCommand($plugin, "add", "Add a marker"));
     }
 
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
-        $sender->sendMessage("--- PocketMap Commands ---");
-        $sender->sendMessage($this->parent->getUsageMessage());
+        $sender->sendMessage($this->getUsageMessage());
     }
 }

@@ -12,8 +12,26 @@ permissions:
     description: Allows to execute pocketmap commands
     default: true
   pocketmap.cmd.render:
-    description: Allows to render the world map
+    description: Allows to execute the render command
     default: op
   pocketmap.cmd.reload:
-    description: Allows to reload some parts of the plugin
+    description: Allows to execute the reload command
+    default: op
+  pocketmap.cmd.reload.config:
+    description: Allows to execute the reload config command
+    default: op
+  pocketmap.cmd.reload.web:
+    description: Allows to execute the reload web command
+    default: op
+  pocketmap.cmd.reload.data:
+    description: Allows to execute the reload data command
+    default: op
+  pocketmap.cmd.marker:
+    description: Allows to execute the marker command
+    default: op
+  pocketmap.cmd.marker.add:
+    description: Allows to execute the marker add command
+    default: op
+  pocketmap.cmd.marker.remove:
+    description: Allows to execute the marker remove command
     default: op

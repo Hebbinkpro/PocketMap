@@ -20,6 +20,7 @@
 namespace Hebbinkpro\PocketMap;
 
 use Exception;
+use Hebbinkpro\PocketMap\api\MarkerManager;
 use Hebbinkpro\PocketMap\api\UpdateApiTask;
 use Hebbinkpro\PocketMap\commands\PocketMapCommand;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
@@ -58,6 +59,7 @@ class PocketMap extends PluginBase implements Listener
     private WebServer $webServer;
     private RenderSchedulerTask $renderScheduler;
     private ChunkSchedulerTask $chunkScheduler;
+    private MarkerManager $markers;
 
     public static function getFolder(): string
     {
@@ -102,6 +104,14 @@ class PocketMap extends PluginBase implements Listener
     public function getChunkScheduler(): ChunkSchedulerTask
     {
         return $this->chunkScheduler;
+    }
+
+    /**
+     * @return MarkerManager
+     */
+    public function getMarkers(): MarkerManager
+    {
+        return $this->markers;
     }
 
     /**
@@ -318,6 +328,8 @@ class PocketMap extends PluginBase implements Listener
 
         // start all tasks
         $this->startTasks();
+
+        $this->markers = new MarkerManager($this->getDataFolder()."markers/");
 
         // register the event listener
         $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);

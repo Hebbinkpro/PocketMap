@@ -20,6 +20,9 @@
 namespace Hebbinkpro\PocketMap\commands;
 
 use CortexPE\Commando\BaseCommand;
+use Hebbinkpro\PocketMap\commands\marker\MarkerCommand;
+use Hebbinkpro\PocketMap\commands\reload\ReloadCommand;
+use Hebbinkpro\PocketMap\PocketMap;
 use pocketmine\command\CommandSender;
 
 class PocketMapCommand extends BaseCommand
@@ -27,10 +30,14 @@ class PocketMapCommand extends BaseCommand
 
     protected function prepare(): void
     {
+        /** @var PocketMap $plugin */
+        $plugin = $this->getOwningPlugin();
+
         $this->setPermissions(["pocketmap.cmd"]);
-        $this->registerSubCommand(new HelpCommand("help", "Get a list of all commands"));
-        $this->registerSubCommand(new RenderCommand("render", "Render a region of the world map"));
-        $this->registerSubCommand(new ReloadCommand("reload", "Reload some parts of the plugin"));
+        $this->registerSubCommand(new HelpCommand($plugin, "help", "Get a list of all commands"));
+        $this->registerSubCommand(new RenderCommand($plugin, "render", "Render a region of the world map"));
+        $this->registerSubCommand(new ReloadCommand($plugin, "reload", "Reload some parts of the plugin"));
+        $this->registerSubCommand(new MarkerCommand($plugin, "marker", "Manage map markers"));
     }
 
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
