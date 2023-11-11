@@ -19,11 +19,16 @@
 
 namespace Hebbinkpro\PocketMap\api;
 
+use pocketmine\math\Vector3;
 use pocketmine\world\Position;
 use pocketmine\world\World;
 
 class MarkerManager
 {
+    public const TYPE_ICON = "icon";
+    public const TYPE_CIRCLE = "circle";
+    public const TYPE_POLYGON = "polygon";
+    public const TYPE_POLYLINE = "polyline";
 
     private string $folder;
     private array $markers;
@@ -59,31 +64,135 @@ class MarkerManager
         return $this->icons;
     }
 
-    public function addMarker(string $name, string $icon, Position $pos, ?string $index = null): bool {
+    /**
+     * Mark a position with an icon
+     * @param string $name
+     * @param Position $pos
+     * @param string $icon
+     * @param string|null $id
+     * @return bool
+     */
+    public function addIconMarker(string $name, Position $pos, string $icon, ?string $id = null): bool {
         if (!in_array($icon, $this->icons)) return false;
 
-        [$x,$z] = [$pos->getFloorX(), $pos->getFloorZ()];
-        if ($this->getMarkerIndex($pos) != null ||
-            ($index != null && $this->getMarker($index, $pos->getWorld()) != null)) {
-            return false;
-        }
-
-        $world = $pos->getWorld()->getFolderName();
-
-        $index = $index ?? count($this->markers[$world]);
-        $marker = [
-            "id" => $index,
-            "name" => $name,
-            "icon" => $icon,
-            "pos" => [
-                "x" => $x,
-                "z" => $z
-            ]
+        $data = [
+            "type" => self::TYPE_ICON,
+            "icon" => $icon
         ];
 
-        if (!isset($this->markers[$world])) $this->markers[$world] = [];
+        return $this->addPositionMarker($name, $data, $pos, $id);
+    }
 
-        $this->markers[$world][$index] = $marker;
+    /**
+     * Place a circle over a position
+     * @param string $name
+     * @param Position $pos
+     * @param int $radius
+     * @param string $color
+     * @param bool $fill
+     * @param string|null $fillColor
+     * @param string|null $id
+     * @return bool
+     */
+    public function addCircleMarker(string $name, Position $pos, int $radius, string $color = "red", bool $fill = false, ?string $fillColor = null, ?string $id = null): bool {
+
+        $options = $this->getLeafletOptions($color, $fill, $fillColor);
+        $options["radius"] = $radius;
+
+        $data = [
+            "type" => self::TYPE_CIRCLE,
+            "options" => $options
+        ];
+
+        return $this->addPositionMarker($name, $data, $pos, $id);
+    }
+
+    /**
+     * Mark an area
+     * @param string $name
+     * @param Vector3[] $positions
+     * @param World $world
+     * @param string $color
+     * @param bool $fill
+     * @param string|null $fillColor
+     * @param string|null $id
+     * @return bool
+     */
+    public function addPolygonMarker(string $name, array $positions, World $world, string $color = "red", bool $fill = false, ?string $fillColor = null, ?string $id = null): bool {
+        $data = [
+            "type" => self::TYPE_POLYGON,
+            "options" => $this->getLeafletOptions($color, $fill, $fillColor)
+        ];
+
+        return $this->addMultiPositionMarker($name, $data, $positions, $world, $id);
+    }
+
+    /**
+     * Create a multipoint line
+     * @param string $name
+     * @param array $positions
+     * @param World $world
+     * @param string $color
+     * @param bool $fill
+     * @param string|null $fillColor
+     * @param string|null $id
+     * @return bool
+     */
+    public function addPolylineMarker(string $name, array $positions, World $world, string $color = "red", bool $fill = false, ?string $fillColor = null, ?string $id = null): bool {
+        $data = [
+            "type" => self::TYPE_POLYGON,
+            "options" => $this->getLeafletOptions($color, $fill, $fillColor)
+        ];
+
+        return $this->addMultiPositionMarker($name, $data, $positions, $world, $id);
+    }
+
+    public function getLeafletOptions(string $color, bool $fill, ?string $fillColor = null): array {
+        return [
+            "color" => $color,
+            "fill" => $fill,
+            "fillColor" => $fillColor ?? $color
+        ];
+    }
+
+    public function addMultiPositionMarker(string $name, array $data, array $positions, World $world, ?string $id = null): bool {
+        // add all positions
+        $data["positions"] = [];
+        foreach ($positions as $pos) {
+            $data["positions"][] = [
+                "x" => $pos->getFloorX(),
+                "z" => $pos->getFloorZ()
+            ];
+        }
+
+        return $this->addMarker($name, $data, $world, $id);
+    }
+
+    public function addPositionMarker(string $name, array $data, Position $pos, ?string $id = null): bool {
+        $data["pos"] =[
+            "x" => $pos->getFloorX(),
+            "z" => $pos->getFloorZ()
+        ];
+
+        return $this->addMarker($name, $data, $pos->getWorld(), $id);
+    }
+
+    public function addMarker(string $name, array $data, World $world, ?string $id = null): bool {
+
+        if (!isset($data["type"])) return false;
+
+        $worldName = $world->getFolderName();
+
+        $id = $id ?? strval(count($this->markers[$worldName]));
+        $marker = [
+            "id" => $id,
+            "name" => $name,
+            "data" => $data,
+        ];
+
+        if (!isset($this->markers[$worldName])) $this->markers[$worldName] = [];
+
+        $this->markers[$worldName][$id] = $marker;
         $this->encode();
 
         return true;
@@ -91,39 +200,23 @@ class MarkerManager
 
     /**
      * Remove a marker
-     * @param string|int $index the markers index
+     * @param string $id the markers index
      * @param World $world the world the marker is in
      * @return bool
      */
-    public function removeMarker(string|int $index, World $world): bool {
-        if ( $this->getMarker($index, $world) == null) return false;
+    public function removeMarker(string $id, World $world): bool {
+        if ( $this->getMarker($id, $world) == null) return false;
 
-        unset($this->markers[$world][$index]);
+        unset($this->markers[$world][$id]);
         $this->encode();
 
         return true;
     }
 
-    /**
-     * Get a marker by its position
-     * @param Position $pos the position of the marker
-     * @return string|int|null the index in the markers[world] list, or null if it doesn't exist
-     */
-    public function getMarkerIndex(Position $pos): null|string|int {
-        $world = $pos->getWorld()->getFolderName();
-        foreach ($this->markers[$world] ?? [] as $i=>$marker) {
-            if ($marker["pos"]["x"] == $pos->getFloorX() && $marker["pos"]["z"] == $pos->getFloorZ()) {
-                return $i;
-            }
-        }
-
-        return null;
-    }
-
-    public function getMarker(string|int $index, World $world): ?array {
+    public function getMarker(string $id, World $world): ?array {
         if (!isset($this->markers[$world->getFolderName()])) return null;
 
-        return $this->markers[$world->getFolderName()][$index] ?? null;
+        return $this->markers[$world->getFolderName()][$id] ?? null;
     }
 
     /**

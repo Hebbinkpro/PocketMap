@@ -36,6 +36,7 @@ class MarkerCommand extends BaseSubCommand
         $this->setPermissions(["pocketmap.cmd.marker"]);
 
         $this->registerSubCommand(new MarkerAddCommand($plugin, "add", "Add a marker"));
+        $this->registerSubCommand(new MarkerRemoveCommand($plugin, "remove", "Remove a marker"));
     }
 
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void

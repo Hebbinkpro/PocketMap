@@ -78,6 +78,6 @@ class MarkerAddCommand extends BaseSubCommand
         $pos = Position::fromObject($args["pos"], $world);
         $id = $args["id"] ?? null;
 
-        $plugin->getMarkers()->addMarker($name, $icon, $pos, $id);
+        $plugin->getMarkers()->addIconMarker($name, $icon, $pos, $id);
     }
 }
