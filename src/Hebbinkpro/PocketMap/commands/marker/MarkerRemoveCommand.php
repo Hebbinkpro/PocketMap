@@ -57,8 +57,8 @@ class MarkerRemoveCommand extends BaseSubCommand
         $world = $plugin->getServer()->getWorldManager()->getWorldByName($args["world"]);
         $res = $plugin->getMarkers()->removeMarker($args["id"], $world);
 
-        if (!$res) $sender->sendMessage("§cMarker does not exist in world '{$args["world"]}'");
-        else $sender->sendMessage("[PocketMap] Marker ".$args["id"]." is removed.");
+        if ($res) $sender->sendMessage("[PocketMap] Marker ".$args["id"]." is removed.");
+        else $sender->sendMessage("§cMarker does not exist in world '{$args["world"]}'");
 
     }
 }

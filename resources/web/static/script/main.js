@@ -227,26 +227,53 @@ function getCoordString(player) {
 }
 
 async function loadMarkers() {
-    let req = await fetch(API_URL + "markers");
-    let markers = (await req.json())[world];
-    if (!markers) return;
-
     let icons = await getMarkerIcons()
-
     let worldData = (await getWorlds())[world]
     let worldSpawnMarker = L.marker(getLatLngPos(worldData["spawn"]), {icon: icons["compass"]})
     worldSpawnMarker.bindPopup("World Spawn")
     worldSpawnMarker.addTo(map)
+
+    let req = await fetch(API_URL + "markers");
+    let markers = (await req.json())[world];
+    if (!markers) return;
+
+
 
 
     // load the other markers
     for (let i in markers) {
         let marker = markers[i];
 
-        let leafletMarker = L.marker(getLatLngPos(marker.pos, -0.5, 0.5), {icon: icons[marker.icon]})
-        leafletMarker.bindPopup(marker.name)
+        let m = null;
+        let positions = [];
+        let data = marker["data"];
+        switch (data["type"]) {
+            case "icon":
+                m = L.marker(getLatLngPos(data["pos"], -0.5, 0.5), {icon: icons[data["icon"]]})
+                break;
+            case "circle":
+                m = L.circle(getLatLngPos(data["pos"], -0.5, 0.5), data["options"]);
+                break;
+            case "polygon":
+                positions = [];
+                for (let i in data["positions"]) {
+                    positions.push(getLatLngPos(data["positions"][i], -0.5, 0.5));
+                }
+                m = L.polygon(positions, data["options"])
+                break;
+            case "polyline":
+                positions = [];
+                for (let i in data["positions"]) {
+                    positions.push(getLatLngPos(data["positions"][i], -0.5, 0.5));
+                }
+                m = L.polyline(positions, data["options"]);
+                break;
+        }
 
-        leafletMarker.addTo(map)
+        if (m != null) {
+            m.bindPopup(marker.name)
+            m.addTo(map)
+        }
     }
 
 }

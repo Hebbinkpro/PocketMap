@@ -40,10 +40,11 @@ class MarkerManager
         $this->folder = $folder;
 
         $this->markers = [];
-        if (is_file($this->folder."markers.json")) {
-            $file = file_get_contents($this->folder."markers.json");
-            $this->markers = json_decode($file, true) ?? [];
+        if (!is_file($this->folder."markers.json")) {
+            file_put_contents($this->folder."markers.json", "[]");
         }
+
+        $this->update();
 
         $this->icons = [];
         if (is_file($this->folder."icons.json")) {
@@ -160,8 +161,8 @@ class MarkerManager
         $data["positions"] = [];
         foreach ($positions as $pos) {
             $data["positions"][] = [
-                "x" => $pos->getFloorX(),
-                "z" => $pos->getFloorZ()
+                "x" => $pos->getX(),
+                "z" => $pos->getZ()
             ];
         }
 
@@ -170,15 +171,15 @@ class MarkerManager
 
     public function addPositionMarker(string $name, array $data, Position $pos, ?string $id = null): bool {
         $data["pos"] =[
-            "x" => $pos->getFloorX(),
-            "z" => $pos->getFloorZ()
+            "x" => $pos->getX(),
+            "z" => $pos->getZ()
         ];
 
         return $this->addMarker($name, $data, $pos->getWorld(), $id);
     }
 
     public function addMarker(string $name, array $data, World $world, ?string $id = null): bool {
-
+        $this->update();
         if (!isset($data["type"])) return false;
 
         $worldName = $world->getFolderName();
@@ -191,6 +192,7 @@ class MarkerManager
         ];
 
         if (!isset($this->markers[$worldName])) $this->markers[$worldName] = [];
+        if ($this->getMarker($id, $world) != null) return false;
 
         $this->markers[$worldName][$id] = $marker;
         $this->encode();
@@ -205,9 +207,10 @@ class MarkerManager
      * @return bool
      */
     public function removeMarker(string $id, World $world): bool {
+        $this->update();
         if ( $this->getMarker($id, $world) == null) return false;
 
-        unset($this->markers[$world][$id]);
+        unset($this->markers[$world->getFolderName()][$id]);
         $this->encode();
 
         return true;
@@ -226,5 +229,13 @@ class MarkerManager
     private function encode(): void {
         $data = json_encode($this->markers);
         file_put_contents($this->folder."markers.json", $data);
+    }
+
+    /**
+     * Load all markers from the file
+     * @return void
+     */
+    private function update(): void {
+        $this->markers = json_decode(file_get_contents($this->folder."markers.json"), true);
     }
 }

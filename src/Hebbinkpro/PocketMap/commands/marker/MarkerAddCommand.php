@@ -78,6 +78,8 @@ class MarkerAddCommand extends BaseSubCommand
         $pos = Position::fromObject($args["pos"], $world);
         $id = $args["id"] ?? null;
 
-        $plugin->getMarkers()->addIconMarker($name, $icon, $pos, $id);
+        $res = $plugin->getMarkers()->addIconMarker($name, $pos, $icon, $id);
+        if ($res) $sender->sendMessage("[PocketMap] Marker '$name' is added to world '{$args["world"]}'");
+        else $sender->sendMessage("§cSomething went wrong");
     }
 }
