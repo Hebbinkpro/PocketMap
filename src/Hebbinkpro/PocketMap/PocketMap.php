@@ -33,11 +33,8 @@ use Hebbinkpro\WebServer\exception\WebServerException;
 use Hebbinkpro\WebServer\libs\Laravel\SerializableClosure\Exceptions\PhpVersionNotSupportedException;
 use Hebbinkpro\WebServer\route\Router;
 use Hebbinkpro\WebServer\WebServer;
-use pocketmine\command\Command;
-use pocketmine\command\CommandSender;
 use pocketmine\event\Listener;
 use pocketmine\item\StringToItemParser;
-use pocketmine\player\Player;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\Config;
 use pocketmine\utils\Filesystem;
@@ -64,6 +61,19 @@ class PocketMap extends PluginBase implements Listener
     public static function getFolder(): string
     {
         return self::$instance->getDataFolder();
+    }
+
+    /**
+     * Get a world renderer by its world or the name of the world
+     * @param World|string $world The world or the name of the world
+     * @return WorldRenderer|null the WorldRenderer or null when it wasn't found
+     */
+    public static function getWorldRenderer(World|string $world): ?WorldRenderer
+    {
+        if (is_string($world)) $worldName = $world;
+        else $worldName = $world->getFolderName();
+
+        return self::$worldRenderers[$worldName] ?? null;
     }
 
     /**
@@ -124,92 +134,40 @@ class PocketMap extends PluginBase implements Listener
         unset(self::$worldRenderers[$world->getFolderName()]);
     }
 
-    private function loadWebFiles(): void
+    protected function onEnable(): void
     {
-        $folder = $this->getDataFolder() . "web/";
+        self::$instance = $this;
 
-        // does not yet exist
-        if (is_dir($folder)) {
-            // config file does not exist
-            $webConfig = new Config($folder . "config.json");
+        // load all resources
+        $this->loadConfig();
+        $this->generateFolderStructure();
 
-            $version = $webConfig->get("version", -1);
+        // load the terrain textures
+        $this->loadTerrainTextures();
 
-            // the correct web version is already loaded
-            if ($version == self::WEB_VERSION) return;
+        // start all tasks
+        $this->startTasks();
 
-            $this->getLogger()->warning("The current version of PocketMap is using another web version. The web files will be replaced. Expected: " . self::WEB_VERSION . ", Found: v$version");
-            $this->getLogger()->warning("You can find your old web files in 'backup/web_v$version/'");
+        $this->markers = new MarkerManager($this->getDataFolder() . "markers/");
 
-            if (!is_dir($this->getDataFolder() . "backup")) mkdir($this->getDataFolder() . "backup");
+        // register the event listener
+        $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
 
-            // place files in the backup folder
-            $backupFolder = $this->getDataFolder() . "backup/web-v$version";
-            if (!is_dir($backupFolder)) {
-                mkdir($this->getDataFolder() . "backup/web-v$version");
-                Filesystem::recursiveCopy($folder, $backupFolder);
-            }
+        $this->getServer()->getCommandMap()->register("pocketmap", new PocketMapCommand($this, "pocketmap", "PocketMap command", ["pmap"]));
 
-            // remove the current files and add the new ones
-            Filesystem::recursiveUnlink($folder);
+        $this->loadAllWorlds();
+
+        WebServer::register($this);
+
+        try {
+            // create the web server
+            $this->createWebServer();
+        } catch (Exception $e) {
+            $this->getLogger()->alert("Could not start the web server.");
+            $this->getLogger()->error($e);
+            $this->getServer()->getPluginManager()->disablePlugin($this);
+            return;
         }
-
-        // create the web folder and copy the contents
-        mkdir($folder);
-        Filesystem::recursiveCopy($this->getFile() . "resources/web", $folder);
-    }
-
-    public function loadWebConfig(): void
-    {
-        $config = new Config($this->getDataFolder() . "web/config.json");
-
-        $validWorlds = self::getConfigManger()->getArray("api.worlds");
-        $worldSettings = $config->get("worlds", []);
-
-        foreach (self::$worldRenderers as $worldName => $renderer) {
-            // we aren't allowed to load this world
-            if (!empty($validWorlds) && !in_array($worldName, $validWorlds)) {
-                // remove from the world settings list
-                if (array_key_exists($worldName, $worldSettings)) unset($worldSettings[$worldName]);
-                continue;
-            }
-
-            // already loaded
-            if (array_key_exists($worldName, $worldSettings)) continue;
-
-            $spawnPos = $renderer->getWorld()->getSpawnLocation();
-
-            $worldSettings[$worldName] = [
-                "zoom" => [
-                    "min" => 0,
-                    "max" => 8
-                ],
-                "view" => [
-                    "x" => $spawnPos->getFloorX(),
-                    "z" => $spawnPos->getFloorZ(),
-                    "zoom" => 4
-                ]
-            ];
-        }
-
-        $defaultWorld = $config->get("default-world", "world");
-        // default world does not exist (anymore)
-        if (!array_key_exists($defaultWorld, $worldSettings)) {
-            // the default world of the server isn't allowed to be displayed, use the first world in the list
-            $defaultWorld = array_keys($worldSettings)[0] ?? null;
-        }
-
-        // set the values
-        $config->set("default-world", $defaultWorld);
-        $config->set("worlds", $worldSettings);
-
-        // save the config
-        $config->save();
-    }
-
-    public static function getConfigManger(): ConfigManager
-    {
-        return self::$instance->configManager;
     }
 
     /**
@@ -302,70 +260,6 @@ class PocketMap extends PluginBase implements Listener
         }
     }
 
-    /**
-     * Get a world renderer by its world or the name of the world
-     * @param World|string $world The world or the name of the world
-     * @return WorldRenderer|null the WorldRenderer or null when it wasn't found
-     */
-    public static function getWorldRenderer(World|string $world): ?WorldRenderer
-    {
-        if (is_string($world)) $worldName = $world;
-        else $worldName = $world->getFolderName();
-
-        return self::$worldRenderers[$worldName] ?? null;
-    }
-
-    protected function onEnable(): void
-    {
-        self::$instance = $this;
-
-        // load all resources
-        $this->loadConfig();
-        $this->generateFolderStructure();
-
-        // load the terrain textures
-        $this->loadTerrainTextures();
-
-        // start all tasks
-        $this->startTasks();
-
-        $this->markers = new MarkerManager($this->getDataFolder()."markers/");
-
-        // register the event listener
-        $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
-
-        $this->getServer()->getCommandMap()->register("pocketmap", new PocketMapCommand($this, "pocketmap", "PocketMap command", ["pmap"]));
-
-        $this->loadAllWorlds();
-
-        WebServer::register($this);
-
-        try {
-            // create the web server
-            $this->createWebServer();
-        } catch (Exception $e) {
-            $this->getLogger()->alert("Could not start the web server.");
-            $this->getLogger()->error($e);
-            $this->getServer()->getPluginManager()->disablePlugin($this);
-            return;
-        }
-    }
-
-    private function startTasks(): void {
-        // start the render scheduler
-        $this->renderScheduler = new RenderSchedulerTask($this);
-        $this->getScheduler()->scheduleRepeatingTask($this->renderScheduler, $this->configManager->getInt("renderer.scheduler.run-period", 5));
-
-        // start the chunk update task, this check every period if regions have to be updated
-        $this->chunkScheduler = new ChunkSchedulerTask($this);
-        $this->getScheduler()->scheduleRepeatingTask($this->chunkScheduler, $this->configManager->getInt("renderer.chunk-renderer.run-period", 10));
-
-        // start the api update task
-        $updateApiTask = new UpdateApiTask($this, $this->getDataFolder() . "tmp/api/");
-        $this->getScheduler()->scheduleRepeatingTask($updateApiTask, $this->configManager->getInt("api.update-period", 20));
-
-    }
-
     private function loadTerrainTextures(): void
     {
         $textureSettings = $this->configManager->getManager("textures");
@@ -383,6 +277,22 @@ class PocketMap extends PluginBase implements Listener
         $path = $this->getDataFolder() . "resource_packs/";
 
         $this->terrainTextures = TerrainTextures::generate($this, $path, $options);
+    }
+
+    private function startTasks(): void
+    {
+        // start the render scheduler
+        $this->renderScheduler = new RenderSchedulerTask($this);
+        $this->getScheduler()->scheduleRepeatingTask($this->renderScheduler, $this->configManager->getInt("renderer.scheduler.run-period", 5));
+
+        // start the chunk update task, this check every period if regions have to be updated
+        $this->chunkScheduler = new ChunkSchedulerTask($this);
+        $this->getScheduler()->scheduleRepeatingTask($this->chunkScheduler, $this->configManager->getInt("renderer.chunk-renderer.run-period", 10));
+
+        // start the api update task
+        $updateApiTask = new UpdateApiTask($this, $this->getDataFolder() . "tmp/api/");
+        $this->getScheduler()->scheduleRepeatingTask($updateApiTask, $this->configManager->getInt("api.update-period", 20));
+
     }
 
     /**
@@ -432,6 +342,94 @@ class PocketMap extends PluginBase implements Listener
         $this->webServer->start();
     }
 
+    private function loadWebFiles(): void
+    {
+        $folder = $this->getDataFolder() . "web/";
+
+        // does not yet exist
+        if (is_dir($folder)) {
+            // config file does not exist
+            $webConfig = new Config($folder . "config.json");
+
+            $version = $webConfig->get("version", -1);
+
+            // the correct web version is already loaded
+            if ($version == self::WEB_VERSION) return;
+
+            $this->getLogger()->warning("The current version of PocketMap is using another web version. The web files will be replaced. Expected: " . self::WEB_VERSION . ", Found: v$version");
+            $this->getLogger()->warning("You can find your old web files in 'backup/web_v$version/'");
+
+            if (!is_dir($this->getDataFolder() . "backup")) mkdir($this->getDataFolder() . "backup");
+
+            // place files in the backup folder
+            $backupFolder = $this->getDataFolder() . "backup/web-v$version";
+            if (!is_dir($backupFolder)) {
+                mkdir($this->getDataFolder() . "backup/web-v$version");
+                Filesystem::recursiveCopy($folder, $backupFolder);
+            }
+
+            // remove the current files and add the new ones
+            Filesystem::recursiveUnlink($folder);
+        }
+
+        // create the web folder and copy the contents
+        mkdir($folder);
+        Filesystem::recursiveCopy($this->getFile() . "resources/web", $folder);
+    }
+
+    public function loadWebConfig(): void
+    {
+        $config = new Config($this->getDataFolder() . "web/config.json");
+
+        $validWorlds = self::getConfigManger()->getArray("api.worlds");
+        $worldSettings = $config->get("worlds", []);
+
+        foreach (self::$worldRenderers as $worldName => $renderer) {
+            // we aren't allowed to load this world
+            if (!empty($validWorlds) && !in_array($worldName, $validWorlds)) {
+                // remove from the world settings list
+                if (array_key_exists($worldName, $worldSettings)) unset($worldSettings[$worldName]);
+                continue;
+            }
+
+            // already loaded
+            if (array_key_exists($worldName, $worldSettings)) continue;
+
+            $spawnPos = $renderer->getWorld()->getSpawnLocation();
+
+            $worldSettings[$worldName] = [
+                "zoom" => [
+                    "min" => 0,
+                    "max" => 8
+                ],
+                "view" => [
+                    "x" => $spawnPos->getFloorX(),
+                    "z" => $spawnPos->getFloorZ(),
+                    "zoom" => 4
+                ]
+            ];
+        }
+
+        $defaultWorld = $config->get("default-world", "world");
+        // default world does not exist (anymore)
+        if (!array_key_exists($defaultWorld, $worldSettings)) {
+            // the default world of the server isn't allowed to be displayed, use the first world in the list
+            $defaultWorld = array_keys($worldSettings)[0] ?? null;
+        }
+
+        // set the values
+        $config->set("default-world", $defaultWorld);
+        $config->set("worlds", $worldSettings);
+
+        // save the config
+        $config->save();
+    }
+
+    public static function getConfigManger(): ConfigManager
+    {
+        return self::$instance->configManager;
+    }
+
     /**
      * Register all API routes to the web server
      * @throws PhpVersionNotSupportedException
@@ -459,10 +457,10 @@ class PocketMap extends PluginBase implements Listener
         $router->getStatic("/render", $this->getDataFolder() . "renders");
 
         // get markers
-        $router->getFile("/markers", $this->getDataFolder()."markers/markers.json", "[]");
+        $router->getFile("/markers", $this->getDataFolder() . "markers/markers.json", "[]");
         // get marker icons
-        $router->getFile("/markers/icons", $this->getDataFolder()."markers/icons.json", "[]");
-        $router->getStatic("/markers/icons", $this->getDataFolder()."markers/icons");
+        $router->getFile("/markers/icons", $this->getDataFolder() . "markers/icons.json", "[]");
+        $router->getStatic("/markers/icons", $this->getDataFolder() . "markers/icons");
 
         return $router;
     }

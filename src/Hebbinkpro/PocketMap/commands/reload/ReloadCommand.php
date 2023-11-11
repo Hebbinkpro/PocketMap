@@ -19,14 +19,18 @@
 
 namespace Hebbinkpro\PocketMap\commands\reload;
 
-use CortexPE\Commando\args\RawStringArgument;
 use CortexPE\Commando\BaseSubCommand;
-use CortexPE\Commando\exception\ArgumentOrderException;
 use Hebbinkpro\PocketMap\PocketMap;
 use pocketmine\command\CommandSender;
 
 class ReloadCommand extends BaseSubCommand
 {
+
+    public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
+    {
+        $sender->sendMessage("--- PocketMap Reload ---");
+        $sender->sendMessage($this->getUsageMessage());
+    }
 
     protected function prepare(): void
     {
@@ -39,11 +43,5 @@ class ReloadCommand extends BaseSubCommand
         $this->registerSubCommand(new ReloadConfig($plugin, "config", "Reload the config"));
         $this->registerSubCommand(new ReloadWeb($plugin, "web", "Reload the web config"));
         $this->registerSubCommand(new ReloadData($plugin, "data", "Reload the plugin data"));
-    }
-
-    public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
-    {
-        $sender->sendMessage("--- PocketMap Reload ---");
-        $sender->sendMessage($this->getUsageMessage());
     }
 }

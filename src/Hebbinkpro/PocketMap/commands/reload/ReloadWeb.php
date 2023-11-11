@@ -26,11 +26,6 @@ use pocketmine\command\CommandSender;
 class ReloadWeb extends BaseSubCommand
 {
 
-    protected function prepare(): void
-    {
-        $this->setPermissions(["pocketmap.cmd.reload.web"]);
-    }
-
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
 
@@ -38,5 +33,10 @@ class ReloadWeb extends BaseSubCommand
         $plugin = $this->getOwningPlugin();
         $plugin->loadWebConfig();
         $sender->sendMessage("[PocketMap] The web config is reloaded");
+    }
+
+    protected function prepare(): void
+    {
+        $this->setPermissions(["pocketmap.cmd.reload.web"]);
     }
 }

@@ -19,28 +19,15 @@
 
 namespace Hebbinkpro\PocketMap\commands\marker;
 
-use CortexPE\Commando\args\BlockPositionArgument;
 use CortexPE\Commando\args\RawStringArgument;
 use CortexPE\Commando\BaseSubCommand;
 use CortexPE\Commando\exception\ArgumentOrderException;
 use Hebbinkpro\PocketMap\PocketMap;
 use pocketmine\command\CommandSender;
 use pocketmine\player\Player;
-use pocketmine\world\Position;
 
 class MarkerRemoveCommand extends BaseSubCommand
 {
-
-    /**
-     * @throws ArgumentOrderException
-     */
-    protected function prepare(): void
-    {
-        $this->setPermissions(["pocketmap.cmd.marker.remove"]);
-
-        $this->registerArgument(0, new RawStringArgument("id"));
-        $this->registerArgument(1, new RawStringArgument("world", true));
-    }
 
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
@@ -57,8 +44,19 @@ class MarkerRemoveCommand extends BaseSubCommand
         $world = $plugin->getServer()->getWorldManager()->getWorldByName($args["world"]);
         $res = $plugin->getMarkers()->removeMarker($args["id"], $world);
 
-        if ($res) $sender->sendMessage("[PocketMap] Marker ".$args["id"]." is removed.");
+        if ($res) $sender->sendMessage("[PocketMap] Marker " . $args["id"] . " is removed.");
         else $sender->sendMessage("§cMarker does not exist in world '{$args["world"]}'");
 
+    }
+
+    /**
+     * @throws ArgumentOrderException
+     */
+    protected function prepare(): void
+    {
+        $this->setPermissions(["pocketmap.cmd.marker.remove"]);
+
+        $this->registerArgument(0, new RawStringArgument("id"));
+        $this->registerArgument(1, new RawStringArgument("world", true));
     }
 }

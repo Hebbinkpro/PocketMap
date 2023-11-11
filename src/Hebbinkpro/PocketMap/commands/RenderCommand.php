@@ -31,24 +31,11 @@ use pocketmine\player\Player;
 class RenderCommand extends BaseSubCommand
 {
 
-    /**
-     * @throws ArgumentOrderException
-     */
-    protected function prepare(): void
-    {
-        $this->setPermissions(["pocketmap.cmd.render"]);
-
-        $this->registerArgument(0, new IntegerArgument("x", true));
-        $this->registerArgument(1, new IntegerArgument("z", true));
-        $this->registerArgument(2, new RawStringArgument("world", true));
-        $this->registerArgument(3, new IntegerArgument("zoom", true));
-    }
-
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
         /** @var array{x: int, z: int, zoom: int, world: string} $args */
 
-        if (sizeof($args) < 4){
+        if (sizeof($args) < 4) {
             if ($sender instanceof Player) {
                 $pos = $sender->getPosition()->divide(16)->floor();
                 if (!isset($args["x"])) $args["x"] = $pos->getX();
@@ -57,7 +44,7 @@ class RenderCommand extends BaseSubCommand
                 if (!isset($args["zoom"])) $args["zoom"] = 0;
 
             } else {
-                $sender->sendMessage("§cNot all arguments are provided: ".$this->getUsageMessage());
+                $sender->sendMessage("§cNot all arguments are provided: " . $this->getUsageMessage());
                 return;
             }
         }
@@ -88,7 +75,20 @@ class RenderCommand extends BaseSubCommand
         $region = $renderer->getRegion($zoom, $x, $z, true);
         $plugin->getChunkScheduler()->addChunks($renderer, $region->getChunks(), ChunkSchedulerTask::CHUNK_GENERATOR_CURRENT);
 
-        $sender->sendMessage("[PocketMap] Rendering region: " . $region->getName() . " (".$region->getTotalChunks()." chunks)");
+        $sender->sendMessage("[PocketMap] Rendering region: " . $region->getName() . " (" . $region->getTotalChunks() . " chunks)");
 
+    }
+
+    /**
+     * @throws ArgumentOrderException
+     */
+    protected function prepare(): void
+    {
+        $this->setPermissions(["pocketmap.cmd.render"]);
+
+        $this->registerArgument(0, new IntegerArgument("x", true));
+        $this->registerArgument(1, new IntegerArgument("z", true));
+        $this->registerArgument(2, new RawStringArgument("world", true));
+        $this->registerArgument(3, new IntegerArgument("zoom", true));
     }
 }

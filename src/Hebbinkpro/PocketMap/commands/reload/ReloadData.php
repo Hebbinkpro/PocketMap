@@ -26,11 +26,6 @@ use pocketmine\command\CommandSender;
 class ReloadData extends BaseSubCommand
 {
 
-    protected function prepare(): void
-    {
-        $this->setPermissions(["pocketmap.cmd.reload.data"]);
-    }
-
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
 
@@ -38,5 +33,10 @@ class ReloadData extends BaseSubCommand
         $plugin = $this->getOwningPlugin();
         $plugin->generateFolderStructure();
         $sender->sendMessage("[PocketMap] The plugin data is reloaded");
+    }
+
+    protected function prepare(): void
+    {
+        $this->setPermissions(["pocketmap.cmd.reload.data"]);
     }
 }

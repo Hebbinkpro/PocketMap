@@ -28,6 +28,11 @@ use pocketmine\command\CommandSender;
 class PocketMapCommand extends BaseCommand
 {
 
+    public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
+    {
+        $sender->sendMessage("[PocketMap] Execute '/pmap help' for a list of all available command");
+    }
+
     protected function prepare(): void
     {
         /** @var PocketMap $plugin */
@@ -38,10 +43,5 @@ class PocketMapCommand extends BaseCommand
         $this->registerSubCommand(new RenderCommand($plugin, "render", "Render a region of the world map"));
         $this->registerSubCommand(new ReloadCommand($plugin, "reload", "Reload some parts of the plugin"));
         $this->registerSubCommand(new MarkerCommand($plugin, "marker", "Manage map markers"));
-    }
-
-    public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
-    {
-        $sender->sendMessage("[PocketMap] Execute '/pmap help' for a list of all available command");
     }
 }

@@ -40,21 +40,30 @@ class MarkerManager
         $this->folder = $folder;
 
         $this->markers = [];
-        if (!is_file($this->folder."markers.json")) {
-            file_put_contents($this->folder."markers.json", "[]");
+        if (!is_file($this->folder . "markers.json")) {
+            file_put_contents($this->folder . "markers.json", "[]");
         }
 
         $this->update();
 
         $this->icons = [];
-        if (is_file($this->folder."icons.json")) {
-            $file = file_get_contents($this->folder."icons.json");
+        if (is_file($this->folder . "icons.json")) {
+            $file = file_get_contents($this->folder . "icons.json");
             $icons = json_decode($file, true) ?? [];
 
             foreach ($icons as $i) {
                 $this->icons[] = $i["name"];
             }
         }
+    }
+
+    /**
+     * Load all markers from the file
+     * @return void
+     */
+    private function update(): void
+    {
+        $this->markers = json_decode(file_get_contents($this->folder . "markers.json"), true);
     }
 
     /**
@@ -73,7 +82,8 @@ class MarkerManager
      * @param string|null $id
      * @return bool
      */
-    public function addIconMarker(string $name, Position $pos, string $icon, ?string $id = null): bool {
+    public function addIconMarker(string $name, Position $pos, string $icon, ?string $id = null): bool
+    {
         if (!in_array($icon, $this->icons)) return false;
 
         $data = [
@@ -84,93 +94,9 @@ class MarkerManager
         return $this->addPositionMarker($name, $data, $pos, $id);
     }
 
-    /**
-     * Place a circle over a position
-     * @param string $name
-     * @param Position $pos
-     * @param int $radius
-     * @param string $color
-     * @param bool $fill
-     * @param string|null $fillColor
-     * @param string|null $id
-     * @return bool
-     */
-    public function addCircleMarker(string $name, Position $pos, int $radius, string $color = "red", bool $fill = false, ?string $fillColor = null, ?string $id = null): bool {
-
-        $options = $this->getLeafletOptions($color, $fill, $fillColor);
-        $options["radius"] = $radius;
-
-        $data = [
-            "type" => self::TYPE_CIRCLE,
-            "options" => $options
-        ];
-
-        return $this->addPositionMarker($name, $data, $pos, $id);
-    }
-
-    /**
-     * Mark an area
-     * @param string $name
-     * @param Vector3[] $positions
-     * @param World $world
-     * @param string $color
-     * @param bool $fill
-     * @param string|null $fillColor
-     * @param string|null $id
-     * @return bool
-     */
-    public function addPolygonMarker(string $name, array $positions, World $world, string $color = "red", bool $fill = false, ?string $fillColor = null, ?string $id = null): bool {
-        $data = [
-            "type" => self::TYPE_POLYGON,
-            "options" => $this->getLeafletOptions($color, $fill, $fillColor)
-        ];
-
-        return $this->addMultiPositionMarker($name, $data, $positions, $world, $id);
-    }
-
-    /**
-     * Create a multipoint line
-     * @param string $name
-     * @param array $positions
-     * @param World $world
-     * @param string $color
-     * @param bool $fill
-     * @param string|null $fillColor
-     * @param string|null $id
-     * @return bool
-     */
-    public function addPolylineMarker(string $name, array $positions, World $world, string $color = "red", bool $fill = false, ?string $fillColor = null, ?string $id = null): bool {
-        $data = [
-            "type" => self::TYPE_POLYGON,
-            "options" => $this->getLeafletOptions($color, $fill, $fillColor)
-        ];
-
-        return $this->addMultiPositionMarker($name, $data, $positions, $world, $id);
-    }
-
-    public function getLeafletOptions(string $color, bool $fill, ?string $fillColor = null): array {
-        return [
-            "color" => $color,
-            "fill" => $fill,
-            "fillColor" => $fillColor ?? $color
-        ];
-    }
-
-    public function addMultiPositionMarker(string $name, array $data, array $positions, World $world, ?string $id = null): bool {
-        // add all positions
-        $data["positions"] = [];
-        foreach ($positions as $pos) {
-            $data["positions"][] = [
-                "x" => $pos->getX(),
-                "z" => $pos->getZ()
-            ];
-        }
-
-        return $this->addMarker($name, $data, $world, $id);
-    }
-
-    public function addPositionMarker(string $name, array $data, Position $pos, ?string $id = null): bool {
-        $data["pos"] =[
+    public function addPositionMarker(string $name, array $data, Position $pos, ?string $id = null): bool
+    {
+        $data["pos"] = [
             "x" => $pos->getX(),
             "z" => $pos->getZ()
         ];
@@ -178,7 +104,8 @@ class MarkerManager
         return $this->addMarker($name, $data, $pos->getWorld(), $id);
     }
 
-    public function addMarker(string $name, array $data, World $world, ?string $id = null): bool {
+    public function addMarker(string $name, array $data, World $world, ?string $id = null): bool
+    {
         $this->update();
         if (!isset($data["type"])) return false;
 
@@ -200,23 +127,8 @@ class MarkerManager
         return true;
     }
 
-    /**
-     * Remove a marker
-     * @param string $id the markers index
-     * @param World $world the world the marker is in
-     * @return bool
-     */
-    public function removeMarker(string $id, World $world): bool {
-        $this->update();
-        if ( $this->getMarker($id, $world) == null) return false;
-
-        unset($this->markers[$world->getFolderName()][$id]);
-        $this->encode();
-
-        return true;
-    }
-
-    public function getMarker(string $id, World $world): ?array {
+    public function getMarker(string $id, World $world): ?array
+    {
         if (!isset($this->markers[$world->getFolderName()])) return null;
 
         return $this->markers[$world->getFolderName()][$id] ?? null;
@@ -226,16 +138,116 @@ class MarkerManager
      * Store the markers as json
      * @return void
      */
-    private function encode(): void {
+    private function encode(): void
+    {
         $data = json_encode($this->markers);
-        file_put_contents($this->folder."markers.json", $data);
+        file_put_contents($this->folder . "markers.json", $data);
     }
 
     /**
-     * Load all markers from the file
-     * @return void
+     * Place a circle over a position
+     * @param string $name
+     * @param Position $pos
+     * @param int $radius
+     * @param string $color
+     * @param bool $fill
+     * @param string|null $fillColor
+     * @param string|null $id
+     * @return bool
      */
-    private function update(): void {
-        $this->markers = json_decode(file_get_contents($this->folder."markers.json"), true);
+    public function addCircleMarker(string $name, Position $pos, int $radius, string $color = "red", bool $fill = false, ?string $fillColor = null, ?string $id = null): bool
+    {
+
+        $options = $this->getLeafletOptions($color, $fill, $fillColor);
+        $options["radius"] = $radius;
+
+        $data = [
+            "type" => self::TYPE_CIRCLE,
+            "options" => $options
+        ];
+
+        return $this->addPositionMarker($name, $data, $pos, $id);
+    }
+
+    public function getLeafletOptions(string $color, bool $fill, ?string $fillColor = null): array
+    {
+        return [
+            "color" => $color,
+            "fill" => $fill,
+            "fillColor" => $fillColor ?? $color
+        ];
+    }
+
+    /**
+     * Mark an area
+     * @param string $name
+     * @param Vector3[] $positions
+     * @param World $world
+     * @param string $color
+     * @param bool $fill
+     * @param string|null $fillColor
+     * @param string|null $id
+     * @return bool
+     */
+    public function addPolygonMarker(string $name, array $positions, World $world, string $color = "red", bool $fill = false, ?string $fillColor = null, ?string $id = null): bool
+    {
+        $data = [
+            "type" => self::TYPE_POLYGON,
+            "options" => $this->getLeafletOptions($color, $fill, $fillColor)
+        ];
+
+        return $this->addMultiPositionMarker($name, $data, $positions, $world, $id);
+    }
+
+    public function addMultiPositionMarker(string $name, array $data, array $positions, World $world, ?string $id = null): bool
+    {
+        // add all positions
+        $data["positions"] = [];
+        foreach ($positions as $pos) {
+            $data["positions"][] = [
+                "x" => $pos->getX(),
+                "z" => $pos->getZ()
+            ];
+        }
+
+        return $this->addMarker($name, $data, $world, $id);
+    }
+
+    /**
+     * Create a multipoint line
+     * @param string $name
+     * @param array $positions
+     * @param World $world
+     * @param string $color
+     * @param bool $fill
+     * @param string|null $fillColor
+     * @param string|null $id
+     * @return bool
+     */
+    public function addPolylineMarker(string $name, array $positions, World $world, string $color = "red", bool $fill = false, ?string $fillColor = null, ?string $id = null): bool
+    {
+        $data = [
+            "type" => self::TYPE_POLYGON,
+            "options" => $this->getLeafletOptions($color, $fill, $fillColor)
+        ];
+
+        return $this->addMultiPositionMarker($name, $data, $positions, $world, $id);
+    }
+
+    /**
+     * Remove a marker
+     * @param string $id the markers index
+     * @param World $world the world the marker is in
+     * @return bool
+     */
+    public function removeMarker(string $id, World $world): bool
+    {
+        $this->update();
+        if ($this->getMarker($id, $world) == null) return false;
+
+        unset($this->markers[$world->getFolderName()][$id]);
+        $this->encode();
+
+        return true;
     }
 }

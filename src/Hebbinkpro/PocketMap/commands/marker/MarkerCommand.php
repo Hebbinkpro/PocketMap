@@ -20,12 +20,16 @@
 namespace Hebbinkpro\PocketMap\commands\marker;
 
 use CortexPE\Commando\BaseSubCommand;
-use CortexPE\Commando\exception\ArgumentOrderException;
 use Hebbinkpro\PocketMap\PocketMap;
 use pocketmine\command\CommandSender;
 
 class MarkerCommand extends BaseSubCommand
 {
+
+    public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
+    {
+        $sender->sendMessage($this->getUsageMessage());
+    }
 
     protected function prepare(): void
     {
@@ -37,10 +41,5 @@ class MarkerCommand extends BaseSubCommand
 
         $this->registerSubCommand(new MarkerAddCommand($plugin, "add", "Add a marker"));
         $this->registerSubCommand(new MarkerRemoveCommand($plugin, "remove", "Remove a marker"));
-    }
-
-    public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
-    {
-        $sender->sendMessage($this->getUsageMessage());
     }
 }

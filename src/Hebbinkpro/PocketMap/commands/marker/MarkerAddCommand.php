@@ -20,7 +20,6 @@
 namespace Hebbinkpro\PocketMap\commands\marker;
 
 use CortexPE\Commando\args\BlockPositionArgument;
-use CortexPE\Commando\args\IntegerArgument;
 use CortexPE\Commando\args\RawStringArgument;
 use CortexPE\Commando\BaseSubCommand;
 use CortexPE\Commando\exception\ArgumentOrderException;
@@ -32,26 +31,6 @@ use pocketmine\world\Position;
 
 class MarkerAddCommand extends BaseSubCommand
 {
-
-    /**
-     * @throws ArgumentOrderException
-     */
-    protected function prepare(): void
-    {
-        /** @var PocketMap $plugin */
-        $plugin = $this->getOwningPlugin();
-
-        $this->setPermissions(["pocketmap.cmd.marker.add"]);
-
-        $this->registerArgument(0, new RawStringArgument("name"));
-        $this->registerArgument(1, new MarkerIconArgument("icon", $plugin->getMarkers()));
-        $this->registerArgument(2, new BlockPositionArgument("pos", true));
-        $this->registerArgument(3, new RawStringArgument("world", true));
-        $this->registerArgument(4, new RawStringArgument("id", true));
-
-
-
-    }
 
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
@@ -81,5 +60,24 @@ class MarkerAddCommand extends BaseSubCommand
         $res = $plugin->getMarkers()->addIconMarker($name, $pos, $icon, $id);
         if ($res) $sender->sendMessage("[PocketMap] Marker '$name' is added to world '{$args["world"]}'");
         else $sender->sendMessage("§cSomething went wrong");
+    }
+
+    /**
+     * @throws ArgumentOrderException
+     */
+    protected function prepare(): void
+    {
+        /** @var PocketMap $plugin */
+        $plugin = $this->getOwningPlugin();
+
+        $this->setPermissions(["pocketmap.cmd.marker.add"]);
+
+        $this->registerArgument(0, new RawStringArgument("name"));
+        $this->registerArgument(1, new MarkerIconArgument("icon", $plugin->getMarkers()));
+        $this->registerArgument(2, new BlockPositionArgument("pos", true));
+        $this->registerArgument(3, new RawStringArgument("world", true));
+        $this->registerArgument(4, new RawStringArgument("id", true));
+
+
     }
 }

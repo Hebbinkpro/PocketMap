@@ -26,11 +26,6 @@ use pocketmine\command\CommandSender;
 class ReloadConfig extends BaseSubCommand
 {
 
-    protected function prepare(): void
-    {
-        $this->setPermissions(["pocketmap.cmd.reload.config"]);
-    }
-
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
 
@@ -38,5 +33,10 @@ class ReloadConfig extends BaseSubCommand
         $plugin = $this->getOwningPlugin();
         $plugin->loadConfig();
         $sender->sendMessage("[PocketMap] The config is reloaded");
+    }
+
+    protected function prepare(): void
+    {
+        $this->setPermissions(["pocketmap.cmd.reload.config"]);
     }
 }

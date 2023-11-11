@@ -217,7 +217,7 @@ function getPlayerHead(player) {
 }
 
 function getLatLngPos(pos, offsetX = 0, offsetZ = 0) {
-    return L.latLng(-(pos.z+offsetZ) / 16, (pos.x+offsetX) / 16);
+    return L.latLng(-(pos.z + offsetZ) / 16, (pos.x + offsetX) / 16);
 }
 
 
@@ -236,8 +236,6 @@ async function loadMarkers() {
     let req = await fetch(API_URL + "markers");
     let markers = (await req.json())[world];
     if (!markers) return;
-
-
 
 
     // load the other markers
@@ -290,7 +288,7 @@ async function getMarkerIcons() {
     let MarkerIcon = L.Icon.extend({
         options: {
             iconSize: [iconSize, iconSize],
-            iconAnchor: [iconSize/2, iconSize/2],
+            iconAnchor: [iconSize / 2, iconSize / 2],
             popupAnchor: [0, 0]
         }
     })
@@ -306,8 +304,7 @@ async function getMarkerIcons() {
         if (iconData.path) {
             if (!iconData.path.includes(".")) iconData.path += ".png";
             iconUrl = API_URL + "markers/icons/" + iconData.path;
-        }
-        else if (iconData.url) iconUrl = iconData.url;
+        } else if (iconData.url) iconUrl = iconData.url;
         else continue;
 
         markerIcons[name] = new MarkerIcon({iconUrl})
