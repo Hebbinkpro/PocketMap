@@ -17,7 +17,7 @@
  * (at your option) any later version.
  */
 
-namespace Hebbinkpro\PocketMap\commands\marker;
+namespace Hebbinkpro\PocketMap\commands\render;
 
 use CortexPE\Commando\args\RawStringArgument;
 use CortexPE\Commando\BaseSubCommand;
@@ -26,8 +26,18 @@ use Hebbinkpro\PocketMap\PocketMap;
 use pocketmine\command\CommandSender;
 use pocketmine\player\Player;
 
-class MarkerRemoveCommand extends BaseSubCommand
+class RenderFullCommand extends BaseSubCommand
 {
+
+    /**
+     * @throws ArgumentOrderException
+     */
+    protected function prepare(): void
+    {
+        $this->setPermissions(["pocketmap.cmd.render.full"]);
+
+        $this->registerArgument(0, new RawStringArgument("world", true));
+    }
 
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
@@ -41,22 +51,19 @@ class MarkerRemoveCommand extends BaseSubCommand
                 return;
             }
         }
-        $world = $plugin->getServer()->getWorldManager()->getWorldByName($args["world"]);
-        $res = PocketMap::getMarkers()->removeMarker($args["id"], $world);
 
-        if ($res) $sender->sendMessage("[PocketMap] Marker " . $args["id"] . " is removed.");
-        else $sender->sendMessage("§cMarker does not exist in world '{$args["world"]}'");
+        $world = $args["world"];
 
-    }
-
-    /**
-     * @throws ArgumentOrderException
-     */
-    protected function prepare(): void
-    {
-        $this->setPermissions(["pocketmap.cmd.marker.remove"]);
-
-        $this->registerArgument(0, new RawStringArgument("id"));
-        $this->registerArgument(1, new RawStringArgument("world", true));
+        $renderer = PocketMap::getWorldRenderer($world);
+        if ($renderer === null) {
+            if (!$plugin->getServer()->getWorldManager()->loadWorld($world)) {
+                $sender->sendMessage("§cWorld not found: $world");
+                return;
+            }
+            $renderer = PocketMap::getWorldRenderer($world);
+        }
+        
+        $renderer->startFullWorldRender();
+        $sender->sendMessage("[PocketMap] Started full render of world '$world'");
     }
 }

@@ -34,36 +34,10 @@ class MarkerAddCommand extends BaseSubCommand
 
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
-        /** @var array{name: string, icon: string, pos: Vector3, world: string, id?: string} $args */
-
-        if ($sender instanceof Player) {
-            if (!isset($args["pos"])) $args["pos"] = $sender->getPosition();
-            if (!isset($args["world"])) $args["world"] = $sender->getWorld()->getFolderName();
-        } else if (sizeof($args) < 4) {
-            $sender->sendMessage("§cInvalid amount of arguments given");
-            return;
-        }
-
-        /** @var PocketMap $plugin */
-        $plugin = $this->getOwningPlugin();
-        $world = $plugin->getServer()->getWorldManager()->getWorldByName($args["world"]);
-        if ($world == null) {
-            $sender->sendMessage("§cInvalid world given");
-            return;
-        }
-
-        $name = $args["name"];
-        $icon = $args["icon"];
-        $pos = Position::fromObject($args["pos"], $world);
-        $id = $args["id"] ?? null;
-
-        $res = $plugin->getMarkers()->addIconMarker($name, $pos, $icon, $id);
-        if ($res) $sender->sendMessage("[PocketMap] Marker '$name' is added to world '{$args["world"]}'");
-        else $sender->sendMessage("§cSomething went wrong");
+        $sender->sendMessage($this->getUsageMessage());
     }
 
     /**
-     * @throws ArgumentOrderException
      */
     protected function prepare(): void
     {
@@ -72,11 +46,10 @@ class MarkerAddCommand extends BaseSubCommand
 
         $this->setPermissions(["pocketmap.cmd.marker.add"]);
 
-        $this->registerArgument(0, new RawStringArgument("name"));
-        $this->registerArgument(1, new MarkerIconArgument("icon", $plugin->getMarkers()));
-        $this->registerArgument(2, new BlockPositionArgument("pos", true));
-        $this->registerArgument(3, new RawStringArgument("world", true));
-        $this->registerArgument(4, new RawStringArgument("id", true));
+        $this->registerSubCommand(new MarkerAddIconCommand($plugin, "icon", "Create an icon marker", ["i"]));
+        $this->registerSubCommand(new MarkerAddCircleCommand($plugin, "circle", "Create an icon marker", ["c"]));
+        $this->registerSubCommand(new MarkerAddAreaCommand($plugin, "area", "Create an icon marker", ["a"]));
+        $this->registerSubCommand(new MarkerAddLineCommand($plugin, "line", "Create an icon marker", ["l"]));
 
 
     }

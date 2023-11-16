@@ -94,7 +94,7 @@ class MarkerManager
         return $this->addPositionMarker($name, $data, $pos, $id);
     }
 
-    public function addPositionMarker(string $name, array $data, Position $pos, ?string $id = null): bool
+    protected function addPositionMarker(string $name, array $data, Position $pos, ?string $id = null): bool
     {
         $data["pos"] = [
             "x" => $pos->getX(),
@@ -104,7 +104,7 @@ class MarkerManager
         return $this->addMarker($name, $data, $pos->getWorld(), $id);
     }
 
-    public function addMarker(string $name, array $data, World $world, ?string $id = null): bool
+    protected function addMarker(string $name, array $data, World $world, ?string $id = null): bool
     {
         $this->update();
         if (!isset($data["type"])) return false;
@@ -113,7 +113,6 @@ class MarkerManager
 
         $id = $id ?? strval(count($this->markers[$worldName]));
         $marker = [
-            "id" => $id,
             "name" => $name,
             "data" => $data,
         ];
@@ -140,7 +139,7 @@ class MarkerManager
      */
     private function encode(): void
     {
-        $data = json_encode($this->markers);
+        $data = json_encode($this->markers, JSON_PRETTY_PRINT);
         file_put_contents($this->folder . "markers.json", $data);
     }
 
@@ -155,7 +154,7 @@ class MarkerManager
      * @param string|null $id
      * @return bool
      */
-    public function addCircleMarker(string $name, Position $pos, int $radius, string $color = "red", bool $fill = false, ?string $fillColor = null, ?string $id = null): bool
+    public function addCircleMarker(string $name, Position $pos, int $radius, ?string $id = null, string $color = "red", bool $fill = false, ?string $fillColor = null): bool
     {
 
         $options = $this->getLeafletOptions($color, $fill, $fillColor);
@@ -169,7 +168,7 @@ class MarkerManager
         return $this->addPositionMarker($name, $data, $pos, $id);
     }
 
-    public function getLeafletOptions(string $color, bool $fill, ?string $fillColor = null): array
+    protected function getLeafletOptions(string $color, bool $fill, ?string $fillColor = null): array
     {
         return [
             "color" => $color,
@@ -189,7 +188,7 @@ class MarkerManager
      * @param string|null $id
      * @return bool
      */
-    public function addPolygonMarker(string $name, array $positions, World $world, string $color = "red", bool $fill = false, ?string $fillColor = null, ?string $id = null): bool
+    public function addPolygonMarker(string $name, array $positions, World $world, ?string $id = null, string $color = "red", bool $fill = false, ?string $fillColor = null): bool
     {
         $data = [
             "type" => self::TYPE_POLYGON,
@@ -199,7 +198,7 @@ class MarkerManager
         return $this->addMultiPositionMarker($name, $data, $positions, $world, $id);
     }
 
-    public function addMultiPositionMarker(string $name, array $data, array $positions, World $world, ?string $id = null): bool
+    protected function addMultiPositionMarker(string $name, array $data, array $positions, World $world, ?string $id = null): bool
     {
         // add all positions
         $data["positions"] = [];
@@ -224,10 +223,10 @@ class MarkerManager
      * @param string|null $id
      * @return bool
      */
-    public function addPolylineMarker(string $name, array $positions, World $world, string $color = "red", bool $fill = false, ?string $fillColor = null, ?string $id = null): bool
+    public function addPolylineMarker(string $name, array $positions, World $world, ?string $id = null, string $color = "red", bool $fill = false, ?string $fillColor = null): bool
     {
         $data = [
-            "type" => self::TYPE_POLYGON,
+            "type" => self::TYPE_POLYLINE,
             "options" => $this->getLeafletOptions($color, $fill, $fillColor)
         ];
 

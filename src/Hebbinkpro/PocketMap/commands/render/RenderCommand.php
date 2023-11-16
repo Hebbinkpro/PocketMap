@@ -17,7 +17,7 @@
  * (at your option) any later version.
  */
 
-namespace Hebbinkpro\PocketMap\commands;
+namespace Hebbinkpro\PocketMap\commands\render;
 
 use CortexPE\Commando\args\IntegerArgument;
 use CortexPE\Commando\args\RawStringArgument;
@@ -84,7 +84,12 @@ class RenderCommand extends BaseSubCommand
      */
     protected function prepare(): void
     {
+        /** @var PocketMap $plugin */
+        $plugin = $this->getOwningPlugin();
+
         $this->setPermissions(["pocketmap.cmd.render"]);
+
+        $this->registerSubCommand(new RenderFullCommand($plugin, "full", "Create a full world render"));
 
         $this->registerArgument(0, new IntegerArgument("x", true));
         $this->registerArgument(1, new IntegerArgument("z", true));

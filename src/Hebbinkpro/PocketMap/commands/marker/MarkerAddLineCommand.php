@@ -19,44 +19,29 @@
 
 namespace Hebbinkpro\PocketMap\commands\marker;
 
+use CortexPE\Commando\args\BlockPositionArgument;
 use CortexPE\Commando\args\RawStringArgument;
 use CortexPE\Commando\BaseSubCommand;
 use CortexPE\Commando\exception\ArgumentOrderException;
 use Hebbinkpro\PocketMap\PocketMap;
 use pocketmine\command\CommandSender;
+use pocketmine\math\Vector3;
 use pocketmine\player\Player;
+use pocketmine\world\World;
 
-class MarkerRemoveCommand extends BaseSubCommand
+class MarkerAddLineCommand extends MarkerAddAreaCommand
 {
 
-    public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
-    {
+    protected function addMarker(string $name, Vector3 $pos1, Vector3 $pos2, World $world, ?string $id): bool {
         /** @var PocketMap $plugin */
         $plugin = $this->getOwningPlugin();
 
-        if (!isset($args["world"])) {
-            if ($sender instanceof Player) $args["world"] = $sender->getWorld()->getFolderName();
-            else {
-                $sender->sendMessage("§cNo world given");
-                return;
-            }
-        }
-        $world = $plugin->getServer()->getWorldManager()->getWorldByName($args["world"]);
-        $res = PocketMap::getMarkers()->removeMarker($args["id"], $world);
+        // create a rectangular polygon positions list
+        $positions = [
+            $pos1,
+            $pos2
+        ];
 
-        if ($res) $sender->sendMessage("[PocketMap] Marker " . $args["id"] . " is removed.");
-        else $sender->sendMessage("§cMarker does not exist in world '{$args["world"]}'");
-
-    }
-
-    /**
-     * @throws ArgumentOrderException
-     */
-    protected function prepare(): void
-    {
-        $this->setPermissions(["pocketmap.cmd.marker.remove"]);
-
-        $this->registerArgument(0, new RawStringArgument("id"));
-        $this->registerArgument(1, new RawStringArgument("world", true));
+        return PocketMap::getMarkers()->addPolylineMarker($name, $positions, $world, $id);
     }
 }
