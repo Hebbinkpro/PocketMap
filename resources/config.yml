@@ -1,24 +1,12 @@
 # the config.yml version DO NOT CHANGE
-version: 1.5
+version: 1.6
 
 # Settings for the renderer
 renderer:
-  # Settings for the chunk loader
-  # The chunk loader loads all chunks so that they are ready for rendering
-  chunk-loader:
-    # The amount of chunks the chunk loader can load in a single run
-    # Every scheduler.run-period, the chunk-loader will run
-    # Setting this number too high will cause the server to lag because of a very long loop
-    # A too low number will cause a slower map generation
-    # Default: 128
-    chunks-per-run: 128
-    # Max amount of chunks that can be queued at the same time
-    queue-size: 256
-
   # Settings for the chunk renderer
   # The chunk renderer manages when a chunk is added to the scheduler
-  chunk-renderer:
-    # in which interval in ticks the chunk renderer will run
+  chunk-scheduler:
+    # in which interval in ticks the chunk scheduler will run
     # Default: 10
     run-period: 10
     # the cooldown in seconds a chunk is not updated when there are updates inside the chunk
@@ -34,6 +22,14 @@ renderer:
     # The best is to yield a bit more than the scheduler can handle simultaneously
     # Default: 16
     generator-yield: 16
+    # The amount of chunks the chunk loader can load in a single run
+    # Every scheduler.run-period, the chunk-loader will run
+    # Setting this number too high will cause the server to lag because of a very long loop
+    # A too low number will cause a slower map generation
+    # Default: 128
+    chunks-per-run: 128
+    # Max amount of chunks that can be queued at the same time
+    queue-size: 256
 
   scheduler:
     # in which interval in ticks the chunk renderer will run

@@ -53,8 +53,8 @@ class ChunkSchedulerTask extends Task
         $this->queuedRegions = [];
         $this->chunkGenerators = [];
 
-        $this->enableCache = PocketMap::getConfigManger()->getBool("renderer.chunk-renderer.region-cache", true);
-        $this->maxQueueSize = PocketMap::getConfigManger()->getInt("chunk-loader.queue-size", 256);
+        $this->enableCache = PocketMap::getConfigManger()->getBool("renderer.chunk-scheduler.region-cache", true);
+        $this->maxQueueSize = PocketMap::getConfigManger()->getInt("chunk-scheduler.queue-size", 256);
 
         if ($this->enableCache) $this->readFromCache();
     }
@@ -141,7 +141,7 @@ class ChunkSchedulerTask extends Task
     {
         $finished = [];
 
-        $maxLoad = PocketMap::getConfigManger()->getInt("renderer.chunk-renderer.generator-yield", 10);
+        $maxLoad = PocketMap::getConfigManger()->getInt("renderer.chunk-scheduler.generator-yield", 10);
         $loaded = 0;
 
         foreach ($this->chunkGenerators as $worldName => $worldChunks) {

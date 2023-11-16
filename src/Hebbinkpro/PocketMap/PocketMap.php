@@ -119,9 +119,9 @@ class PocketMap extends PluginBase implements Listener
     /**
      * @return MarkerManager
      */
-    public function getMarkers(): MarkerManager
+    public static function getMarkers(): MarkerManager
     {
-        return $this->markers;
+        return self::$instance->markers;
     }
 
     /**
@@ -287,7 +287,7 @@ class PocketMap extends PluginBase implements Listener
 
         // start the chunk update task, this check every period if regions have to be updated
         $this->chunkScheduler = new ChunkSchedulerTask($this);
-        $this->getScheduler()->scheduleRepeatingTask($this->chunkScheduler, $this->configManager->getInt("renderer.chunk-renderer.run-period", 10));
+        $this->getScheduler()->scheduleRepeatingTask($this->chunkScheduler, $this->configManager->getInt("renderer.chunk-scheduler.run-period", 10));
 
         // start the api update task
         $updateApiTask = new UpdateApiTask($this, $this->getDataFolder() . "tmp/api/");
