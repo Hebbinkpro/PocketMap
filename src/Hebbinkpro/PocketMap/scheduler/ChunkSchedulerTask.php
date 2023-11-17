@@ -22,7 +22,9 @@ namespace Hebbinkpro\PocketMap\scheduler;
 use Generator;
 use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\region\PartialRegion;
+use Hebbinkpro\PocketMap\region\Region;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
+use PhpParser\Node\Expr\Isset_;
 use pocketmine\scheduler\Task;
 
 class ChunkSchedulerTask extends Task
@@ -39,7 +41,7 @@ class ChunkSchedulerTask extends Task
     private array $queuedRegions;
 
     /**
-     * @var array{renderer: WorldRenderer, chunks: Generator, type: int}[]
+     * @var array<array{renderer: WorldRenderer, chunks: Generator, type: int}>
      */
     private array $chunkGenerators;
 
@@ -54,7 +56,7 @@ class ChunkSchedulerTask extends Task
         $this->chunkGenerators = [];
 
         $this->enableCache = PocketMap::getConfigManger()->getBool("renderer.chunk-scheduler.region-cache", true);
-        $this->maxQueueSize = PocketMap::getConfigManger()->getInt("chunk-scheduler.queue-size", 256);
+        $this->maxQueueSize = PocketMap::getConfigManger()->getInt("renderer.chunk-scheduler.queue-size", 256);
 
         if ($this->enableCache) $this->readFromCache();
     }
@@ -79,16 +81,36 @@ class ChunkSchedulerTask extends Task
      * @param WorldRenderer $renderer
      * @param Generator $chunks
      * @param int $type
-     * @return void
+     * @param string|null $id the id to distinct renders
+     * @return bool false if the id already exists
      */
-    public function addChunks(WorldRenderer $renderer, Generator $chunks, int $type = self::CHUNK_GENERATOR_KEY): void
+    public function addChunks(WorldRenderer $renderer, Generator $chunks, int $type = self::CHUNK_GENERATOR_KEY, string $id = null): bool
     {
-        $this->pocketMap->getLogger()->debug("Adding chunks generator for world: {$renderer->getWorld()->getFolderName()}");
-        $this->chunkGenerators[$renderer->getWorld()->getFolderName()] = [
+        $world = $renderer->getWorld()->getFolderName();
+        if (isset($this->chunkGenerators[$world])) return false;
+
+        if ($id == null) $id = $world;
+        $this->pocketMap->getLogger()->info("[Chunk Scheduler] Starting chunks generator for world '$id'");
+
+        $this->chunkGenerators[$id] = [
             "renderer" => $renderer,
             "chunks" => $chunks,
-            "type" => $type
+            "type" => $type,
+            "count" => 0
         ];
+
+
+        return true;
+    }
+
+    /**
+     * Add all chunks in the given region to the scheduler
+     * @param WorldRenderer $renderer
+     * @param Region $region
+     * @return bool false if the same region or full world render is added
+     */
+    public function addChunksByRegion(WorldRenderer $renderer, Region $region): bool {
+        return $this->addChunks($renderer, $region->getChunks(), self::CHUNK_GENERATOR_CURRENT, $region->getName());
     }
 
     /**
@@ -153,18 +175,29 @@ class ChunkSchedulerTask extends Task
             $type = $worldChunks["type"];
 
             while ($chunks->valid() && $loaded < $maxLoad && count($this->queuedRegions) < $this->maxQueueSize) {
-                if ($type == self::CHUNK_GENERATOR_KEY) [$cx, $cz] = $chunks->key();
-                else if ($type == self::CHUNK_GENERATOR_CURRENT) [$cx, $cz] = $chunks->current();
-                else continue;
+                [$cx,$cz] = match($type) {
+                    self::CHUNK_GENERATOR_KEY => $chunks->key(),
+                    self::CHUNK_GENERATOR_CURRENT => $chunks->current(),
+                    default => [null, null]
+                };
+
+                // invalid generator type
+                if ([$cx,$cz] === [null, null]) {
+                    $this->pocketMap->getLogger()->error("[Chunk Scheduler] Cannot add chunks with invalid generator type: $type");
+                    $finished[] = $worldName;
+                    break;
+                }
 
                 $this->addChunk($renderer, $cx, $cz);
+                var_dump("Added chunk $cx,$cz in world '$worldName' to the queue");
                 $chunks->next();
                 $loaded++;
+                $worldChunks["count"]++;
             }
 
             // finished with loading
             if (!$chunks->valid()) {
-                $this->pocketMap->getLogger()->debug("Chunks generator for world: {$renderer->getWorld()->getFolderName()} is finished");
+                $this->pocketMap->getLogger()->info("[Chunk Scheduler] Chunks generator for world '{$worldName}' is finished. Loaded {$worldChunks["count"]} chunks.");
                 $finished[] = $worldName;
             }
 
@@ -178,7 +211,7 @@ class ChunkSchedulerTask extends Task
     }
 
     /**
-     * Add the smallest region the chunk is in to the render queue
+     * Add A chunk region to the region queue
      * @param WorldRenderer $renderer
      * @param int $chunkX
      * @param int $chunkZ
@@ -187,12 +220,8 @@ class ChunkSchedulerTask extends Task
     public function addChunk(WorldRenderer $renderer, int $chunkX, int $chunkZ): void
     {
         $region = $renderer->getChunkRegion($chunkX, $chunkZ);
-        if (!array_key_exists($region->getName(), $this->queuedRegions)) {
-            $this->queuedRegions[$region->getName()] = $region;
-        }
+        $region->addChunk($chunkX, $chunkZ);
 
-        // make sure the chunk is saved
-        $renderer->saveChunk($chunkX, $chunkZ);
-        $this->queuedRegions[$region->getName()]->addChunk($chunkX, $chunkZ);
+        $this->queuedRegions[$region->getName()] = $region;
     }
 }
