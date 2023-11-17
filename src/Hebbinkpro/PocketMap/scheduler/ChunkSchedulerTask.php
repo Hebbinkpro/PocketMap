@@ -186,11 +186,13 @@ class ChunkSchedulerTask extends Task
      */
     public function addChunk(WorldRenderer $renderer, int $chunkX, int $chunkZ): void
     {
-        $region = $renderer->getSmallestRegion($chunkX, $chunkZ);
+        $region = $renderer->getChunkRegion($chunkX, $chunkZ);
         if (!array_key_exists($region->getName(), $this->queuedRegions)) {
             $this->queuedRegions[$region->getName()] = $region;
         }
 
+        // make sure the chunk is saved
+        $renderer->saveChunk($chunkX, $chunkZ);
         $this->queuedRegions[$region->getName()]->addChunk($chunkX, $chunkZ);
     }
 }

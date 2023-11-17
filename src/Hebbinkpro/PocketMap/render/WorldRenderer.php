@@ -111,12 +111,12 @@ class WorldRenderer
     }
 
     /**
-     * Get the smallest region the chunk is in
+     * Get a region with the size of a single chunk
      * @param int $x the x coordinate of the chunk
      * @param int $z the z coordinate of the chunk
      * @return PartialRegion
      */
-    public function getSmallestRegion(int $x, int $z): PartialRegion
+    public function getChunkRegion(int $x, int $z): PartialRegion
     {
         return new PartialRegion($this->world->getFolderName(), self::MIN_ZOOM, $x, $z, $this->terrainTextures);
     }
