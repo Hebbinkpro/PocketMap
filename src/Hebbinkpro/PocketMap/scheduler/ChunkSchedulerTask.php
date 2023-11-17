@@ -41,6 +41,7 @@ class ChunkSchedulerTask extends Task
      */
     private array $chunkGenerators;
 
+    private int $maxGeneratorYield;
     private int $maxQueueSize;
 
     public function __construct(PocketMap $pocketMap)
@@ -49,6 +50,7 @@ class ChunkSchedulerTask extends Task
         $this->queuedRegions = [];
         $this->chunkGenerators = [];
 
+        $this->maxGeneratorYield = PocketMap::getConfigManger()->getInt("renderer.chunk-scheduler.generator-yield", 32);
         $this->maxQueueSize = PocketMap::getConfigManger()->getInt("renderer.chunk-scheduler.queue-size", 256);
     }
 
@@ -76,7 +78,7 @@ class ChunkSchedulerTask extends Task
         $world = $renderer->getWorld()->getFolderName();
         if (isset($this->chunkGenerators[$world])) return false;
 
-        if ($id == null) $id = $world;
+        if ($id === null) $id = $world;
         $this->pocketMap->getLogger()->info("[Chunk Scheduler] Starting chunks generator for world '$id'");
 
         $this->chunkGenerators[$id] = [
@@ -133,8 +135,7 @@ class ChunkSchedulerTask extends Task
     private function loadChunksFromGenerators(): void
     {
         $finished = [];
-
-        $maxLoad = PocketMap::getConfigManger()->getInt("renderer.chunk-scheduler.generator-yield", 10);
+        
         $loaded = 0;
 
         foreach ($this->chunkGenerators as $worldName => $worldChunks) {
@@ -145,7 +146,7 @@ class ChunkSchedulerTask extends Task
             /** @var int $type */
             $type = $worldChunks["type"];
 
-            while ($chunks->valid() && $loaded < $maxLoad && count($this->queuedRegions) < $this->maxQueueSize) {
+            while ($chunks->valid() && $loaded < $this->maxGeneratorYield && count($this->queuedRegions) < $this->maxQueueSize) {
                 [$cx, $cz] = match ($type) {
                     self::CHUNK_GENERATOR_KEY => $chunks->key(),
                     self::CHUNK_GENERATOR_CURRENT => $chunks->current(),
@@ -160,7 +161,6 @@ class ChunkSchedulerTask extends Task
                 }
 
                 $this->addChunk($renderer, $cx, $cz);
-                var_dump("Added chunk $cx,$cz in world '$worldName' to the queue");
                 $chunks->next();
                 $loaded++;
                 $worldChunks["count"]++;
@@ -173,7 +173,7 @@ class ChunkSchedulerTask extends Task
             }
 
             // the max amount of chunks of this run is loaded
-            if ($loaded >= $maxLoad || count($this->queuedRegions) >= $this->maxQueueSize) break;
+            if ($loaded >= $this->maxGeneratorYield || count($this->queuedRegions) >= $this->maxQueueSize) break;
         }
 
         foreach ($finished as $worldName) {

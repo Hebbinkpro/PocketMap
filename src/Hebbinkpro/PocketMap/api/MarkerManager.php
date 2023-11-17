@@ -242,7 +242,7 @@ class MarkerManager
     public function removeMarker(string $id, World $world): bool
     {
         $this->update();
-        if ($this->getMarker($id, $world) == null) return false;
+        if ($this->getMarker($id, $world) === null) return false;
 
         unset($this->markers[$world->getFolderName()][$id]);
         $this->encode();

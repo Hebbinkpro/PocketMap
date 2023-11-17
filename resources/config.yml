@@ -16,7 +16,7 @@ renderer:
     # This is used for rendering full worlds, the generator yields all chunks inside the world
     # The best is to yield a bit more than the scheduler can handle simultaneously
     # Default: 16
-    generator-yield: 16
+    generator-yield: 32
     # The amount of chunks the chunk loader can load in a single run
     # Every scheduler.run-period, the chunk-loader will run
     # Setting this number too high will cause the server to lag because of a very long loop
@@ -35,8 +35,8 @@ renderer:
     # Default: 4
     renders: 4
     # The queue size of the scheduler
-    # Default: 16
-    queue-size: 16
+    # Default: 32
+    queue-size: 32
 
 
 # Settings for the web server
@@ -94,11 +94,3 @@ textures:
     # Set to 0 if you want to disable the overlay.
     # Default: 3 (min: 0, max: 127)
     alpha: 3
-
-# Startup settings
-# These settings will influence the behaviour of PocketMap when the server starts.
-startup:
-  # Reload all web files on a server startup.
-  # This will reset all the web files back to the original files on each startup.
-  # default: false
-  reload-web-files: false

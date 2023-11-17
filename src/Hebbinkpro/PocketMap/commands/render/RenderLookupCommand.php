@@ -56,7 +56,7 @@ class RenderLookupCommand extends BaseSubCommand
             $sender->sendMessage("- " . $region->getName());
 
             $region = $region->getNextZoomRegion();
-            if ($region == null) break;
+            if ($region === null) break;
         }
     }
 

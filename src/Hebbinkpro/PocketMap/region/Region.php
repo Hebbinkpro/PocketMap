@@ -71,7 +71,7 @@ class Region extends BaseRegion
     public function getNextZoomRegion(): ?Region
     {
         $base = parent::getNextZoomRegion();
-        if ($base == null) return null;
+        if ($base === null) return null;
 
         return new Region($this->worldName, $base->getZoom(), $base->getX(), $base->getZ(), $this->getTerrainTextures());
     }

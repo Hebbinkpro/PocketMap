@@ -52,8 +52,8 @@ class RenderSchedulerTask extends Task
         $this->scheduledChunkLoaders = [];
         $this->scheduledRenders = [];
 
-        $this->maxRunningRenders = PocketMap::getConfigManger()->getInt("renderer.scheduler.renders", 5);
-        $this->maxScheduled = PocketMap::getConfigManger()->getInt("renderer.scheduler.queue-size", 25);
+        $this->maxRunningRenders = PocketMap::getConfigManger()->getInt("renderer.scheduler.renders", 4);
+        $this->maxScheduled = PocketMap::getConfigManger()->getInt("renderer.scheduler.queue-size", 32);
 
         self::$logger = $plugin->getLogger();
     }

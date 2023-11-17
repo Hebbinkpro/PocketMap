@@ -48,7 +48,7 @@ class MarkerAddCircleCommand extends BaseSubCommand
             return;
         }
         $world = $plugin->getServer()->getWorldManager()->getWorldByName($args["world"]);
-        if ($world == null) {
+        if ($world === null) {
             $sender->sendMessage("§cInvalid world given");
             return;
         }
