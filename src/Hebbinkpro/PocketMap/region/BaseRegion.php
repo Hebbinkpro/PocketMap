@@ -28,7 +28,8 @@ class BaseRegion
     private int $x;
     private int $z;
 
-    public function __construct(int $zoom, int $regionX, int $regionZ) {
+    public function __construct(int $zoom, int $regionX, int $regionZ)
+    {
         $this->zoom = $zoom;
         $this->x = $regionX;
         $this->z = $regionZ;

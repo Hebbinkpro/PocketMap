@@ -27,25 +27,10 @@ use Hebbinkpro\PocketMap\PocketMap;
 use pocketmine\command\CommandSender;
 use pocketmine\math\Vector3;
 use pocketmine\player\Player;
-use pocketmine\world\Position;
 use pocketmine\world\World;
 
 class MarkerAddAreaCommand extends BaseSubCommand
 {
-
-    /**
-     * @throws ArgumentOrderException
-     */
-    protected function prepare(): void
-    {
-        $this->setPermissions(["pocketmap.cmd.marker.add"]);
-
-        $this->registerArgument(0, new RawStringArgument("name"));
-        $this->registerArgument(1, new BlockPositionArgument("pos1"));
-        $this->registerArgument(2, new BlockPositionArgument("pos2", true));
-        $this->registerArgument(3, new RawStringArgument("world", true));
-        $this->registerArgument(4, new RawStringArgument("id", true));
-    }
 
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
@@ -76,13 +61,13 @@ class MarkerAddAreaCommand extends BaseSubCommand
 
         if ($this->addMarker($name, $pos1, $pos2, $world, $id)) {
             $sender->sendMessage("[PocketMap] Marker '$name' is added to world '{$args["world"]}'");
-        }
-        else $sender->sendMessage("§cSomething went wrong");
+        } else $sender->sendMessage("§cSomething went wrong");
 
 
     }
 
-    protected function addMarker(string $name, Vector3 $pos1, Vector3 $pos2, World $world, ?string $id): bool {
+    protected function addMarker(string $name, Vector3 $pos1, Vector3 $pos2, World $world, ?string $id): bool
+    {
         /** @var PocketMap $plugin */
         $plugin = $this->getOwningPlugin();
 
@@ -95,5 +80,19 @@ class MarkerAddAreaCommand extends BaseSubCommand
         ];
 
         return PocketMap::getMarkers()->addPolygonMarker($name, $positions, $world, $id);
+    }
+
+    /**
+     * @throws ArgumentOrderException
+     */
+    protected function prepare(): void
+    {
+        $this->setPermissions(["pocketmap.cmd.marker.add"]);
+
+        $this->registerArgument(0, new RawStringArgument("name"));
+        $this->registerArgument(1, new BlockPositionArgument("pos1"));
+        $this->registerArgument(2, new BlockPositionArgument("pos2", true));
+        $this->registerArgument(3, new RawStringArgument("world", true));
+        $this->registerArgument(4, new RawStringArgument("id", true));
     }
 }

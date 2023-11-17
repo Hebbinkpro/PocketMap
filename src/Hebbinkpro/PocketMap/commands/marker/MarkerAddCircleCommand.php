@@ -33,20 +33,6 @@ use pocketmine\world\Position;
 class MarkerAddCircleCommand extends BaseSubCommand
 {
 
-    /**
-     * @throws ArgumentOrderException
-     */
-    protected function prepare(): void
-    {
-        $this->setPermissions(["pocketmap.cmd.marker.add"]);
-
-        $this->registerArgument(0, new RawStringArgument("name"));
-        $this->registerArgument(1, new IntegerArgument("radius"));
-        $this->registerArgument(2, new BlockPositionArgument("pos", true));
-        $this->registerArgument(3, new RawStringArgument("world", true));
-        $this->registerArgument(4, new RawStringArgument("id", true));
-    }
-
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
         /** @var PocketMap $plugin */
@@ -75,5 +61,19 @@ class MarkerAddCircleCommand extends BaseSubCommand
         $res = PocketMap::getMarkers()->addCircleMarker($name, $pos, $r, $id);
         if ($res) $sender->sendMessage("[PocketMap] Marker '$name' is added to world '{$args["world"]}'");
         else $sender->sendMessage("§cSomething went wrong");
+    }
+
+    /**
+     * @throws ArgumentOrderException
+     */
+    protected function prepare(): void
+    {
+        $this->setPermissions(["pocketmap.cmd.marker.add"]);
+
+        $this->registerArgument(0, new RawStringArgument("name"));
+        $this->registerArgument(1, new IntegerArgument("radius"));
+        $this->registerArgument(2, new BlockPositionArgument("pos", true));
+        $this->registerArgument(3, new RawStringArgument("world", true));
+        $this->registerArgument(4, new RawStringArgument("id", true));
     }
 }

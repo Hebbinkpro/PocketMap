@@ -24,7 +24,6 @@ use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\region\PartialRegion;
 use Hebbinkpro\PocketMap\region\Region;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
-use PhpParser\Node\Expr\Isset_;
 use pocketmine\scheduler\Task;
 
 class ChunkSchedulerTask extends Task
@@ -54,6 +53,17 @@ class ChunkSchedulerTask extends Task
     }
 
     /**
+     * Add all chunks in the given region to the scheduler
+     * @param WorldRenderer $renderer
+     * @param Region $region
+     * @return bool false if the same region or full world render is added
+     */
+    public function addChunksByRegion(WorldRenderer $renderer, Region $region): bool
+    {
+        return $this->addChunks($renderer, $region->getChunks(), self::CHUNK_GENERATOR_CURRENT, $region->getName());
+    }
+
+    /**
      * Add a list of chunks to the render queue
      * @param WorldRenderer $renderer
      * @param Generator $chunks
@@ -78,16 +88,6 @@ class ChunkSchedulerTask extends Task
 
 
         return true;
-    }
-
-    /**
-     * Add all chunks in the given region to the scheduler
-     * @param WorldRenderer $renderer
-     * @param Region $region
-     * @return bool false if the same region or full world render is added
-     */
-    public function addChunksByRegion(WorldRenderer $renderer, Region $region): bool {
-        return $this->addChunks($renderer, $region->getChunks(), self::CHUNK_GENERATOR_CURRENT, $region->getName());
     }
 
     /**
@@ -146,14 +146,14 @@ class ChunkSchedulerTask extends Task
             $type = $worldChunks["type"];
 
             while ($chunks->valid() && $loaded < $maxLoad && count($this->queuedRegions) < $this->maxQueueSize) {
-                [$cx,$cz] = match($type) {
+                [$cx, $cz] = match ($type) {
                     self::CHUNK_GENERATOR_KEY => $chunks->key(),
                     self::CHUNK_GENERATOR_CURRENT => $chunks->current(),
                     default => [null, null]
                 };
 
                 // invalid generator type
-                if ([$cx,$cz] === [null, null]) {
+                if ([$cx, $cz] === [null, null]) {
                     $this->pocketMap->getLogger()->error("[Chunk Scheduler] Cannot add chunks with invalid generator type: $type");
                     $finished[] = $worldName;
                     break;

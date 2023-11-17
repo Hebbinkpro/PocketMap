@@ -36,16 +36,16 @@ class TorchModel extends HorizontalFacingModel
                 return [
                     // top
                     [
-                        [7,6], // start
-                        [2,2], // size
-                        [7,11]  // dest
+                        [7, 6], // start
+                        [2, 2], // size
+                        [7, 11]  // dest
                     ],
                     // stick
                     [
-                        [7,8],
-                        [2,8],
-                        [7,13],
-                        [2,3]
+                        [7, 8],
+                        [2, 8],
+                        [7, 13],
+                        [2, 3]
                     ]
                 ];
             }
@@ -54,9 +54,9 @@ class TorchModel extends HorizontalFacingModel
         // top in a block center
         return [
             [
-                [7,6], // start
-                [2,2], // size
-                [7,7]  // dest
+                [7, 6], // start
+                [2, 2], // size
+                [7, 7]  // dest
             ]
         ];
     }

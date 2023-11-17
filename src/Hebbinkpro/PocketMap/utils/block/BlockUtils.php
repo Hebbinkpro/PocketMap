@@ -113,13 +113,6 @@ class BlockUtils
         return in_array(HorizontalFacingTrait::class, self::getTraits($block));
     }
 
-    public static function hasCount(Block $block): bool {
-        return match ($block->getTypeId()) {
-            BlockTypeIds::SEA_PICKLE, BlockTypeIds::CANDLE, BlockTypeIds::DYED_CANDLE => true,
-            default => false
-        };
-    }
-
     /**
      * Get a list of all traits a block (including traits in its parent classes) is using
      * @param Block $block
@@ -162,6 +155,14 @@ class BlockUtils
         }
 
         return $parents;
+    }
+
+    public static function hasCount(Block $block): bool
+    {
+        return match ($block->getTypeId()) {
+            BlockTypeIds::SEA_PICKLE, BlockTypeIds::CANDLE, BlockTypeIds::DYED_CANDLE => true,
+            default => false
+        };
     }
 
     public static function hasSignLikeRotation(Block $block): bool

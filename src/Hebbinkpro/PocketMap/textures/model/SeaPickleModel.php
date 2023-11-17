@@ -29,22 +29,22 @@ class SeaPickleModel extends GroupModel
     {
         return [
             [
-                [6,6]
+                [6, 6]
             ],
             [
-                [4,4],
-                [8,8]
+                [4, 4],
+                [8, 8]
             ],
             [
-                [3,3],
-                [8,4],
-                [6,9]
+                [3, 3],
+                [8, 4],
+                [6, 9]
             ],
             [
-                [3,3],
-                [9,2],
-                [2,9],
-                [9,10]
+                [3, 3],
+                [9, 2],
+                [2, 9],
+                [9, 10]
             ]
         ];
     }
@@ -57,13 +57,13 @@ class SeaPickleModel extends GroupModel
         return [
             // bottom part of the top texture
             [
-                [8,1],
-                [4,4],
+                [8, 1],
+                [4, 4],
             ],
             // top part of the top texture
             [
-                [4,1],
-                [4,4]
+                [4, 1],
+                [4, 4]
             ]
         ];
     }

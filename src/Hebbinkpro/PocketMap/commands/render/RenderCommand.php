@@ -24,7 +24,6 @@ use CortexPE\Commando\args\RawStringArgument;
 use CortexPE\Commando\BaseSubCommand;
 use CortexPE\Commando\exception\ArgumentOrderException;
 use Hebbinkpro\PocketMap\PocketMap;
-use Hebbinkpro\PocketMap\scheduler\ChunkSchedulerTask;
 use pocketmine\command\CommandSender;
 use pocketmine\player\Player;
 
@@ -76,7 +75,7 @@ class RenderCommand extends BaseSubCommand
         $res = $plugin->getChunkScheduler()->addChunksByRegion($renderer, $region);
 
         if ($res) $sender->sendMessage("[PocketMap] Rendering region: " . $region->getName() . " (" . $region->getTotalChunks() . " chunks)");
-        else $sender->sendMessage("§cCannot render region ".$region->getName().", already scheduled.");
+        else $sender->sendMessage("§cCannot render region " . $region->getName() . ", already scheduled.");
 
     }
 

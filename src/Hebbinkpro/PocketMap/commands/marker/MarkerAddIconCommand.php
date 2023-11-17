@@ -32,24 +32,6 @@ use pocketmine\world\Position;
 class MarkerAddIconCommand extends BaseSubCommand
 {
 
-    /**
-     * @throws ArgumentOrderException
-     */
-    protected function prepare(): void
-    {
-        $this->setPermissions(["pocketmap.cmd.marker.add"]);
-
-
-        /** @var PocketMap $plugin */
-        $plugin = $this->getOwningPlugin();
-
-        $this->registerArgument(0, new RawStringArgument("name"));
-        $this->registerArgument(1, new MarkerIconArgument("icon", PocketMap::getMarkers()));
-        $this->registerArgument(2, new BlockPositionArgument("pos", true));
-        $this->registerArgument(3, new RawStringArgument("world", true));
-        $this->registerArgument(4, new RawStringArgument("id", true));
-    }
-
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
         /** @var PocketMap $plugin */
@@ -78,5 +60,23 @@ class MarkerAddIconCommand extends BaseSubCommand
         $res = PocketMap::getMarkers()->addIconMarker($name, $pos, $icon, $id);
         if ($res) $sender->sendMessage("[PocketMap] Marker '$name' is added to world '{$args["world"]}'");
         else $sender->sendMessage("§cSomething went wrong");
+    }
+
+    /**
+     * @throws ArgumentOrderException
+     */
+    protected function prepare(): void
+    {
+        $this->setPermissions(["pocketmap.cmd.marker.add"]);
+
+
+        /** @var PocketMap $plugin */
+        $plugin = $this->getOwningPlugin();
+
+        $this->registerArgument(0, new RawStringArgument("name"));
+        $this->registerArgument(1, new MarkerIconArgument("icon", PocketMap::getMarkers()));
+        $this->registerArgument(2, new BlockPositionArgument("pos", true));
+        $this->registerArgument(3, new RawStringArgument("world", true));
+        $this->registerArgument(4, new RawStringArgument("id", true));
     }
 }

@@ -19,7 +19,6 @@
 
 namespace Hebbinkpro\PocketMap\region;
 
-use Generator;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
 
@@ -58,7 +57,6 @@ class Region extends BaseRegion
         if (!$includeWorld) return parent::getName();
         return $this->getWorldName() . "/" . parent::getName();
     }
-
 
 
     /**

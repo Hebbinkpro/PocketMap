@@ -29,16 +29,6 @@ use pocketmine\player\Player;
 class RenderFullCommand extends BaseSubCommand
 {
 
-    /**
-     * @throws ArgumentOrderException
-     */
-    protected function prepare(): void
-    {
-        $this->setPermissions(["pocketmap.cmd.render.full"]);
-
-        $this->registerArgument(0, new RawStringArgument("world", true));
-    }
-
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
         /** @var PocketMap $plugin */
@@ -62,8 +52,18 @@ class RenderFullCommand extends BaseSubCommand
             }
             $renderer = PocketMap::getWorldRenderer($world);
         }
-        
+
         $renderer->startFullWorldRender();
         $sender->sendMessage("[PocketMap] Started full render of world '$world'");
+    }
+
+    /**
+     * @throws ArgumentOrderException
+     */
+    protected function prepare(): void
+    {
+        $this->setPermissions(["pocketmap.cmd.render.full"]);
+
+        $this->registerArgument(0, new RawStringArgument("world", true));
     }
 }

@@ -29,7 +29,6 @@ use pocketmine\block\Fence;
 use pocketmine\block\FenceGate;
 use pocketmine\block\Flower;
 use pocketmine\block\PressurePlate;
-use pocketmine\block\RedstoneTorch;
 use pocketmine\block\Sapling;
 use pocketmine\block\Stair;
 use pocketmine\block\Thin;

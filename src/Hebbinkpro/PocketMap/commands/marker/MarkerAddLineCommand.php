@@ -19,20 +19,15 @@
 
 namespace Hebbinkpro\PocketMap\commands\marker;
 
-use CortexPE\Commando\args\BlockPositionArgument;
-use CortexPE\Commando\args\RawStringArgument;
-use CortexPE\Commando\BaseSubCommand;
-use CortexPE\Commando\exception\ArgumentOrderException;
 use Hebbinkpro\PocketMap\PocketMap;
-use pocketmine\command\CommandSender;
 use pocketmine\math\Vector3;
-use pocketmine\player\Player;
 use pocketmine\world\World;
 
 class MarkerAddLineCommand extends MarkerAddAreaCommand
 {
 
-    protected function addMarker(string $name, Vector3 $pos1, Vector3 $pos2, World $world, ?string $id): bool {
+    protected function addMarker(string $name, Vector3 $pos1, Vector3 $pos2, World $world, ?string $id): bool
+    {
         /** @var PocketMap $plugin */
         $plugin = $this->getOwningPlugin();
 

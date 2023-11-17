@@ -78,6 +78,14 @@ class PocketMap extends PluginBase implements Listener
     }
 
     /**
+     * @return MarkerManager
+     */
+    public static function getMarkers(): MarkerManager
+    {
+        return self::$instance->markers;
+    }
+
+    /**
      * Create a world renderer for a given world
      * @param World $world
      * @return WorldRenderer
@@ -118,14 +126,6 @@ class PocketMap extends PluginBase implements Listener
     }
 
     /**
-     * @return MarkerManager
-     */
-    public static function getMarkers(): MarkerManager
-    {
-        return self::$instance->markers;
-    }
-
-    /**
      * Remove a world renderer
      * @param World $world
      * @return void
@@ -154,7 +154,7 @@ class PocketMap extends PluginBase implements Listener
         // register the event listener
         $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
 
-        if(!PacketHooker::isRegistered()) {
+        if (!PacketHooker::isRegistered()) {
             PacketHooker::register($this);
         }
 

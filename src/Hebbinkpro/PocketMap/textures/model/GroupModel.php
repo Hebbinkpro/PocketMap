@@ -22,25 +22,10 @@ namespace Hebbinkpro\PocketMap\textures\model;
 use Hebbinkpro\PocketMap\utils\block\BlockUtils;
 use pocketmine\block\Block;
 use pocketmine\block\Candle;
-use pocketmine\block\SeaPickle;
 use pocketmine\world\format\Chunk;
 
 abstract class GroupModel extends BlockModel
 {
-
-    /**
-     * A list of all destinations for each group item
-     * e.g. for candles and sea pickles:
-     * - [[d1], [d1, d2], [d1, d2, d3], [d1, d2, d3, d4]]
-     * @return array
-     */
-    public abstract function getDestLocations(): array;
-
-    /**
-     * Get the source position of the top texture
-     * @return array
-     */
-    public abstract function getTopGeometry(): array;
 
     public function getGeometry(Block $block, Chunk $chunk): array
     {
@@ -53,7 +38,7 @@ abstract class GroupModel extends BlockModel
                 $count = $block->getCount();
             }
 
-            $dest = $this->getDestLocations()[$count-1];
+            $dest = $this->getDestLocations()[$count - 1];
             foreach ($dest as $d) {
                 $geo[] = [
                     $top[0],
@@ -65,4 +50,18 @@ abstract class GroupModel extends BlockModel
 
         return $geo;
     }
+
+    /**
+     * Get the source position of the top texture
+     * @return array
+     */
+    public abstract function getTopGeometry(): array;
+
+    /**
+     * A list of all destinations for each group item
+     * e.g. for candles and sea pickles:
+     * - [[d1], [d1, d2], [d1, d2, d3], [d1, d2, d3, d4]]
+     * @return array
+     */
+    public abstract function getDestLocations(): array;
 }

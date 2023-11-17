@@ -22,25 +22,14 @@ namespace Hebbinkpro\PocketMap\commands\render;
 use CortexPE\Commando\args\BlockPositionArgument;
 use CortexPE\Commando\args\IntegerArgument;
 use CortexPE\Commando\BaseCommand;
+use CortexPE\Commando\BaseSubCommand;
 use CortexPE\Commando\exception\ArgumentOrderException;
 use Hebbinkpro\PocketMap\region\BaseRegion;
-use Hebbinkpro\PocketMap\render\Region;
 use pocketmine\command\CommandSender;
 use pocketmine\player\Player;
 
-class RenderLookupCommand extends \CortexPE\Commando\BaseSubCommand
+class RenderLookupCommand extends BaseSubCommand
 {
-
-    /**
-     * @throws ArgumentOrderException
-     */
-    protected function prepare(): void
-    {
-        $this->setPermissions(["pocketmap.cmd.render.lookup"]);
-
-        $this->registerArgument(0, new BlockPositionArgument("pos", true));
-        $this->registerArgument(1, new IntegerArgument("zoom", true));
-    }
 
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
@@ -59,15 +48,26 @@ class RenderLookupCommand extends \CortexPE\Commando\BaseSubCommand
         $region = new BaseRegion(0, $chunk->getX(), $chunk->getZ());
 
         $sender->sendMessage("--- Render Lookup ---");
-        $sender->sendMessage("Coords (x,z): ".$pos->getX().",".$pos->getZ());
-        $sender->sendMessage("Chunk (x,z): ".$chunk->getX().",".$chunk->getZ());
+        $sender->sendMessage("Coords (x,z): " . $pos->getX() . "," . $pos->getZ());
+        $sender->sendMessage("Chunk (x,z): " . $chunk->getX() . "," . $chunk->getZ());
 
         $sender->sendMessage("Regions (zoom/x,z):");
-        for ($z = 0; $z <= $args["zoom"]; $z ++) {
-            $sender->sendMessage("- ".$region->getName());
+        for ($z = 0; $z <= $args["zoom"]; $z++) {
+            $sender->sendMessage("- " . $region->getName());
 
             $region = $region->getNextZoomRegion();
             if ($region == null) break;
         }
+    }
+
+    /**
+     * @throws ArgumentOrderException
+     */
+    protected function prepare(): void
+    {
+        $this->setPermissions(["pocketmap.cmd.render.lookup"]);
+
+        $this->registerArgument(0, new BlockPositionArgument("pos", true));
+        $this->registerArgument(1, new IntegerArgument("zoom", true));
     }
 }
