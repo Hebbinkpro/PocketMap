@@ -33,7 +33,6 @@ class RenderLookupCommand extends BaseSubCommand
 
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
-        if (!isset($args["zoom"]) || $args["zoom"] < 0) $args["zoom"] = 0;
 
         if ($sender instanceof Player) {
             $pos = $sender->getPosition();
@@ -42,6 +41,8 @@ class RenderLookupCommand extends BaseSubCommand
             $this->sendError(BaseCommand::ERR_INSUFFICIENT_ARGUMENTS);
             return;
         }
+
+        if (!isset($args["zoom"]) || $args["zoom"] < 0) $args["zoom"] = 0;
 
         $pos = $args["pos"]->floor();
         $chunk = $pos->divide(16)->floor();

@@ -163,7 +163,7 @@ class ChunkSchedulerTask extends Task
                 $this->addChunk($renderer, $cx, $cz);
                 $chunks->next();
                 $loaded++;
-                $worldChunks["count"]++;
+                $this->chunkGenerators[$worldName]["count"]++;
             }
 
             // finished with loading

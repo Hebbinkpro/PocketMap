@@ -24,6 +24,7 @@ use CortexPE\Commando\args\RawStringArgument;
 use CortexPE\Commando\BaseSubCommand;
 use CortexPE\Commando\exception\ArgumentOrderException;
 use Hebbinkpro\PocketMap\PocketMap;
+use Hebbinkpro\PocketMap\region\Region;
 use pocketmine\command\CommandSender;
 use pocketmine\player\Player;
 
@@ -34,47 +35,56 @@ class RenderCommand extends BaseSubCommand
     {
         /** @var array{x: int, z: int, zoom: int, world: string} $args */
 
-        if (sizeof($args) < 4) {
+        /** @var PocketMap $plugin */
+        $plugin = $this->getOwningPlugin();
+
+        if (!isset($args["region"])) {
             if ($sender instanceof Player) {
                 $pos = $sender->getPosition()->divide(16)->floor();
                 if (!isset($args["x"])) $args["x"] = $pos->getX();
                 if (!isset($args["z"])) $args["z"] = $pos->getZ();
                 if (!isset($args["world"])) $args["world"] = $sender->getWorld()->getFolderName();
-                if (!isset($args["zoom"])) $args["zoom"] = 0;
 
-            } else {
+            } elseif (sizeof($args) < 3) {
                 $sender->sendMessage("§cNot all arguments are provided: " . $this->getUsageMessage());
                 return;
             }
-        }
 
-        $x = $args["x"];
-        $z = $args["z"];
-        $world = $args["world"];
-        $zoom = $args["zoom"];
+            if (!isset($args["zoom"])) $args["zoom"] = 0;
 
-        if ($zoom < 0 || $zoom > 8) {
-            $sender->sendMessage("§cZoom not in range: [0, 8]");
-            return;
-        }
+            $x = $args["x"];
+            $z = $args["z"];
+            $world = $args["world"];
+            $zoom = $args["zoom"];
 
-
-        /** @var PocketMap $plugin */
-        $plugin = $this->getOwningPlugin();
-
-        $renderer = PocketMap::getWorldRenderer($world);
-        if ($renderer === null) {
-            if (!$plugin->getServer()->getWorldManager()->loadWorld($world)) {
-                $sender->sendMessage("§cWorld not found: $world");
+            if ($zoom < 0 || $zoom > 8) {
+                $sender->sendMessage("§cZoom not in range: [0, 8]");
                 return;
             }
+
             $renderer = PocketMap::getWorldRenderer($world);
+            if ($renderer === null) {
+                if (!$plugin->getServer()->getWorldManager()->loadWorld($world)) {
+                    $sender->sendMessage("§cWorld not found: $world");
+                    return;
+                }
+                $renderer = PocketMap::getWorldRenderer($world);
+            }
+
+            $region = $renderer->getRegion($zoom, $x, $z, true);
+        } else {
+            $region = Region::getByName($args["region"]);
+            if ($region === null) {
+                $sender->sendMessage("§cInvalid region. Format: world/zoom/x,z");
+                return;
+            }
+
+            $renderer = PocketMap::getWorldRenderer($region->getWorldName());
         }
 
-        $region = $renderer->getRegion($zoom, $x, $z, true);
         $res = $plugin->getChunkScheduler()->addChunksByRegion($renderer, $region);
 
-        if ($res) $sender->sendMessage("[PocketMap] Rendering region: " . $region->getName() . " (" . $region->getTotalChunks() . " chunks)");
+        if ($res) $sender->sendMessage("[PocketMap] Rendering region: " . $region->getName() . " (" . pow($region->getTotalChunks(), 2) . " chunks)");
         else $sender->sendMessage("§cCannot render region " . $region->getName() . ", already scheduled.");
 
     }
@@ -96,5 +106,6 @@ class RenderCommand extends BaseSubCommand
         $this->registerArgument(1, new IntegerArgument("z", true));
         $this->registerArgument(2, new RawStringArgument("world", true));
         $this->registerArgument(3, new IntegerArgument("zoom", true));
+        $this->registerArgument(0, new RawStringArgument("region", true));
     }
 }

@@ -64,6 +64,11 @@ Please report all issues you encounter [here](https://github.com/Hebbinkpro/Pock
 
 This is a list of all things that have to be added before the release of v1.0.0
 
+### Commands
+
+- Create fork of Commando to make use of commands with different argument overloads
+- Add an `x z` (vector 2) argument type instead of `x y z` (vector 3)
+
 ### WebPage
 
 - List of all online players
@@ -89,12 +94,13 @@ This is a list of all things that have to be added before the release of v1.0.0
 
 ## Credits
 
-- The web server is created using my [WebServer](https://github.com/Hebbinkpro/pmmp-webserver) virion .
-- The rendered textures are from the official [bedrock-samples](https://github.com/Mojang/bedrock-samples) resource
-  pack.
-- The dynamic map is created using [leaflet.js](https://leafletjs.com/)
-- The player heads shown on the map are created using the [LibSkin](https://github.com/HimbeersaftLP/LibSkin) virion by
-  HimbeersaftLP.
+- [PMMP WebServer](https://github.com/Hebbinkpro/pmmp-webserver) by me for creating the website and API.
+- [LibSkin](https://github.com/HimbeersaftLP/LibSkin) by HimbeersaftLP for player heads.
+- [Commando](https://github.com/Paroxity/Commando) fork by Paroxity for commands.
+- [SimplePacketHandler](https://github.com/Muqsit/SimplePacketHandler/tree/pm5) by Muqsit for Commando.
+- [Bedrock Samples](https://github.com/Mojang/bedrock-samples) by Mojang for the latest block textures used in the map
+- [Leaflet.js](https://leafletjs.com/) for the interactive map
+- [OpenMoji](https://openmoji.org/) for a large range of default icons
 
 # Documentation
 
@@ -131,8 +137,6 @@ Usage: `/pmap marker`
 - `id`: Custom identifier for a marker
 - `position`: Position (`x y z`)
 - `icon`: Name of the icon defined in `markers/icons.json`
-    - PocketMap provides a large range of default icons which are designed by [OpenMoji](https://openmoji.org/) – the
-      open-source emoji and icon project.
     - Look [here](resources/markers/README.md) for more info about adding your own markers.
 - `pos1`: First position (`x y z`)
 - `pos2`: Second position (`x y z`)

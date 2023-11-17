@@ -19,6 +19,7 @@
 
 namespace Hebbinkpro\PocketMap\region;
 
+use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
 
@@ -93,5 +94,23 @@ class Region extends BaseRegion
     public function renderAllChunks(): bool
     {
         return $this->isChunk() || $this->renderChunks;
+    }
+
+    public static function getByName(string $name): ?Region
+    {
+        $parts = explode("/", $name);
+
+        if (count($parts) != 3) return null;
+
+        $renderer = PocketMap::getWorldRenderer($parts[0]);
+        if ($renderer === null) return null;
+
+        $zoom = intval($parts[1]);
+        $pos = explode(",", $parts[2]);
+        if (count($pos) < 2) return null;
+        $x = intval($pos[0]);
+        $z = intval($pos[1]);
+
+        return $renderer->getRegion($zoom, $x, $z);
     }
 }

@@ -18,9 +18,7 @@ renderer:
     # Default: 16
     generator-yield: 32
     # The amount of chunks the chunk loader can load in a single run
-    # Every scheduler.run-period, the chunk-loader will run
-    # Setting this number too high will cause the server to lag because of a very long loop
-    # A too low number will cause a slower map generation
+    # Due to optimizations, changing this value does not change the expected behaviour.
     # Default: 128
     chunks-per-run: 128
     # Max amount of chunks that can be queued at the same time
@@ -32,8 +30,8 @@ renderer:
     run-period: 5
     # the amount of simultaneous renders
     # A render is the image that is generated
-    # Default: 4
-    renders: 4
+    # Default: 8
+    renders: 8
     # The queue size of the scheduler
     # Default: 32
     queue-size: 32
