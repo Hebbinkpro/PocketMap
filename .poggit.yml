@@ -12,4 +12,6 @@ projects:
         version: 2.0.1
       - src: Paroxity/Commando/Commando
         version: 3.1.0
+      - src: Muqsit/SimplePacketHandler/SimplePacketHandler
+        version: 0.1.3
 ...

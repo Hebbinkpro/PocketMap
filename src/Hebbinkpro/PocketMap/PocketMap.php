@@ -19,6 +19,7 @@
 
 namespace Hebbinkpro\PocketMap;
 
+use CortexPE\Commando\PacketHooker;
 use Exception;
 use Hebbinkpro\PocketMap\api\MarkerManager;
 use Hebbinkpro\PocketMap\api\UpdateApiTask;
@@ -152,6 +153,10 @@ class PocketMap extends PluginBase implements Listener
 
         // register the event listener
         $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
+
+        if(!PacketHooker::isRegistered()) {
+            PacketHooker::register($this);
+        }
 
         $this->getServer()->getCommandMap()->register("pocketmap", new PocketMapCommand($this, "pocketmap", "PocketMap command", ["pmap"]));
 
