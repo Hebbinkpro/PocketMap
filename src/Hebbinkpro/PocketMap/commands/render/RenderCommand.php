@@ -91,6 +91,7 @@ class RenderCommand extends BaseSubCommand
         $this->setPermissions(["pocketmap.cmd.render"]);
 
         $this->registerSubCommand(new RenderFullCommand($plugin, "full", "Create a full world render"));
+        $this->registerSubCommand(new RenderLookupCommand($plugin, "lookup", "Lookup the chunk and region coords of a given world coord"));
 
         $this->registerArgument(0, new IntegerArgument("x", true));
         $this->registerArgument(1, new IntegerArgument("z", true));

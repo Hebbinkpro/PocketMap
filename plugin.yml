@@ -17,6 +17,9 @@ permissions:
   pocketmap.cmd.render.full:
     description: Allows to execute the render full command
     default: op
+  pocketmap.cmd.render.lookup:
+    description: Allows to execute the render lookup command
+    default: op
   pocketmap.cmd.reload:
     description: Allows to execute the reload command
     default: op
