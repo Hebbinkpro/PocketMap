@@ -152,6 +152,17 @@ Usage: `/pmap render {x} {z} {world} {zoom}`
 Start a full world render for the given world.<br>
 Usage: `/pmap render full {world}`
 
+#### Render Lookup Command
+Lookup the chunk and region coordinates of a given world position.<br>
+Usage: `/pmap render lookup {x y z} [zoom]`
+- `x y z` is the position in the world
+- `zoom` is the amount of zoom regions you want the region coordinates from.
+  - Default: `0`
+Output:
+  - Coords (x,z): the given x and z coordinates
+  - Chunk (x,z): The chunk x,z coordinates where the given position is in.
+  - Regions (zoom/x,z): A list of all zoom regions in the range [0,`zoom`]
+
 ## Web Map
 On the webpage of PocketMap (`http://<server_ip>:<pocketmap_port>/`) you can view the real map. On the map you can do the following:
 - View the location of all online players

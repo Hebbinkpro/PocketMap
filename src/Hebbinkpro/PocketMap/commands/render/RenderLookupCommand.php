@@ -62,14 +62,12 @@ class RenderLookupCommand extends \CortexPE\Commando\BaseSubCommand
         $sender->sendMessage("Coords (x,z): ".$pos->getX().",".$pos->getZ());
         $sender->sendMessage("Chunk (x,z): ".$chunk->getX().",".$chunk->getZ());
 
-        if ($args["zoom"] > 0) {
-            $sender->sendMessage("Regions (zoom/x,z):");
-            for ($z = 0; $z < $args["zoom"]; $z ++) {
-                $region = $region->getNextZoomRegion();
-                if ($region == null) break;
+        $sender->sendMessage("Regions (zoom/x,z):");
+        for ($z = 0; $z <= $args["zoom"]; $z ++) {
+            $sender->sendMessage("- ".$region->getName());
 
-                $sender->sendMessage("- ".$region->getName());
-            }
+            $region = $region->getNextZoomRegion();
+            if ($region == null) break;
         }
     }
 }
