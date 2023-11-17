@@ -73,7 +73,8 @@ class RenderCommand extends BaseSubCommand
         }
 
         $region = $renderer->getRegion($zoom, $x, $z, true);
-        $plugin->getChunkScheduler()->addChunks($renderer, $region->getChunks(), ChunkSchedulerTask::CHUNK_GENERATOR_CURRENT);
+        if ($zoom == 0) $renderer->startRegionRender($region);
+        else $plugin->getChunkScheduler()->addChunks($renderer, $region->getChunks(), ChunkSchedulerTask::CHUNK_GENERATOR_CURRENT);
 
         $sender->sendMessage("[PocketMap] Rendering region: " . $region->getName() . " (" . $region->getTotalChunks() . " chunks)");
 
