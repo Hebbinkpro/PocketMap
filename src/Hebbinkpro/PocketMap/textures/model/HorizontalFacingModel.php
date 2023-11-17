@@ -51,9 +51,9 @@ abstract class HorizontalFacingModel extends BlockModel
 
         return match ($block->getFacing()) {
             Facing::NORTH => 0,
-            Facing::EAST => 90,
+            Facing::EAST => 270,
             Facing::SOUTH => 180,
-            Facing::WEST => 270,
+            Facing::WEST => 90,
             default => 0
         };
     }

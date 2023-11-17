@@ -46,8 +46,6 @@ abstract class GroupModel extends BlockModel
     {
         $geo = [];
 
-        var_dump("HI");
-
         foreach ($this->getTopGeometry() as $top) {
             $count = 0;
             if (BlockUtils::hasCount($block)) {
@@ -55,16 +53,15 @@ abstract class GroupModel extends BlockModel
                 $count = $block->getCount();
             }
 
-            $dest = $this->getDestLocations()[$count];
-
-            $geo[] = [
-                $top[0],
-                $top[1],
-                $dest
-            ];
+            $dest = $this->getDestLocations()[$count-1];
+            foreach ($dest as $d) {
+                $geo[] = [
+                    $top[0],
+                    $top[1],
+                    $d
+                ];
+            }
         }
-
-        var_dump($geo);
 
         return $geo;
     }

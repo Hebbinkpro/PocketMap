@@ -63,7 +63,7 @@ abstract class BlockModel
      * - [start,size,destStart]
      * - [start,size,destStart,destSize]
      * If dest values are not given, the source values will be used
-     * @return int[][][][]
+     * @return int[][][]
      */
     public abstract function getGeometry(Block $block, Chunk $chunk): array;
 }
