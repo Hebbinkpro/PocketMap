@@ -19,59 +19,52 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
-use pocketmine\math\Facing;
-
-class EndRodModel extends AnyFacingModel
+class SeaPickleModel extends GroupModel
 {
-    public function getSideFacing(): array
+
+    /**
+     * @inheritDoc
+     */
+    public function getDestLocations(): array
     {
         return [
-            Facing::NORTH,
-            Facing::EAST,
-            Facing::SOUTH,
-            Facing::WEST
-        ];
-    }
-
-    public function getTopGeometry(int $facing): array
-    {
-        $geo = [
-            // 4x4 bottom
             [
-                [2, 3],
-                [4, 4],
-                [6, 6]
+                [6,6]
             ],
-        ];
-
-        if ($facing == Facing::UP) {
-            // 2x2 top
-            $geo[] = [
-                [2, 0],
-                [2, 2],
-                [7, 7]
-            ];
-        }
-
-        return $geo;
-    }
-
-    public function getSideGeometry(int $facing): array
-    {
-        return [
-            // 4x1 bottom
             [
-                [2, 2],
-                [4, 1],
-                [6, 15]
+                [4,4],
+                [8,8]
             ],
-            // 2x15 rod
             [
-                [0, 0],
-                [2, 15],
-                [7, 0]
+                [3,3],
+                [8,4],
+                [6,9]
+            ],
+            [
+                [3,3],
+                [9,2],
+                [2,9],
+                [9,10]
             ]
         ];
     }
 
+    /**
+     * @inheritDoc
+     */
+    public function getTopGeometry(): array
+    {
+        return [
+            // bottom part of the top texture
+            [
+                [8,1],
+                [4,4],
+            ],
+            // top part of the top texture
+            [
+                [4,1],
+                [4,4]
+            ]
+        ];
+    }
 }

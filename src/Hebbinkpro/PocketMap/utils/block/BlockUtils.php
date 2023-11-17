@@ -109,7 +109,15 @@ class BlockUtils
 
     public static function hasHorizontalFacing(Block $block): bool
     {
+        if ($block->getTypeId() == BlockTypeIds::TORCH) return true;
         return in_array(HorizontalFacingTrait::class, self::getTraits($block));
+    }
+
+    public static function hasCount(Block $block): bool {
+        return match ($block->getTypeId()) {
+            BlockTypeIds::SEA_PICKLE, BlockTypeIds::CANDLE, BlockTypeIds::DYED_CANDLE => true,
+            default => false
+        };
     }
 
     /**

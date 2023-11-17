@@ -42,10 +42,12 @@ abstract class BlockModel
         $geo = $this->getGeometry($block, $chunk);
         foreach ($geo as $parts) {
             $srcStart = $parts[0];
-            $width = $parts[1];
+            $srcSize = $parts[1];
             $dstStart = $parts[2] ?? $srcStart;
+            $dstSize = $parts[3] ?? $srcSize;
+
             imagealphablending($texture, true);
-            imagecopy($modelTexture, $texture, $dstStart[0], $dstStart[1], $srcStart[0], $srcStart[1], $width[0], $width[1]);
+            imagecopyresized($modelTexture, $texture, $dstStart[0], $dstStart[1], $srcStart[0], $srcStart[1], $dstSize[0], $dstSize[1], $srcSize[0], $srcSize[1]);
             imagesavealpha($texture, true);
 
         }
@@ -55,7 +57,12 @@ abstract class BlockModel
     }
 
     /**
-     * Get the block geometry
+     * Get the block geometry.
+     * A geometry is an array of parts, and a part is one of the following:
+     * - [start,size]
+     * - [start,size,destStart]
+     * - [start,size,destStart,destSize]
+     * If dest values are not given, the source values will be used
      * @return int[][][][]
      */
     public abstract function getGeometry(Block $block, Chunk $chunk): array;

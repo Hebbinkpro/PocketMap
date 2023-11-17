@@ -54,6 +54,7 @@ abstract class HorizontalFacingModel extends BlockModel
             Facing::EAST => 90,
             Facing::SOUTH => 180,
             Facing::WEST => 270,
+            default => 0
         };
     }
 }
