@@ -32,9 +32,6 @@ class ChunkSchedulerTask extends Task
     public const CHUNK_GENERATOR_KEY = 0;
     public const CHUNK_GENERATOR_CURRENT = 1;
 
-    public const CACHE_FILE = "tmp/regions/render.txt";
-
-
     private PocketMap $pocketMap;
 
     /** @var PartialRegion[] */
@@ -45,8 +42,6 @@ class ChunkSchedulerTask extends Task
      */
     private array $chunkGenerators;
 
-    private bool $enableCache;
-
     private int $maxQueueSize;
 
     public function __construct(PocketMap $pocketMap)
@@ -55,25 +50,7 @@ class ChunkSchedulerTask extends Task
         $this->queuedRegions = [];
         $this->chunkGenerators = [];
 
-        $this->enableCache = PocketMap::getConfigManger()->getBool("renderer.chunk-scheduler.region-cache", true);
         $this->maxQueueSize = PocketMap::getConfigManger()->getInt("renderer.chunk-scheduler.queue-size", 256);
-
-        if ($this->enableCache) $this->readFromCache();
-    }
-
-    /**
-     * Read the contents of the cache file and restore the contents inside the updated regions list.
-     * This allows us to start directly with rendering if there were chunks added just before the server closed.
-     * @return void
-     */
-    private function readFromCache(): void
-    {
-        $cacheFile = PocketMap::getFolder() . self::CACHE_FILE;
-        if (!file_exists($cacheFile)) return;
-
-        $data = file_get_contents($cacheFile);
-        $this->queuedRegions = unserialize($data);
-        $this->pocketMap->getLogger()->debug("Restored " . count($this->queuedRegions) . " regions from the cache");
     }
 
     /**
@@ -145,12 +122,6 @@ class ChunkSchedulerTask extends Task
         // remove all the started regions
         foreach ($started as $name) {
             unset($this->queuedRegions[$name]);
-        }
-
-        if ($this->enableCache) {
-            // update the cache
-            $cacheFile = PocketMap::getFolder() . self::CACHE_FILE;
-            file_put_contents($cacheFile, serialize($this->queuedRegions));
         }
     }
 

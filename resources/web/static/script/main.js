@@ -250,6 +250,8 @@ async function loadMarkers() {
                 m = L.marker(getLatLngPos(data["pos"], -0.5, 0.5), {icon: icons[data["icon"]]})
                 break;
             case "circle":
+                // convert radius from blocks to lat lng
+                data["options"]["radius"] /= 16;
                 m = L.circle(getLatLngPos(data["pos"], -0.5, 0.5), data["options"]);
                 break;
             case "polygon":
