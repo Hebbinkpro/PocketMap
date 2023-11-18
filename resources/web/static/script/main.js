@@ -171,7 +171,7 @@ function updatePlayerMarker(player) {
         MARKER_CACHE[player["uuid"]].setLatLng(latLng);
     } else {
         let head = getPlayerHead(player);
-        let marker = L.marker(latLng, {head});
+        let marker = L.marker(latLng, {icon: head});
         marker.bindTooltip(`${player["name"]}<br>${getCoordString(player)}`, {
             permanent: false,
             direction: "right"
