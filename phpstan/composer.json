@@ -1,0 +1,19 @@
+{
+  "name": "pocketmine/phpstan-plugin-config",
+  "require": {
+    "phpstan/phpstan": "^1.10.0",
+    "pocketmine/pocketmine-mp": "^5.8.1",
+    "phpstan/phpstan-strict-rules": "^1.0",
+    "phpstan/extension-installer": "^1.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Hebbinkpro\\PocketMap\\": "../src/Hebbinkpro/PocketMap"
+    }
+  },
+  "config": {
+    "allow-plugins": {
+      "phpstan/extension-installer": true
+    }
+  }
+}
