@@ -98,7 +98,7 @@ class MarkerManager
      */
     public function addIconMarker(string $name, Position $pos, string $icon, ?string $id = null): bool
     {
-        if (!in_array($icon, $this->icons, true)) return false;
+        if (!$this->isIcon($icon)) return false;
 
         $data = [
             "type" => self::TYPE_ICON,
@@ -106,6 +106,10 @@ class MarkerManager
         ];
 
         return $this->addPositionMarker($name, $data, $pos, $id);
+    }
+
+    public function isIcon(string $name): bool {
+        return in_array($name, $this->icons, true);
     }
 
     /**
@@ -139,14 +143,24 @@ class MarkerManager
 
         $worldName = $world->getFolderName();
 
-        $id = $id ?? strval(count($this->markers[$worldName]));
+        // id is already used
+        if ($id !== null && $this->getMarker($id, $world) !== null) return false;
+        else {
+            $lower = str_replace(" ", "_", strtolower($name));
+            $id = $lower;
+            $loop = 1;
+            while ($this->getMarker($id, $world) !== null) {
+                $id = $lower . $loop;
+                $loop ++;
+            }
+        }
+
         $marker = [
             "name" => $name,
             "data" => $data,
         ];
 
         if (!isset($this->markers[$worldName])) $this->markers[$worldName] = [];
-        if ($this->getMarker($id, $world) !== null) return false;
 
         $this->markers[$worldName][$id] = $marker;
         $this->encode();

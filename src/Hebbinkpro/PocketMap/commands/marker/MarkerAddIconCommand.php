@@ -61,7 +61,18 @@ class MarkerAddIconCommand extends BaseSubCommand
         $pos = Position::fromObject($args["pos"], $world);
         $id = $args["id"] ?? null;
 
-        $res = PocketMap::getMarkers()->addIconMarker($name, $pos, $icon, $id);
+        $markers = PocketMap::getMarkers();
+        if (!$markers->isIcon($icon)) {
+            $sender->sendMessage("§cInvalid icon");
+            return;
+        }
+
+        if ($id !== null && $markers->getMarker($id, $world) !== null) {
+            $sender->sendMessage("§cThe id '$id' is already in use");
+            return;
+        }
+
+        $res = $markers->addIconMarker($name, $pos, $icon, $id);
         if ($res) $sender->sendMessage("[PocketMap] Marker '$name' is added to world '{$args["world"]}'");
         else $sender->sendMessage("§cSomething went wrong");
     }

@@ -153,7 +153,7 @@ class ChunkSchedulerTask extends Task
                     $coords = $chunks->key();
                 } else if ($type == self::CHUNK_GENERATOR_CURRENT) {
                     /** @var array{int,int} $coords */
-                    $coords = $chunks->key();
+                    $coords = $chunks->current();
                 } else {
                     $this->pocketMap->getLogger()->error("[Chunk Scheduler] Cannot add chunks with invalid generator type: $type");
                     $finished[] = $worldName;
@@ -163,10 +163,14 @@ class ChunkSchedulerTask extends Task
                 [$cx, $cz] = $coords;
 
 
-                $this->addChunk($renderer, $cx, $cz);
-                $chunks->next();
+                // increase the counters
                 $loaded++;
                 $this->chunkGenerators[$worldName]["count"]++;
+
+                // add the chunk
+                $this->addChunk($renderer, $cx, $cz);
+
+                $chunks->next();
             }
 
             // finished with loading
