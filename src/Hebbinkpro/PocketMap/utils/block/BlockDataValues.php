@@ -37,13 +37,13 @@ use pocketmine\block\Sapling;
 use pocketmine\block\Slab;
 use pocketmine\block\Torch;
 use pocketmine\block\TorchflowerCrop;
-use pocketmine\block\utils\ColoredTrait;
 use pocketmine\block\utils\DyeColor;
 use pocketmine\block\utils\WoodType;
 use pocketmine\block\Wall;
 use pocketmine\block\Wood;
 use pocketmine\block\WoodenDoor;
 use pocketmine\block\WoodenFence;
+use pocketmine\block\Wool;
 use pocketmine\data\bedrock\block\BlockStateNames as BSN;
 use pocketmine\data\bedrock\block\BlockStateStringValues as BSV;
 use pocketmine\data\bedrock\block\BlockTypeNames as BTN;
@@ -199,12 +199,13 @@ final class BlockDataValues
     public static function getDataValue(Block $block): int
     {
         $bsd = BlockStateParser::getBlockStateData($block);
+        if ($bsd === null) return 0;
         $name = $bsd->getName();
 
         // block uses the ColoredTrait, so it's colored
         if (BlockUtils::hasColor($block)) {
             // get the color of the block
-            /** @var ColoredTrait $block */
+            /** @var Wool $block */
             /** @var DyeColor $color */
             $color = $block->getColor();
 
@@ -215,10 +216,10 @@ final class BlockDataValues
         // it's a chiseled block
         if (($chisel = BlockStateParser::getStateValue($bsd, BSN::CHISEL_TYPE)) !== null) {
             return match ($chisel) {
-                BSV::CHISEL_TYPE_DEFAULT => 0,
                 BSV::CHISEL_TYPE_CHISELED => 1,
                 BSV::CHISEL_TYPE_LINES => 2,
-                BSV::CHISEL_TYPE_SMOOTH => 3
+                BSV::CHISEL_TYPE_SMOOTH => 3,
+                default => 0 // BSV::CHISEL_TYPE_DEFAULT
             };
         }
 
@@ -256,14 +257,18 @@ final class BlockDataValues
 
             case Crops::class:
             case PitcherCrop::class:
-            case TorchflowerCrop::class:
                 return $block->getAge();
+
+            case TorchflowerCrop::class:
+                return intval($block->isReady());
 
             case DoublePitcherCrop::class:
                 return $block->getAge() + 1 + PitcherCrop::MAX_AGE;
 
             case Torch::class:
-                return self::DATA_VALUES[BTN::TORCH][BlockStateParser::getStateValue($bsd, BSN::COLOR_BIT)];
+                /** @var bool|null $state */
+                $state = BlockStateParser::getStateValue($bsd, BSN::COLOR_BIT);
+                return intval($state ?? 0);
 
             case Door::class:
                 // iron door does not count towards wood but has a data value, so check if it's iron and else return 0
@@ -286,7 +291,9 @@ final class BlockDataValues
                 };
 
             case RedMushroomBlock::class:
-                return $bsd->getState(BSN::HUGE_MUSHROOM_BITS)->getValue();
+                /** @var int|null $state */
+                $state = BlockStateParser::getStateValue($bsd, BSN::HUGE_MUSHROOM_BITS);
+                return $state ?? 0;
 
             case Flower::class:
                 return match ($name) {

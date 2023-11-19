@@ -90,7 +90,10 @@ class RegionChunks
         if ($this->completed || !$this->valid) return false;
 
         // merge the chunks from the region chunks instance and the new chunks together
-        $this->chunks = ArrayUtils::merge($this->chunks, $chunks);
+        /** @var Chunk[][] $c */
+        $c = ArrayUtils::merge($this->chunks, $chunks);
+        $this->chunks = $c;
+
         $this->completed = $completed;
 
 

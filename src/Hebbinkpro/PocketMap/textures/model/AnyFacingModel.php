@@ -33,7 +33,7 @@ abstract class AnyFacingModel extends BlockModel
         /** @var Button $block */
         if (BlockUtils::hasAnyFacing($block)) {
             $facing = $block->getFacing();
-            if (in_array($block->getFacing(), $this->getSideFacing())) {
+            if (in_array($block->getFacing(), $this->getSideFacing(), true)) {
                 return $this->getSideGeometry($facing);
             }
 
@@ -43,6 +43,9 @@ abstract class AnyFacingModel extends BlockModel
         return $this->getTopGeometry(Facing::UP);
     }
 
+    /**
+     * @return array{int, int}
+     */
     public function getSideFacing(): array
     {
         return [
@@ -51,8 +54,16 @@ abstract class AnyFacingModel extends BlockModel
         ];
     }
 
+    /**
+     * @param int $facing
+     * @return int[][][]
+     */
     public abstract function getSideGeometry(int $facing): array;
 
+    /**
+     * @param int $facing
+     * @return int[][][]
+     */
     public abstract function getTopGeometry(int $facing): array;
 
 }

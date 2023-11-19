@@ -37,7 +37,7 @@ class DoorModel extends HorizontalFacingModel
             Facing::NORTH => 270 + $open,
             Facing::EAST => 180 + $open,
             Facing::SOUTH => 90 + $open,
-            Facing::WEST => $open,
+            default => $open, // Facing::WEST
         };
     }
 

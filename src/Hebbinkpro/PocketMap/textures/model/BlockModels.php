@@ -32,6 +32,7 @@ use pocketmine\block\PressurePlate;
 use pocketmine\block\Sapling;
 use pocketmine\block\Stair;
 use pocketmine\block\Thin;
+use pocketmine\block\Torch;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\block\Wall;
 use pocketmine\utils\SingletonTrait;
@@ -41,9 +42,10 @@ final class BlockModels
     use SingletonTrait;
 
     private BlockModel $default;
+    /** @var array<int, BlockModel> */
     private array $blockModels;
 
-    /** @var array<string, string> */
+    /** @var array<string, BlockModel> */
     private array $blockTypeModels;
 
     public function __construct()
@@ -107,13 +109,19 @@ final class BlockModels
         $this->register(VanillaBlocks::CHEST(), new DefaultBlockModel()); // TODO double chests
         $this->register(VanillaBlocks::TRAPPED_CHEST(), new DefaultBlockModel());
         $this->register(VanillaBlocks::ENDER_CHEST(), new DefaultBlockModel());
-        $this->register(VanillaBlocks::BARREL(), new DefaultBlockModel()); // TODO rotation
+        $this->register(VanillaBlocks::BARREL(), new DefaultBlockModel());
 
         $this->register(VanillaBlocks::CAKE(), new DefaultBlockModel());
         $this->register(VanillaBlocks::CAKE_WITH_CANDLE(), new DefaultBlockModel());
         $this->register(VanillaBlocks::CAKE_WITH_DYED_CANDLE(), new DefaultBlockModel());
 
         $this->register(VanillaBlocks::PINK_PETALS(), new DefaultBlockModel());
+
+        $this->registerFromBlockType(Torch::class, new TorchModel());
+
+        $this->register(VanillaBlocks::CANDLE(), new CandleModel());
+        $this->register(VanillaBlocks::DYED_CANDLE(), new CandleModel());
+        $this->register(VanillaBlocks::SEA_PICKLE(), new SeaPickleModel());
 
         $this->registerFromBlockType(Stair::class, new DefaultBlockModel()); // TODO height difference
 

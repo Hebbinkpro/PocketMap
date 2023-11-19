@@ -25,7 +25,6 @@ use Hebbinkpro\PocketMap\utils\ResourcePackUtils;
 use Hebbinkpro\PocketMap\utils\TextureUtils;
 use pocketmine\block\Block;
 use pocketmine\plugin\PluginBase;
-use pocketmine\resourcepacks\ResourcePackException;
 use pocketmine\resourcepacks\ResourcePackManager;
 use pocketmine\resourcepacks\ZippedResourcePack;
 use pocketmine\utils\Filesystem;
@@ -38,6 +37,7 @@ class TerrainTextures extends ResourcePackTextures
     private string $path;
     private TerrainTexturesOptions $options;
 
+    /** @var array{vanilla?: string, resource_packs?: array<string, array{uuid: string, file: string, version: string, sha256: string}>} */
     private array $packs;
 
     private function __construct(string $path, TerrainTexturesOptions $options)
@@ -53,14 +53,15 @@ class TerrainTextures extends ResourcePackTextures
      * @param PluginBase $plugin
      * @param string $path
      * @param TerrainTexturesOptions $options
-     * @return TerrainTextures
+     * @return TerrainTextures|null
      */
-    public static function generate(PluginBase $plugin, string $path, TerrainTexturesOptions $options): TerrainTextures
+    public static function generate(PluginBase $plugin, string $path, TerrainTexturesOptions $options): ?TerrainTextures
     {
         $lastTerrainTextures = self::fromExistingTextures($path, $options);
         $textures = new TerrainTextures($path, $options);
 
         $packs = $textures->getAllResourcePacks($plugin->getServer()->getResourcePackManager(), $lastTerrainTextures);
+        if ($packs === null) return null;
 
         // pack list does not exist
         if ($lastTerrainTextures === null || $lastTerrainTextures->getPacks() !== $packs) {
@@ -95,19 +96,19 @@ class TerrainTextures extends ResourcePackTextures
     {
         if (!is_file($this->path . self::TERRAIN_TEXTURES)) return false;
 
-        $contents = json_decode(file_get_contents($this->path . self::TERRAIN_TEXTURES), true) ?? [];
-        if (empty($contents)) return false;
+        $fileContents = file_get_contents($this->path . self::TERRAIN_TEXTURES);
+        if ($fileContents === false) return false;
 
-        if (!array_key_exists("packs", $contents)) return false;
+        $contents = json_decode($fileContents, true) ?? [];
+        $requiredKeys = ["packs", "textures", "terrain_textures", "blocks"];
+        if (!is_array($contents) ||
+            sizeof(array_intersect(array_keys($contents), $requiredKeys)) < sizeof($requiredKeys)) {
+            return false;
+        }
+
         $this->packs = $contents["packs"];
-
-        if (!array_key_exists("textures", $contents)) return false;
         $this->textures = $contents["textures"];
-
-        if (!array_key_exists("terrain_textures", $contents)) return false;
         $this->terrainTextures = $contents["terrain_textures"];
-
-        if (!array_key_exists("blocks", $contents)) return false;
         $this->blocks = $contents["blocks"];
 
         return true;
@@ -117,9 +118,9 @@ class TerrainTextures extends ResourcePackTextures
      * Extract all resource packs inside the server's resource_packs folder
      * @param ResourcePackManager $manager
      * @param TerrainTextures|null $lastTerrainTextures
-     * @return array
+     * @return null|array{vanilla: string, resource_packs: array<string, array{uuid: string, file: string, version: string, sha256: string}>}
      */
-    private function getAllResourcePacks(ResourcePackManager $manager, ?TerrainTextures $lastTerrainTextures = null): array
+    private function getAllResourcePacks(ResourcePackManager $manager, ?TerrainTextures $lastTerrainTextures = null): ?array
     {
         if (!is_dir($this->path)) mkdir($this->path);
 
@@ -146,7 +147,7 @@ class TerrainTextures extends ResourcePackTextures
             ];
 
             // this pack is already loaded in a previous startup
-            if (in_array($info, $lastLoaded)) {
+            if (in_array($info, $lastLoaded, true)) {
                 $loaded[$uuid] = $info;
                 continue;
             }
@@ -156,10 +157,13 @@ class TerrainTextures extends ResourcePackTextures
             }
         }
 
-        foreach (scandir($this->path) as $file) {
+        $files = scandir($this->path);
+        if ($files === false) return null;
+
+        foreach ($files as $file) {
             $path = $this->path . $file;
             // not a dir or the current vanilla resource pack
-            if (in_array($file, [".", "..", PocketMap::RESOURCE_PACK_NAME]) || !is_dir($path)) continue;
+            if (in_array($file, [".", "..", PocketMap::RESOURCE_PACK_NAME], true) || !is_dir($path)) continue;
 
             // remove unused dirs
             if (!array_key_exists($file, $loaded)) Filesystem::recursiveUnlink($path);
@@ -171,6 +175,9 @@ class TerrainTextures extends ResourcePackTextures
         ];
     }
 
+    /**
+     * @return array{vanilla?: string, resource_packs?: array<string, array{uuid: string, file: string, version: string, sha256: string}>}
+     */
     public function getPacks(): array
     {
         return $this->packs;
@@ -199,17 +206,16 @@ class TerrainTextures extends ResourcePackTextures
 
         // open the zip archive
         $archive = new ZipArchive();
-        if (($openResult = $archive->open($pack->getPath())) !== true) {
-            throw new ResourcePackException("Encountered ZipArchive error code $openResult while trying to open {$pack->getPath()}");
-        }
-
+        if ($archive->open($pack->getPath()) !== true) return false;
 
         $rpPath = $this->path . $uuid . "/";
         if (!is_dir($rpPath)) mkdir($rpPath . ResourcePackUtils::BLOCK_TEXTURES, 0777, true);
 
         $prefix = ResourcePackUtils::getPrefix($archive);
+        if ($prefix === null) return false;
 
         $manifest = $archive->getFromName($prefix . ResourcePackUtils::MANIFEST);
+        if ($manifest === false) return false;
 
         file_put_contents($rpPath . ResourcePackUtils::MANIFEST, $manifest);
 
@@ -226,7 +232,7 @@ class TerrainTextures extends ResourcePackTextures
             $texture = $archive->getFromName($prefix . $path);
             if ($texture !== false) {
                 $blockPath = str_replace($rpPath . ResourcePackUtils::BLOCK_TEXTURES, "", $rpPath . $path);
-                if (($parts = explode("/", $blockPath)) > 1) {
+                if (sizeof($parts = explode("/", $blockPath)) > 1) {
                     array_pop($parts);
                     $blockFolderPath = $rpPath . ResourcePackUtils::BLOCK_TEXTURES . implode("/", $parts);
                     if (!is_dir($blockFolderPath)) mkdir($blockFolderPath, 0777, true);
@@ -242,6 +248,10 @@ class TerrainTextures extends ResourcePackTextures
         return true;
     }
 
+    /**
+     * @param array{vanilla: string, resource_packs: array<string, array{uuid: string, file: string, version: string, sha256: string}>} $packs
+     * @return void
+     */
     private function indexBlocks(array $packs): void
     {
         // load the vanilla textures
@@ -288,6 +298,7 @@ class TerrainTextures extends ResourcePackTextures
     public function getTextureByBlock(Block $block): string|null
     {
         $textureName = TextureUtils::getBlockTextureName($block);
+        if ($textureName === null) return null;
 
         $blockTexture = $this->getBlockByName($textureName);
         if ($blockTexture !== null) {
@@ -299,6 +310,7 @@ class TerrainTextures extends ResourcePackTextures
                 $blockTexture = $blockTexture[$face];
             }
 
+            /** @var string $textureName */
             $textureName = $blockTexture;
         }
 
@@ -311,6 +323,7 @@ class TerrainTextures extends ResourcePackTextures
                 if ($terrainTexture === null) return null;
             }
 
+            /** @var string $textureName */
             $textureName = $terrainTexture;
         }
 

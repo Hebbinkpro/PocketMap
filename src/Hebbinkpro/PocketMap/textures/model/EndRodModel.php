@@ -36,6 +36,7 @@ class EndRodModel extends AnyFacingModel
     public function getTopGeometry(int $facing): array
     {
         $geo = [
+            // 4x4 bottom
             [
                 [2, 3],
                 [4, 4],
@@ -44,6 +45,7 @@ class EndRodModel extends AnyFacingModel
         ];
 
         if ($facing == Facing::UP) {
+            // 2x2 top
             $geo[] = [
                 [2, 0],
                 [2, 2],
@@ -57,11 +59,13 @@ class EndRodModel extends AnyFacingModel
     public function getSideGeometry(int $facing): array
     {
         return [
+            // 4x1 bottom
             [
                 [2, 2],
                 [4, 1],
                 [6, 15]
             ],
+            // 2x15 rod
             [
                 [0, 0],
                 [2, 15],

@@ -42,13 +42,14 @@ class EventListener implements Listener
 {
     private PocketMap $plugin;
     private int $chunkCooldownTime;
+    /** @var list<array{array{int, int}, int}> */
     private array $chunkCooldown;
 
     public function __construct(PocketMap $plugin)
     {
         $this->plugin = $plugin;
         $this->chunkCooldown = [];
-        $this->chunkCooldownTime = PocketMap::getConfigManger()->getInt("renderer.chunk-renderer.chunk-cooldown", 60);
+        $this->chunkCooldownTime = PocketMap::getConfigManger()->getInt("renderer.chunk-scheduler.chunk-cooldown", 60);
     }
 
     public function onWorldLoad(WorldLoadEvent $e): void
@@ -64,7 +65,8 @@ class EventListener implements Listener
         }
 
         // check if the render folder for the world is empty
-        if (count(scandir($renderer->getRenderPath())) <= 2) {
+        $files = scandir($renderer->getRenderPath());
+        if ($files !== false && count($files) <= 2) {
             // the renders folder is empty
             // load the full world
             $this->plugin->getLogger()->notice("Starting full world render of world: " . $renderer->getWorld()->getFolderName());
@@ -80,7 +82,7 @@ class EventListener implements Listener
         $this->plugin->getLogger()->debug("Destroyed renderer for world: " . $e->getWorld()->getFolderName());
     }
 
-    public function onChunkLoad(ChunkLoadEvent $e)
+    public function onChunkLoad(ChunkLoadEvent $e): void
     {
         $world = $e->getWorld();
         $cx = $e->getChunkX();
@@ -89,7 +91,7 @@ class EventListener implements Listener
         // get the world renderer
         $renderer = PocketMap::getWorldRenderer($world->getFolderName());
         if ($renderer === null) {
-            $this->plugin->getLogger()->debug("Renderer of world: {$world->getFoldername()} not found!");
+            $this->plugin->getLogger()->debug("Renderer of world: {$world->getFolderName()} not found!");
             return;
         }
 
@@ -105,7 +107,7 @@ class EventListener implements Listener
             }
 
             $this->plugin->getLogger()->debug("Found a not rendered chunk: $cx,$cz in world: " . $world->getFolderName());
-            $this->plugin->getChunkRenderer()->addChunk($renderer, $cx, $cz);
+            $this->plugin->getChunkScheduler()->addChunk($renderer, $cx, $cz);
         }
     }
 
@@ -120,8 +122,8 @@ class EventListener implements Listener
         $this->updateChunkCooldown();
 
         $world = $pos->getWorld();
-        $chunkX = floor($pos->getX() / 16);
-        $chunkZ = floor($pos->getZ() / 16);
+        $chunkX = (int)floor($pos->getX() / 16);
+        $chunkZ = (int)floor($pos->getZ() / 16);
 
         if ($this->hasChunkCooldown($chunkX, $chunkZ)) return;
 
@@ -133,7 +135,7 @@ class EventListener implements Listener
         // save the chunk, otherwise it will not be rendered
         $renderer->saveChunk($chunkX, $chunkZ);
         // add the chunk as updated to the update task
-        $this->plugin->getChunkRenderer()->addChunk($renderer, $chunkX, $chunkZ);
+        $this->plugin->getChunkScheduler()->addChunk($renderer, $chunkX, $chunkZ);
         // set the chunk cooldown
         $this->setChunkCooldown($chunkX, $chunkZ);
     }

@@ -61,7 +61,9 @@ class AsyncRegionRenderTask extends AsyncRenderTask
         if (!is_file($path)) return null;
 
         try {
-            return imagecreatefrompng($path);
+            $img = imagecreatefrompng($path);
+            if ($img === false) return null;
+            return $img;
         } catch (Exception) {
             return null;
         }

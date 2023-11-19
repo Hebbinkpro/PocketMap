@@ -35,6 +35,7 @@ use pocketmine\world\format\Chunk;
 
 class TextureUtils
 {
+    /** @var array<int, array<int, GdImage>> */
     private static array $blockTextureMap = [];
 
     /**
@@ -62,7 +63,7 @@ class TextureUtils
      */
     public static function getPixelsPerBlock(int $totalPixels, int $blocks): int
     {
-        return floor(max($totalPixels / $blocks, 1));
+        return (int)floor(max($totalPixels / $blocks, 1));
     }
 
     public static function getBlockTexture(Block $block, Chunk $chunk, TerrainTextures $terrainTextures, int $size): ?GdImage
@@ -71,12 +72,16 @@ class TextureUtils
 
         $differentModel = BlockUtils::hasDifferentModelForSameState($block);
         $texture = self::createBlockTexture($block, $differentModel ? null : $model, $chunk, $terrainTextures);
+        if ($texture === null) return null;
 
         // if block can have different models for the same state, apply the model here
         if ($differentModel) {
             $modelTexture = $model->getModelTexture($block, $chunk, $texture);
-            imagedestroy($texture);
-            $texture = $modelTexture;
+
+            if ($modelTexture !== null) {
+                imagedestroy($texture);
+                $texture = $modelTexture;
+            }
         }
 
         // resize the img
@@ -96,10 +101,10 @@ class TextureUtils
      */
     private static function createBlockTexture(Block $block, ?BlockModel $model, Chunk $chunk, TerrainTextures $terrainTextures): ?GdImage
     {
-        $pos = $block->getPosition();
+        $pos = $block->getPosition()->floor();
 
         // get the biome
-        $biomeId = $chunk->getBiomeId($pos->getX(), $pos->getY(), $pos->getZ());
+        $biomeId = $chunk->getBiomeId((int)$pos->getX(), (int)$pos->getY(), (int)$pos->getZ());
         $biome = BiomeRegistry::getInstance()->getBiome($biomeId);
 
         if (!array_key_exists($biome->getId(), self::$blockTextureMap)) {
@@ -112,6 +117,8 @@ class TextureUtils
 
             // create image and copy the cache data to it
             $img = self::getEmptyTexture();
+            if ($img === false) return null;
+
             imagealphablending($img, false);
             imagecopy($img, $cacheImg, 0, 0, 0, 0, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
             imagesavealpha($img, true);
@@ -122,7 +129,9 @@ class TextureUtils
 
         if (($path = $terrainTextures->getBlockTexturePath($block)) === null) {
             // set the path to the fallback texture
-            $path = $terrainTextures->getRealTexturePath($terrainTextures->getOptions()->getFallbackBlock());
+            $fallback = $terrainTextures->getOptions()->getFallbackBlock();
+            if ($fallback === null) $path = null;
+            else $path = $terrainTextures->getRealTexturePath($fallback);
         }
 
         if (is_file($path . ".png")) $img = imagecreatefrompng($path . ".png");
@@ -131,6 +140,8 @@ class TextureUtils
             // the path is null, return empty image
             $img = self::getEmptyTexture();
         }
+        if ($img === false) return null;
+
         imagealphablending($img, false);
 
         // set the model
@@ -139,6 +150,7 @@ class TextureUtils
             $modelImg = $model->getModelTexture($block, $chunk, $img);
             imagedestroy($img);
         }
+        if ($modelImg === null) return null;
 
         // set the color map
         self::applyColorMap($modelImg, $block, $biome, $terrainTextures);
@@ -146,10 +158,13 @@ class TextureUtils
 
         // set the rotation
         $rotatedImg = TextureUtils::rotateToFacing($modelImg, BlockStateParser::getBlockFace($block));
+        if ($rotatedImg === null) return null;
         imagedestroy($modelImg);
 
         // create a cache image
         $cacheImg = self::getEmptyTexture();
+        if ($cacheImg === false) return null;
+
         imagealphablending($cacheImg, false);
         imagecopy($cacheImg, $rotatedImg, 0, 0, 0, 0, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
         imagesavealpha($cacheImg, true);
@@ -160,9 +175,11 @@ class TextureUtils
         return $rotatedImg;
     }
 
-    public static function getEmptyTexture(int $size = PocketMap::TEXTURE_SIZE): GdImage
+    public static function getEmptyTexture(int $size = PocketMap::TEXTURE_SIZE): GdImage|false
     {
         $texture = imagecreatetruecolor($size, $size);
+        if ($texture === false) return false;
+
         imagefill($texture, 0, 0, imagecolorexactalpha($texture, 0, 0, 0, 127));
         imagesavealpha($texture, true);
 
@@ -206,13 +223,15 @@ class TextureUtils
 
         for ($x = 0; $x < $size; $x++) {
             for ($y = 0; $y < $size; $y++) {
-                $c = imagecolorsforindex($image, imagecolorat($image, $x, $y));
+                if (($color = imagecolorat($image, $x, $y)) === false) continue;
+
+                $c = imagecolorsforindex($image, $color);
                 if ($c["alpha"] == 127) continue; // transparent pixel
 
                 $cr = [
-                    "red" => floor($c["red"] * $rm),
-                    "green" => floor($c["green"] * $gm),
-                    "blue" => floor($c["blue"] * $bm),
+                    "red" => (int)floor($c["red"] * $rm),
+                    "green" => (int)floor($c["green"] * $gm),
+                    "blue" => (int)floor($c["blue"] * $bm),
                     "alpha" => $c["alpha"]
                 ];
 
@@ -225,9 +244,9 @@ class TextureUtils
      * Rotate an image on the given axis
      * @param GdImage $image
      * @param int $facing
-     * @return GdImage
+     * @return GdImage|null
      */
-    public static function rotateToFacing(GdImage $image, int $facing): GdImage
+    public static function rotateToFacing(GdImage $image, int $facing): ?GdImage
     {
         $angle = match ($facing) {
             Facing::DOWN, Facing::SOUTH => 180,     // -y, +z
@@ -240,8 +259,9 @@ class TextureUtils
         if ($angle == 0) return $image;
 
         // rotate the image
-        return imagerotate($image, $angle, 0);
-
+        $img = imagerotate($image, $angle, 0);
+        if ($img === false) return null;
+        return $img;
     }
 
     /**
@@ -251,11 +271,12 @@ class TextureUtils
      * @param int $srcHeight teh height of the image
      * @param int $newWidth the new width of the image
      * @param int $newHeight the new height of the image
-     * @return GdImage the compressed image with the new weight and height
+     * @return GdImage|null the compressed image with the new weight and height
      */
-    public static function getCompressedImage(GdImage $src, int $srcWidth, int $srcHeight, int $newWidth, int $newHeight): GdImage
+    public static function getCompressedImage(GdImage $src, int $srcWidth, int $srcHeight, int $newWidth, int $newHeight): ?GdImage
     {
         $compressedImg = imagecreatetruecolor($newWidth, $newHeight);
+        if ($compressedImg === false) return null;
         imagealphablending($compressedImg, false);
         imagecopyresized($compressedImg, $src, 0, 0, 0, 0, $newWidth, $newHeight, $srcHeight, $srcWidth);
         imagesavealpha($compressedImg, true);
@@ -275,7 +296,8 @@ class TextureUtils
 
         for ($x = 0; $x < $size; $x++) {
             for ($y = 0; $y < $size; $y++) {
-                $c = imagecolorsforindex($image, imagecolorat($image, $x, $y));
+                if (($color = imagecolorat($image, $x, $y)) === false) continue;
+                $c = imagecolorsforindex($image, $color);
                 $c["alpha"] += $alpha;
                 if ($c["alpha"] > 127) $c["alpha"] = 127;
                 else if ($c["alpha"] < 0) $c["alpha"] = 0;
@@ -327,9 +349,14 @@ class TextureUtils
         self::$blockTextureMap = [];
     }
 
+    /**
+     * @param Block $block
+     * @param list<string> $availableFaces
+     * @return string|null
+     */
     public static function getBlockFaceTexture(Block $block, array $availableFaces): ?string
     {
-        if (empty($availableFaces)) return null;
+        if (sizeof($availableFaces) == 0) return null;
 
         $axis = BlockStateParser::getBlockFace($block);
 

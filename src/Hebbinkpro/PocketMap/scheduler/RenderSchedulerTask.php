@@ -36,11 +36,14 @@ class RenderSchedulerTask extends Task
     private static array $unfinishedRenders = [];
     private static Logger $logger;
     private PluginBase $plugin;
-    /** @var AsyncRegionRenderTask[] */
+    /** @var AsyncRenderTask[] */
     private array $runningRenders;
-    /** @var array{path: string, loader: RegionChunksLoader, mode: int}[] */
-    private array $scheduledChunkLoaders;
-    /** @var array<string, array{path: string, region: Region}>[] */
+    /**
+     * @var array<array{path: string, loader: RegionChunksLoader, mode: int}>
+     * TODO figure out what the mode does...
+     */
+    private array $scheduledChunkLoaders; //
+    /** @var array<string, array{path: string, region: Region}> */
     private array $scheduledRenders;
     private int $maxRunningRenders;
     private int $maxScheduled;
@@ -52,8 +55,8 @@ class RenderSchedulerTask extends Task
         $this->scheduledChunkLoaders = [];
         $this->scheduledRenders = [];
 
-        $this->maxRunningRenders = PocketMap::getConfigManger()->getInt("renderer.scheduler.renders", 5);
-        $this->maxScheduled = PocketMap::getConfigManger()->getInt("renderer.scheduler.queue-size", 25);
+        $this->maxRunningRenders = PocketMap::getConfigManger()->getInt("renderer.scheduler.renders", 4);
+        $this->maxScheduled = PocketMap::getConfigManger()->getInt("renderer.scheduler.queue-size", 32);
 
         self::$logger = $plugin->getLogger();
     }
@@ -65,7 +68,7 @@ class RenderSchedulerTask extends Task
      */
     public static function finishRender(Region $region): void
     {
-        if (!in_array($region->getName(), self::$unfinishedRenders)) return;
+        if (!in_array($region->getName(), self::$unfinishedRenders, true)) return;
         // remove the region from the list
         self::removeCurrentRender($region);
 
@@ -73,7 +76,7 @@ class RenderSchedulerTask extends Task
 
         // start now the render for the next zoom level
         $renderer = PocketMap::getWorldRenderer($region->getWorldName());
-        if (($next = $region->getNextZoomRegion()) !== null) {
+        if ($renderer !== null && ($next = $region->getNextZoomRegion()) !== null) {
             // start region render for the next region
             // use replace, so when it was already in the queue, it's added in the back
             // these regions will ALWAYS be added, even if the queue is "full",
@@ -89,8 +92,8 @@ class RenderSchedulerTask extends Task
      */
     private static function removeCurrentRender(Region $region): void
     {
-        $key = array_search($region->getName(), self::$unfinishedRenders);
-        if ($key !== false) array_splice(self::$unfinishedRenders, $key, 1);
+        $key = array_search($region->getName(), self::$unfinishedRenders, true);
+        if ($key !== false && is_int($key)) array_splice(self::$unfinishedRenders, $key, 1);
     }
 
     /**
@@ -99,11 +102,12 @@ class RenderSchedulerTask extends Task
      * @param Region $region the region to render
      * @param bool $force if the render has to be added no matter how full the queue is
      * @return bool if the region is scheduled, if false, you have to manually schedule it again!
+     * @internal
      */
     public function scheduleRegionRender(string $path, Region $region, bool $replace = false, bool $force = false): bool
     {
         // check if the region is already scheduled
-        $scheduled = in_array($region->getName(), $this->scheduledRenders);
+        $scheduled = array_key_exists($region->getName(), $this->scheduledRenders);
 
         // when the action is not forced, and it isn't already scheduled
         if (!$force && !$scheduled && count($this->scheduledRenders) >= $this->maxScheduled) return false;
@@ -224,6 +228,7 @@ class RenderSchedulerTask extends Task
             unset($this->runningRenders[$i]);
         }
 
+        $wm = $this->plugin->getServer()->getWorldManager();
         // add new renders until the cap is reached or no new renders are available
         while ($this->getCurrentRendersCount() < $this->maxRunningRenders && count($this->scheduledRenders) > 0) {
             $rr = array_shift($this->scheduledRenders);
@@ -233,11 +238,18 @@ class RenderSchedulerTask extends Task
 
             // if all chunks should be rendered, prepare for the ChunkRenderTask
             if ($region->renderAllChunks()) {
-                $world = $this->plugin->getServer()->getWorldManager()->getWorldByName($region->getWorldName());
+                $worldName = $region->getWorldName();
+                // world does not exist (is not loaded and cannot be loaded)
+                if (!$wm->isWorldLoaded($worldName) && !$wm->loadWorld($worldName)) continue;
+
+                $world = $wm->getWorldByName($worldName);
+                if ($world === null) continue;
+
                 $loader = new RegionChunksLoader($region, $world->getProvider());
                 $this->scheduledChunkLoaders[] = [
                     "path" => $path,
-                    "loader" => $loader
+                    "loader" => $loader,
+                    "mode" => 0
                 ];
 
                 continue;

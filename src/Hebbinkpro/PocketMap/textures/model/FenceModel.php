@@ -26,6 +26,9 @@ use pocketmine\world\format\Chunk;
 
 class FenceModel extends ConnectionModel
 {
+    /**
+     * @inheritDoc
+     */
     public function getCenterGeometry(Block $block): array
     {
         return [
@@ -36,6 +39,9 @@ class FenceModel extends ConnectionModel
         ];
     }
 
+    /**
+     * @inheritDoc
+     */
     public function getConnectionsGeometry(Block $block, Chunk $chunk): array
     {
         $geo = [];

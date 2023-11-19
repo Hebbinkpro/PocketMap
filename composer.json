@@ -1,15 +1,63 @@
 {
   "name": "hebbinkpro/pocketmap",
   "description": "A dynamic web-based world map for PocketMine-MP servers.",
-  "license": "MIT",
+  "license": "GPL-3.0-only",
+  "type": "project",
+  "authors": [
+    {
+      "name": "Hebbinkpro"
+    }
+  ],
   "require": {
+    "php": "^8.1",
+    "pocketmine/pocketmine-mp": "^5.8.1",
     "hebbinkpro/pmmp-webserver": "^0.3.7",
-    "pocketmine/pocketmine-mp": "^5.0.0",
-    "php": "^8.1"
+    "muqsit/simple-packet-handler": "dev-pm5",
+    "himbeer/libskin": "2.0.1",
+    "paroxity/commando": "3.1.0"
+  },
+  "require-dev": {
+    "phpstan/phpstan": "^1.10.3",
+    "phpstan/phpstan-strict-rules": "^1.5.0",
+    "phpstan/extension-installer": "^1.2.0"
   },
   "autoload": {
     "psr-4": {
       "Hebbinkpro\\PocketMap\\": "src/Hebbinkpro/PocketMap"
     }
+  },
+  "repositories": {
+    "libskin": {
+      "type": "package",
+      "package": {
+        "name": "himbeer/libskin",
+        "version": "2.0.1",
+        "source": {
+          "url": "https://github.com/HimbeersaftLP/LibSkin.git",
+          "type": "git",
+          "reference": "master"
+        }
+      }
+    },
+    "commando": {
+      "type": "package",
+      "package": {
+        "name": "paroxity/commando",
+        "version": "3.1.0",
+        "source": {
+          "url": "https://github.com/Paroxity/Commando.git",
+          "type": "git",
+          "reference": "master"
+        }
+      }
+    }
+  },
+  "config": {
+    "allow-plugins": {
+      "phpstan/extension-installer": true
+    }
+  },
+  "scripts": {
+    "analyse": "./vendor/bin/phpstan analyse -c ./phpstan.neon.dist"
   }
 }

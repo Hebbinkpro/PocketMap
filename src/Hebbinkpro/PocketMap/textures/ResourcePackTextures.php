@@ -25,9 +25,9 @@ class ResourcePackTextures
 {
     /** @var array<string, string> List containing all textures inside /textures/blocks/ */
     protected array $textures;
-    /** @var array<string, string|array> List of all texture aliases mapping a texture defined in /textures/terrain_texture.json */
+    /** @var array<string, string|array<mixed>> List of all texture aliases mapping a texture defined in /textures/terrain_texture.json */
     protected array $terrainTextures;
-    /** @var array<string, string|array> List of all blocks mapping a texture alias defined in /blocks.json */
+    /** @var array<string, string|array<mixed>> List of all blocks mapping a texture alias defined in /blocks.json */
     protected array $blocks;
 
 
@@ -54,18 +54,22 @@ class ResourcePackTextures
      */
     private function loadTextures(string $path, string $prefix): void
     {
-        if (!empty($prefix)) $prefix .= "/";
+        if (strlen($prefix) > 0) $prefix .= "/";
 
         $this->textures = [];
 
-        foreach (scandir($path) as $block) {
-            if (in_array($block, [".", ".."])) continue;
+        $contents = scandir($path);
+        if ($contents === false) return;
+
+        foreach ($contents as $block) {
+            if (in_array($block, [".", ".."], true)) continue;
 
             $blockPrefix = "";
             $blocks = [$block];
 
             if (is_dir($path . $block)) {
                 $blocks = scandir($path . $block);
+                if ($blocks === false) continue;
                 $blockPrefix .= $block . "/";
             } else if (!is_file($path . $block)) continue;
 
@@ -87,10 +91,13 @@ class ResourcePackTextures
             return;
         }
 
-        $contents = json_decode(file_get_contents($path), true) ?? [];
-        if (!isset($contents["texture_data"])) {
-            return;
-        }
+        $fileContents = file_get_contents($path);
+        if ($fileContents === false) return;
+
+        $contents = json_decode($fileContents, true) ?? [];
+        if (!is_array($contents) || !isset($contents["texture_data"])) return;
+
+        /** @var array{texture_data: array<string, array{textures?: string|array<mixed>|mixed}>} $contents */
 
         $this->terrainTextures = [];
 
@@ -117,7 +124,7 @@ class ResourcePackTextures
                     continue;
                 }
 
-                $this->terrainTextures[$name] = [];
+                $textureList = [];
                 foreach ($texture as $key => $item) {
                     $textureName = null;
                     // name: [texture, ...]
@@ -126,12 +133,13 @@ class ResourcePackTextures
                     if (is_array($item) && isset($item["path"])) $textureName = self::getTextureName($item["path"]);
 
                     if ($textureName !== null && self::isValidTexture($textureName)) {
-                        $this->terrainTextures[$name][$key] = $textureName;
+                        $textureList[$key] = $textureName;
                     }
                 }
 
-                // remove empty list
-                if (empty($this->terrainTextures[$name])) unset($this->terrainTextures[$name]);
+                // set the terrain textures
+                if (sizeof($textureList) > 0) $this->terrainTextures[$name] = [];
+
             }
         }
 
@@ -154,7 +162,12 @@ class ResourcePackTextures
             return;
         }
 
-        $contents = json_decode(file_get_contents($path), true) ?? [];
+        $fileContents = file_get_contents($path);
+        if ($fileContents === false) return;
+        $contents = json_decode($fileContents, true) ?? [];
+        if (!is_array($contents)) return;
+
+        /** @var array<string, array{textures: mixed}> $contents */
 
         $this->blocks = [];
         foreach ($contents as $name => $data) {
@@ -166,7 +179,7 @@ class ResourcePackTextures
                 if (self::isValidTerrainTexture($texture)) {
                     $this->blocks[$name] = $texture;
                 } // check if the texture has stages but is not included in the terrain_texture.json
-                elseif (!empty(($stages = $this->getTextureStages($texture)))) {
+                elseif (($stages = $this->getTextureStages($texture)) !== null && sizeof($stages) > 0) {
                     // add the stages to the terrain textures
                     $this->terrainTextures[$texture] = $stages;
                     $this->blocks[$name] = $texture;
@@ -177,24 +190,26 @@ class ResourcePackTextures
             }
 
             if (is_array($texture)) {
-                $this->blocks[$name] = [];
+                $blocks = [];
                 foreach ($texture as $direction => $directionAlias) {
+                    /** @var string $directionAlias */
+
                     // check if it is a valid terrain texture
                     if (self::isValidTerrainTexture($directionAlias)) {
-                        $this->blocks[$name][$direction] = $directionAlias;
+                        $blocks[$direction] = $directionAlias;
                     } // check if the texture has stages but is not included in the terrain_texture.json
-                    elseif (!empty(($stages = $this->getTextureStages($directionAlias)))) {
+                    elseif (($stages = $this->getTextureStages($directionAlias)) !== null && sizeof($stages) > 0) {
                         // add the stages to the terrain textures
                         $this->terrainTextures[$directionAlias] = $stages;
-                        $this->blocks[$name][$direction] = $directionAlias;
+                        $blocks[$direction] = $directionAlias;
                     } // check if the texture is just a valid block texture
                     elseif (self::isValidTexture($directionAlias)) {
-                        $this->blocks[$name][$direction] = $directionAlias;
+                        $blocks[$direction] = $directionAlias;
                     }
                 }
 
                 // remove empty list
-                if (empty($this->blocks[$name])) unset($this->blocks[$name]);
+                if (sizeof($blocks) > 0) $this->blocks[$name] = $blocks;
             }
         }
 
@@ -206,6 +221,10 @@ class ResourcePackTextures
         return array_key_exists($alias, $this->terrainTextures);
     }
 
+    /**
+     * @param string $texture
+     * @return array<int, string>|null
+     */
     public function getTextureStages(string $texture): ?array
     {
         $stages = [];
@@ -216,16 +235,14 @@ class ResourcePackTextures
             // check if the stage texture exists
             if (array_key_exists($stageTexture, $this->textures)) $stages[$stage] = $stageTexture;
             // We need to have at least checked 8 stages (e.g. pitcher_crop_top starts at stage 3)
-            else if (!empty($stages) || $stage >= 8) {
-                break;
-            }
+            else if (sizeof($stages) > 0 || $stage >= 8) break;
 
             // increase the stage
             $stage++;
         }
 
         // no stages found
-        if (empty($stages)) return null;
+        if (sizeof($stages) == 0) return null;
 
         if (sizeof($stages) < $stage && array_key_exists($texture, $this->textures)) {
             $placeholder = $texture;
@@ -255,6 +272,10 @@ class ResourcePackTextures
 
     }
 
+    /**
+     * @param array<string, string> $childTextures
+     * @return void
+     */
     private function mergeTextures(array $childTextures): void
     {
 
@@ -272,19 +293,27 @@ class ResourcePackTextures
 
     }
 
-    public function getTexture(string $name): ?string
+    /**
+     * @param string $name
+     * @return string|null
+     */
+    public function getTexture(string $name): null|string
     {
         return $this->textures[$name] ?? null;
     }
 
     /**
-     * @return array
+     * @return array<string, string>
      */
     public function getTextures(): array
     {
         return $this->textures;
     }
 
+    /**
+     * @param array<string, string|array<mixed>> $childTextureAliases
+     * @return void
+     */
     private function mergeTextureAliases(array $childTextureAliases): void
     {
 
@@ -297,13 +326,17 @@ class ResourcePackTextures
     }
 
     /**
-     * @return array
+     * @return array|mixed[][]|string[]
      */
     public function getTerrainTextures(): array
     {
         return $this->terrainTextures;
     }
 
+    /**
+     * @param array<string, string|array<mixed>> $childBlockTextureAliases
+     * @return void
+     */
     private function mergeBlockTextureAliases(array $childBlockTextureAliases): void
     {
         foreach ($childBlockTextureAliases as $block => $childTextureAlias) {
@@ -314,7 +347,7 @@ class ResourcePackTextures
     }
 
     /**
-     * @return array
+     * @return array|mixed[][]|string[]
      */
     public function getBlocks(): array
     {
@@ -326,11 +359,19 @@ class ResourcePackTextures
         return $this->textures[$name] ?? null;
     }
 
+    /**
+     * @param string $name
+     * @return string|array<mixed>|null
+     */
     public function getTerrainTextureByName(string $name): string|array|null
     {
         return $this->terrainTextures[$name] ?? null;
     }
 
+    /**
+     * @param string $name
+     * @return string|array<mixed>|null
+     */
     public function getBlockByName(string $name): string|array|null
     {
         return $this->blocks[$name] ?? null;

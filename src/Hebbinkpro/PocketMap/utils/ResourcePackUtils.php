@@ -52,7 +52,7 @@ class ResourcePackUtils
             }
         }
 
-        if ($manifestIdx === null || $archive->getFromIndex($manifestIdx) === false) {
+        if ($manifestPath === null || $manifestIdx === null || $archive->getFromIndex($manifestIdx) === false) {
             return null;
         }
 
@@ -63,7 +63,7 @@ class ResourcePackUtils
      * Get all block textures inside the archive
      * @param ZipArchive $archive
      * @param string $prefix
-     * @return array
+     * @return array<mixed>
      */
     public static function getAllBlockTextures(ZipArchive $archive, string $prefix = ""): array
     {

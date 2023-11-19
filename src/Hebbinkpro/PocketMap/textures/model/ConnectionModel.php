@@ -31,7 +31,16 @@ abstract class ConnectionModel extends BlockModel
         return array_merge($center, $connections);
     }
 
+    /**
+     * @param Block $block
+     * @return array<array<array{int, int}>>
+     */
     public abstract function getCenterGeometry(Block $block): array;
 
+    /**
+     * @param Block $block
+     * @param Chunk $chunk
+     * @return array<array<array{int, int}>>
+     */
     public abstract function getConnectionsGeometry(Block $block, Chunk $chunk): array;
 }

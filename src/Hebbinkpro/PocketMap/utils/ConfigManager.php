@@ -27,11 +27,19 @@ class ConfigManager
 {
     private Config|ConfigManager $config;
     private bool $autoSave;
+    /** @var array<mixed> */
     private array $configData;
     private ?string $name;
+    /** @var array<string, ConfigManager> */
     private array $managers;
 
 
+    /**
+     * @param Config|ConfigManager $config
+     * @param bool $autoSave
+     * @param array<string, mixed> $configData
+     * @param string|null $name
+     */
     private function __construct(Config|ConfigManager $config, bool $autoSave = false, array $configData = [], ?string $name = null)
     {
         if ($config instanceof Config) $configData = $config->getAll();
@@ -80,9 +88,12 @@ class ConfigManager
 
         // the config is a config manager
         // setValue will update all managers above this one
-        $this->config->setValue($this->name, $this->toArray());
+        if ($this->name !== null) $this->config->setValue($this->name, $this->toArray());
     }
 
+    /**
+     * @return array<mixed>
+     */
     public function toArray(): array
     {
         return $this->configData;
@@ -106,20 +117,23 @@ class ConfigManager
         }
 
         $manager = $this->getManager(array_shift($nameParts), true);
-        $manager->setValue(implode(".", $nameParts), $value);
-        $manager->save();
+
+        if ($manager !== null) {
+            $manager->setValue(implode(".", $nameParts), $value);
+            $manager->save();
+        }
     }
 
     /**
      * Get a config manager from the config
      * @param string $name the name of the config inside the config
      * @param bool $create if the manager should be created if it doesn't exist
-     * @param array $default the default values when a new manager is created
+     * @param array<mixed> $default the default values when a new manager is created
      * @return ConfigManager|null the config manager or null when it doesn't exist.
      */
     public function getManager(string $name, bool $create = false, array $default = []): ?ConfigManager
     {
-        if (in_array($name, $this->managers)) return $this->managers[$name];
+        if (array_key_exists($name, $this->managers)) return $this->managers[$name];
 
         $nameParts = explode(".", $name);
 
@@ -189,7 +203,8 @@ class ConfigManager
      */
     public function getInt(string $name, int $default = 0): int
     {
-        return intval($this->getValue($name, $default));
+        $res = $this->getValue($name, $default);
+        return is_numeric($res) ? (int)$res : $default;
     }
 
     /**
@@ -211,14 +226,15 @@ class ConfigManager
      */
     public function getFloat(string $name, float $default = 0.0): float
     {
-        return floatval($this->getValue($name, $default));
+        $res = $this->getValue($name, $default);
+        return is_numeric($res) ? (float)$res : $default;
     }
 
     /**
      * Get an array value from the config
      * @param string $name
-     * @param array $default
-     * @return array
+     * @param array<mixed> $default
+     * @return array<mixed>
      */
     public function getArray(string $name, array $default = []): array
     {
@@ -247,7 +263,8 @@ class ConfigManager
      */
     public function getString(string $name, string $default = ""): string
     {
-        return strval($this->getValue($name, $default));
+        $res = $this->getValue($name, $default);
+        return is_string($res) ? $res : $default;
     }
 
     /**

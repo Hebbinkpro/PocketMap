@@ -19,67 +19,42 @@
 
 namespace Hebbinkpro\PocketMap\region;
 
-use Generator;
+use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
 
-class Region
+class Region extends BaseRegion
 {
     private string $worldName;
-    private int $zoom;
-    private int $x;
-    private int $z;
     private TerrainTextures $terrainTextures;
     private bool $renderChunks;
 
 
     public function __construct(string $worldName, int $zoom, int $regionX, int $regionZ, TerrainTextures $terrainTextures, bool $renderChunks = false)
     {
+        parent::__construct($zoom, $regionX, $regionZ);
+
         $this->worldName = $worldName;
-        $this->zoom = $zoom;
-        $this->x = $regionX;
-        $this->z = $regionZ;
         $this->terrainTextures = $terrainTextures;
         $this->renderChunks = $renderChunks;
     }
 
-    /**
-     * Yields all chunk coordinates that are inside the region
-     * @return int[]|Generator
-     */
-    public function getChunks(): Generator|array
+    public static function getByName(string $name): ?Region
     {
-        $minX = $this->x * $this->getTotalChunks();
-        $minZ = $this->z * $this->getTotalChunks();
+        $parts = explode("/", $name);
 
-        for ($x = $minX; $x < $minX + $this->getTotalChunks(); $x++) {
-            for ($z = $minZ; $z < $minZ + $this->getTotalChunks(); $z++) {
-                yield [$x, $z];
-            }
-        }
-    }
+        if (count($parts) != 3) return null;
 
-    /**
-     * Get the total amount of chunks inside the region
-     * @return int
-     */
-    public function getTotalChunks(): int
-    {
-        return intval(pow(2, $this->zoom));
-    }
+        $renderer = PocketMap::getWorldRenderer($parts[0]);
+        if ($renderer === null) return null;
 
-    /**
-     * Get the coordinates of a chunk inside the region.
-     * @param int $worldChunkX the x coordinate of the chunk inside the world
-     * @param int $worldChunkZ the z coordinate of the chunk inside the world
-     * @return int[]
-     */
-    public function getRegionChunkCoords(int $worldChunkX, int $worldChunkZ): array
-    {
-        return [
-            $worldChunkX - ($this->x * $this->getTotalChunks()),
-            $worldChunkZ - ($this->z * $this->getTotalChunks())
-        ];
+        $zoom = intval($parts[1]);
+        $pos = explode(",", $parts[2]);
+        if (count($pos) < 2) return null;
+        $x = intval($pos[0]);
+        $z = intval($pos[1]);
+
+        return $renderer->getRegion($zoom, $x, $z);
     }
 
     /**
@@ -88,24 +63,7 @@ class Region
      */
     public function getChunkPixelSize(): int
     {
-        return floor(WorldRenderer::RENDER_SIZE / $this->getTotalChunks());
-    }
-
-    /**
-     * Check if a chunk is inside the region.
-     * @param int $chunkX
-     * @param int $chunkZ
-     * @return bool
-     */
-    public function isChunkInRegion(int $chunkX, int $chunkZ): bool
-    {
-        $minX = $this->x * $this->getTotalChunks();
-        $minZ = $this->z * $this->getTotalChunks();
-        $maxX = ($this->x + 1) * $this->getTotalChunks();
-        $maxZ = ($this->z + 1) * $this->getTotalChunks();
-
-        return $minX <= $chunkX && $chunkX < $maxX
-            && $minZ <= $chunkZ && $chunkZ < $maxZ;
+        return (int)floor(WorldRenderer::RENDER_SIZE / $this->getTotalChunks());
     }
 
     /**
@@ -115,36 +73,8 @@ class Region
      */
     public function getName(bool $includeWorld = true): string
     {
-        $region = $this->getZoom() . "/" . $this->getX() . "," . $this->getZ();
-        if (!$includeWorld) return $region;
-        return $this->getWorldName() . "/" . $region;
-    }
-
-    /**
-     * Get the zoom level of the region
-     * @return int
-     */
-    public function getZoom(): int
-    {
-        return $this->zoom;
-    }
-
-    /**
-     * Get the X position of the region
-     * @return int
-     */
-    public function getX(): int
-    {
-        return $this->x;
-    }
-
-    /**
-     * Get the Z position of the region
-     * @return int
-     */
-    public function getZ(): int
-    {
-        return $this->z;
+        if (!$includeWorld) return parent::getName();
+        return $this->getWorldName() . "/" . parent::getName();
     }
 
     /**
@@ -158,14 +88,10 @@ class Region
 
     public function getNextZoomRegion(): ?Region
     {
-        $nextZoom = $this->zoom + 1;
-        // there is no smaller zoom available
-        if ($nextZoom > 8) return null;
+        $base = parent::getNextZoomRegion();
+        if ($base === null) return null;
 
-        $nextX = floor($this->x / 2);
-        $nextZ = floor($this->z / 2);
-
-        return new Region($this->worldName, $nextZoom, $nextX, $nextZ, $this->getTerrainTextures());
+        return new Region($this->worldName, $base->getZoom(), $base->getX(), $base->getZ(), $this->getTerrainTextures());
     }
 
     /**
@@ -185,14 +111,5 @@ class Region
     public function renderAllChunks(): bool
     {
         return $this->isChunk() || $this->renderChunks;
-    }
-
-    /**
-     * Get if the region only exists out of a single chunk.
-     * @return bool
-     */
-    public function isChunk(): bool
-    {
-        return $this->getTotalChunks() == 1;
     }
 }

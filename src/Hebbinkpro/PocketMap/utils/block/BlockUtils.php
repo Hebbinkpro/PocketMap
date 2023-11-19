@@ -35,7 +35,6 @@ use pocketmine\block\Wall;
 use pocketmine\math\Facing;
 use pocketmine\world\format\Chunk;
 use ReflectionClass;
-use ReflectionException;
 
 
 class BlockUtils
@@ -51,7 +50,7 @@ class BlockUtils
     /**
      * @param Block $block
      * @param Chunk $chunk
-     * @return array
+     * @return array<int>
      */
     public static function getConnections(Block $block, Chunk $chunk): array
     {
@@ -63,8 +62,8 @@ class BlockUtils
 
         $blockPos = $block->getPosition();
         $blockChunk = [
-            floor($blockPos->getX() / 16),
-            floor($blockPos->getZ() / 16)
+            (int)floor($blockPos->getX() / 16),
+            (int)floor($blockPos->getZ() / 16)
         ];
 
         $connections = [];
@@ -73,14 +72,14 @@ class BlockUtils
             $offset = Facing::OFFSET[$facing];
             $pos = $block->getPosition()->add($offset[0], $offset[1], $offset[2]);
             $posChunk = [
-                floor($pos->getX() / 16),
-                floor($pos->getZ() / 16)
+                (int)floor($pos->getX() / 16),
+                (int)floor($pos->getZ() / 16)
             ];
 
             // outside the chunk
             if ($posChunk != $blockChunk) continue;
 
-            $stateId = $chunk->getBlockStateId($pos->x % 16, $pos->y, $pos->z % 16);
+            $stateId = $chunk->getBlockStateId((int)$pos->x % 16, (int)$pos->y, (int)$pos->z % 16);
             $side = BlockStateParser::getBlockFromStateId($stateId);
 
             if ($block instanceof Fence
@@ -109,7 +108,8 @@ class BlockUtils
 
     public static function hasHorizontalFacing(Block $block): bool
     {
-        return in_array(HorizontalFacingTrait::class, self::getTraits($block));
+        if ($block->getTypeId() == BlockTypeIds::TORCH) return true;
+        return in_array(HorizontalFacingTrait::class, self::getTraits($block), true);
     }
 
     /**
@@ -120,11 +120,7 @@ class BlockUtils
     public static function getTraits(Block $block): array
     {
 
-        try {
-            $reflection = new ReflectionClass($block::class);
-        } catch (ReflectionException) {
-            return [];
-        }
+        $reflection = new ReflectionClass($block::class);
 
         $traits = array_keys($reflection->getTraits());
         foreach (self::getParents($block) as $parent) {
@@ -136,15 +132,11 @@ class BlockUtils
 
     /**
      * @param Block $block
-     * @return ReflectionClass[]
+     * @return ReflectionClass<Block>[]
      */
     public static function getParents(Block $block): array
     {
-        try {
-            $reflection = new ReflectionClass($block::class);
-        } catch (ReflectionException) {
-            return [];
-        }
+        $reflection = new ReflectionClass($block::class);
 
         $parents = [];
         while (true) {
@@ -156,14 +148,22 @@ class BlockUtils
         return $parents;
     }
 
+    public static function hasCount(Block $block): bool
+    {
+        return match ($block->getTypeId()) {
+            BlockTypeIds::SEA_PICKLE, BlockTypeIds::CANDLE, BlockTypeIds::DYED_CANDLE => true,
+            default => false
+        };
+    }
+
     public static function hasSignLikeRotation(Block $block): bool
     {
-        return in_array(SignLikeRotationTrait::class, self::getTraits($block));
+        return in_array(SignLikeRotationTrait::class, self::getTraits($block), true);
     }
 
     public static function hasAnyFacing(Block $block): bool
     {
-        if (in_array(AnyFacingTrait::class, self::getTraits($block))) return true;
+        if (in_array(AnyFacingTrait::class, self::getTraits($block), true)) return true;
 
         return match ($block->getTypeId()) {
             BlockTypeIds::LEVER => true,
@@ -173,12 +173,12 @@ class BlockUtils
 
     public static function hasPillarRotation(Block $block): bool
     {
-        return in_array(PillarRotationTrait::class, self::getTraits($block));
+        return in_array(PillarRotationTrait::class, self::getTraits($block), true);
     }
 
     public static function hasColor(Block $block): bool
     {
-        return in_array(ColoredTrait::class, self::getTraits($block));
+        return in_array(ColoredTrait::class, self::getTraits($block), true);
     }
 
     public static function hasFullTop(Block $block, float $epsilon = 0.000001): bool
