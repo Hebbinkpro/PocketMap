@@ -32,7 +32,7 @@ class TorchModel extends HorizontalFacingModel
         if ($block instanceof Torch) {
             $facing = $block->getFacing();
 
-            if (in_array($facing, Facing::HORIZONTAL)) {
+            if (in_array($facing, Facing::HORIZONTAL, true)) {
                 return [
                     // top
                     [

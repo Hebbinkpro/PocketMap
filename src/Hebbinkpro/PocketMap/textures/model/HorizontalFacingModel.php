@@ -29,15 +29,20 @@ use pocketmine\world\format\Chunk;
 abstract class HorizontalFacingModel extends BlockModel
 {
 
-    public function getModelTexture(Block $block, Chunk $chunk, GdImage $texture): GdImage
+    public function getModelTexture(Block $block, Chunk $chunk, GdImage $texture): ?GdImage
     {
         $model = parent::getModelTexture($block, $chunk, $texture);
+        if ($model === null) return null;
 
         $rotation = $this->getRotation($block);
         if ($rotation != 0) {
+            $color = imagecolorallocatealpha($model, 0, 0, 0, 127);
+            if ($color === false) return $model;
             // rotate the model
-            $rotated = imagerotate($model, $rotation, imagecolorallocatealpha($model, 0, 0, 0, 127));
+            $rotated = imagerotate($model, $rotation, $color);
             imagedestroy($model);
+
+            if ($rotated === false) return $model;
             $model = $rotated;
         }
 
@@ -47,14 +52,13 @@ abstract class HorizontalFacingModel extends BlockModel
     public function getRotation(Block $block): int
     {
         if (!BlockUtils::hasHorizontalFacing($block)) return 0;
-        /** @type FenceGate $block */
+        /** @var FenceGate $block */
 
         return match ($block->getFacing()) {
-            Facing::NORTH => 0,
             Facing::EAST => 270,
             Facing::SOUTH => 180,
             Facing::WEST => 90,
-            default => 0
+            default => 0 // Facing::NORTH
         };
     }
 }

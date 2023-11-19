@@ -40,6 +40,9 @@ final class ColorMapParser
     public const COLOR_MAP_FOLIAGE_SWAMP = "textures/colormap/swamp_foliage.png";
     public const COLOR_MAP_GRASS_SWAMP = "textures/colormap/swamp_grass.png";
 
+    /**
+     * @var array<string, array<int, array<int, int>>>
+     */
     private static array $colorMap = [];
 
     /**
@@ -84,21 +87,26 @@ final class ColorMapParser
      */
     public static function getWaterColor(Biome $biome, TerrainTextures $terrainTextures): int
     {
+        /** @var array{water_surface_color?: string} $biomeData */
         $biomeData = self::getBiomeData($biome, $terrainTextures);
         $hexColor = $biomeData["water_surface_color"] ?? "#44AFF5";
-        return hexdec(str_replace("#", "", $hexColor));
+        return (int)hexdec(str_replace("#", "", $hexColor));
     }
 
     /**
      * Get the biome data from biomes_client.json
      * @param Biome $biome
      * @param TerrainTextures $terrainTextures
-     * @return array
+     * @return array<string, mixed>
      */
     public static function getBiomeData(Biome $biome, TerrainTextures $terrainTextures): array
     {
-        $biomes = json_decode(file_get_contents($terrainTextures->getVanillaPath() . self::BIOMES_CLIENT), true)["biomes"];
-        return $biomes[self::getBiomeName($biome)] ?? $biomes["default"] ?? [];
+        $contents = file_get_contents($terrainTextures->getVanillaPath() . self::BIOMES_CLIENT);
+        if ($contents === false) return [];
+
+        /** @var array{biomes: array<string, array<string, mixed>>} $data */
+        $data = json_decode($contents, true) ?? ["biomes" => []];
+        return $data["biomes"][self::getBiomeName($biome)] ?? $data["biomes"]["default"] ?? [];
     }
 
     /**
@@ -110,7 +118,8 @@ final class ColorMapParser
     {
         $reflector = new ReflectionClass(BiomeIds::class);
 
-        return strtolower(array_search($biome->getId(), $reflector->getConstants()) ?? "ocean");
+        $name = array_search($biome->getId(), $reflector->getConstants(), true);
+        return $name === false ? "ocean" : strtolower($name);
     }
 
     /**
@@ -138,17 +147,21 @@ final class ColorMapParser
         $rain = min(1, max(0, $rain));
 
         $img = imagecreatefrompng($texture);
+        if ($img === false) return 0;
         imagealphablending($img, true);
 
-        $x = floor(self::COLOR_MAP_SIZE - ($temp * self::COLOR_MAP_SIZE));
-        $y = floor(self::COLOR_MAP_SIZE - ($rain * self::COLOR_MAP_SIZE * $temp));
+        $x = (int)floor(self::COLOR_MAP_SIZE - ($temp * self::COLOR_MAP_SIZE));
+        $y = (int)floor(self::COLOR_MAP_SIZE - ($rain * self::COLOR_MAP_SIZE * $temp));
 
         if ($x < 0 || $y < 0 || $x > self::COLOR_MAP_SIZE || $y > self::COLOR_MAP_SIZE) {
             $color = imagecolorexactalpha($img, 0, 0, 0, 127);
         } else $color = imagecolorat($img, $x, $y);
 
         // if no color was found, create a transparent pixel
-        if (!$color) imagedestroy($img);
+        if ($color === false) {
+            imagedestroy($img);
+            return 0;
+        }
 
         return $color;
     }
@@ -198,14 +211,16 @@ final class ColorMapParser
     public static function average(int $color1, int $color2): int
     {
         $placeholder = imagecreatetruecolor(1, 1);
+        if ($placeholder === false) return 0;
+
         $c1 = imagecolorsforindex($placeholder, $color1);
         $c2 = imagecolorsforindex($placeholder, $color2);
 
         $cr = [
-            "red" => sqrt(($c1["red"] ^ 2 + $c2["red"] ^ 2) / 2),
-            "green" => sqrt(($c1["green"] ^ 2 + $c2["green"] ^ 2) / 2),
-            "blue" => sqrt(($c1["blue"] ^ 2 + $c2["blue"] ^ 2) / 2),
-            "alpha" => sqrt(($c1["alpha"] ^ 2 + $c2["alpha"] ^ 2) / 2)
+            "red" => (int)sqrt(($c1["red"] ^ 2 + $c2["red"] ^ 2) / 2),
+            "green" => (int)sqrt(($c1["green"] ^ 2 + $c2["green"] ^ 2) / 2),
+            "blue" => (int)sqrt(($c1["blue"] ^ 2 + $c2["blue"] ^ 2) / 2),
+            "alpha" => (int)sqrt(($c1["alpha"] ^ 2 + $c2["alpha"] ^ 2) / 2)
         ];
 
         $average = imagecolorexactalpha($placeholder, $cr["red"], $cr["green"], $cr["blue"], $cr["alpha"]);
@@ -257,6 +272,7 @@ final class ColorMapParser
      */
     public static function getWaterTransparency(Biome $biome, TerrainTextures $terrainTextures): float
     {
+        /** @var array{water_surface_transparency?: float} $biomeData */
         $biomeData = self::getBiomeData($biome, $terrainTextures);
         return $biomeData["water_surface_transparency"] ?? 0.650;
     }

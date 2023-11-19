@@ -45,6 +45,7 @@ abstract class AsyncRenderTask extends AsyncTask
         /** @var Region $region */
         $region = unserialize($this->serializedRegion);
         $renderImage = $this->getRenderImage();
+        if ($renderImage === false) return;
 
         $result = $this->render($region, $renderImage);
 
@@ -54,13 +55,14 @@ abstract class AsyncRenderTask extends AsyncTask
 
     /**
      * Get the render image or create a new image.
-     * @return GdImage
+     * @return GdImage|false
      */
-    private function getRenderImage(): GdImage
+    private function getRenderImage(): GdImage|false
     {
         // the given region does not yet exist
         if (!is_file($this->renderFile)) {
             return imagecreatetruecolor(WorldRenderer::RENDER_SIZE, WorldRenderer::RENDER_SIZE);
+
         }
 
         return imagecreatefrompng($this->renderFile);

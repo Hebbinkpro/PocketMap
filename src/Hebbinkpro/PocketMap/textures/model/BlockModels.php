@@ -42,9 +42,10 @@ final class BlockModels
     use SingletonTrait;
 
     private BlockModel $default;
+    /** @var array<int, BlockModel> */
     private array $blockModels;
 
-    /** @var array<string, string> */
+    /** @var array<string, BlockModel> */
     private array $blockTypeModels;
 
     public function __construct()
@@ -108,7 +109,7 @@ final class BlockModels
         $this->register(VanillaBlocks::CHEST(), new DefaultBlockModel()); // TODO double chests
         $this->register(VanillaBlocks::TRAPPED_CHEST(), new DefaultBlockModel());
         $this->register(VanillaBlocks::ENDER_CHEST(), new DefaultBlockModel());
-        $this->register(VanillaBlocks::BARREL(), new DefaultBlockModel()); // TODO rotation
+        $this->register(VanillaBlocks::BARREL(), new DefaultBlockModel());
 
         $this->register(VanillaBlocks::CAKE(), new DefaultBlockModel());
         $this->register(VanillaBlocks::CAKE_WITH_CANDLE(), new DefaultBlockModel());

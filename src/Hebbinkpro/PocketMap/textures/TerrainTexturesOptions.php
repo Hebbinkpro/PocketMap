@@ -26,7 +26,7 @@ use pocketmine\block\VanillaBlocks;
 class TerrainTexturesOptions
 {
 
-    private string $fallbackBlock;
+    private ?string $fallbackBlock;
     private int $heightColor;
     private int $heightAlpha;
 
@@ -41,9 +41,9 @@ class TerrainTexturesOptions
 
     /**
      * ID of the fallback block
-     * @return string the fallback texture path or null when it doesn't exist
+     * @return null|string the fallback texture path or null when it doesn't exist
      */
-    public function getFallbackBlock(): string
+    public function getFallbackBlock(): ?string
     {
         return $this->fallbackBlock;
     }

@@ -30,11 +30,14 @@ use pocketmine\player\Player;
 
 class RenderCommand extends BaseSubCommand
 {
-
+    /**
+     * @param CommandSender $sender
+     * @param string $aliasUsed
+     * @param array{region?: string, x?: int, z?: int, world?: string, zoom?: int}|array<mixed> $args
+     * @return void
+     */
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
-        /** @var array{x: int, z: int, zoom: int, world: string} $args */
-
         /** @var PocketMap $plugin */
         $plugin = $this->getOwningPlugin();
 
@@ -54,7 +57,7 @@ class RenderCommand extends BaseSubCommand
 
             $x = $args["x"];
             $z = $args["z"];
-            $world = $args["world"];
+            $worldName = $args["world"];
             $zoom = $args["zoom"];
 
             if ($zoom < 0 || $zoom > 8) {
@@ -62,24 +65,40 @@ class RenderCommand extends BaseSubCommand
                 return;
             }
 
+            $world = $plugin->getLoadedWorld($worldName);
+            if ($world === null) {
+                $sender->sendMessage("§cWorld '$worldName' not found");
+                return;
+            }
+
             $renderer = PocketMap::getWorldRenderer($world);
             if ($renderer === null) {
-                if (!$plugin->getServer()->getWorldManager()->loadWorld($world)) {
-                    $sender->sendMessage("§cWorld not found: $world");
-                    return;
-                }
-                $renderer = PocketMap::getWorldRenderer($world);
+                $sender->sendMessage("§cSomething went wrong");
+                return;
             }
 
             $region = $renderer->getRegion($zoom, $x, $z, true);
         } else {
-            $region = Region::getByName($args["region"]);
+            /** @var string $rName */
+            $rName = $args["region"];
+            $region = Region::getByName($rName);
+
             if ($region === null) {
                 $sender->sendMessage("§cInvalid region. Format: world/zoom/x,z");
                 return;
             }
 
-            $renderer = PocketMap::getWorldRenderer($region->getWorldName());
+            $world = $plugin->getLoadedWorld($region->getWorldName());
+            if ($world === null) {
+                $sender->sendMessage("§cWorld '{$region->getWorldName()}' not found");
+                return;
+            }
+            $renderer = PocketMap::getWorldRenderer($world);
+        }
+
+        if ($renderer === null) {
+            $sender->sendMessage("§cSomething went wrong");
+            return;
         }
 
         $res = $plugin->getChunkScheduler()->addChunksByRegion($renderer, $region);

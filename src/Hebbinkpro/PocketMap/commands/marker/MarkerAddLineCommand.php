@@ -28,8 +28,6 @@ class MarkerAddLineCommand extends MarkerAddAreaCommand
 
     protected function addMarker(string $name, Vector3 $pos1, Vector3 $pos2, World $world, ?string $id): bool
     {
-        /** @var PocketMap $plugin */
-        $plugin = $this->getOwningPlugin();
 
         // create a rectangular polygon positions list
         $positions = [

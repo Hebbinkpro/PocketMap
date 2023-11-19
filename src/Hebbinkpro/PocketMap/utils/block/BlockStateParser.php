@@ -21,10 +21,10 @@ namespace Hebbinkpro\PocketMap\utils\block;
 
 use pocketmine\block\Block;
 use pocketmine\block\BlockTypeIds;
+use pocketmine\block\Button;
 use pocketmine\block\Door;
 use pocketmine\block\RuntimeBlockStateRegistry;
-use pocketmine\block\utils\AnyFacingTrait;
-use pocketmine\block\utils\PillarRotationTrait;
+use pocketmine\block\SimplePillar;
 use pocketmine\data\bedrock\block\BlockStateData;
 use pocketmine\data\bedrock\block\BlockStateSerializeException;
 use pocketmine\math\Facing;
@@ -79,14 +79,14 @@ final class BlockStateParser
 
         // the block uses the AnyFacingTrait
         if (BlockUtils::hasAnyFacing($block)) {
-            /** @var AnyFacingTrait $block */
+            /** @var Button $block */
 
             return $block->getFacing();
         }
 
         // the block uses the PillarRotationTrait
         if (BlockUtils::hasPillarRotation($block)) {
-            /** @var PillarRotationTrait $block */
+            /** @var SimplePillar $block */
 
             // convert axis to facing
             return ($block->getAxis() << 1) | Facing::FLAG_AXIS_POSITIVE;

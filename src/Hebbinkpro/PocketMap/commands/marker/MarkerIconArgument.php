@@ -48,6 +48,9 @@ class MarkerIconArgument extends StringEnumArgument
         return "icon name";
     }
 
+    /**
+     * @return array<int|string, string>
+     */
     public function getEnumValues(): array
     {
         $values = [];

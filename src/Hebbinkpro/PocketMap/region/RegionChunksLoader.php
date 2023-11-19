@@ -28,7 +28,8 @@ class RegionChunksLoader
 {
     private WritableWorldProvider $provider;
     private RegionChunks $regionChunks;
-    private Generator|array $chunkCoords;
+    /** @var Generator<array{int,int}> */
+    private Generator $chunkCoords;
     private bool $finished;
 
     private int $maxChunksPerRun;
@@ -53,10 +54,7 @@ class RegionChunksLoader
 
         $i = 0;
         $chunks = [];
-
-        /** @var PartialRegion $partialRegion */
-        $partialRegion = null;
-        if ($this->regionChunks->getRegion() instanceof PartialRegion) $partialRegion = $this->regionChunks->getRegion();
+        $region = $this->regionChunks->getRegion();
 
         // loop through all chunk coords
         while ($this->chunkCoords->valid()) {
@@ -68,10 +66,10 @@ class RegionChunksLoader
             if ($chunkData !== null) {
                 if (!array_key_exists($x, $chunks)) $chunks[$x] = [];
                 $chunks[$x][$z] = ChunkUtils::getChunkFromData($chunkData->getData());
-            } else {
+            } else if ($region instanceof PartialRegion) {
                 // the chunk data of this chunk didn't exist
                 // remove the chunk from the partial region
-                $partialRegion?->removeChunk($x, $z);
+                $region->removeChunk($x, $z);
             }
             $this->chunkCoords->next();
 

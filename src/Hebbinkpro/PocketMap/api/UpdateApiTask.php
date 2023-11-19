@@ -20,11 +20,11 @@
 namespace Hebbinkpro\PocketMap\api;
 
 use Exception;
+use GdImage;
 use Hebbinkpro\PocketMap\PocketMap;
 use Himbeer\LibSkin\LibSkin;
 use Himbeer\LibSkin\SkinConverter;
 use pocketmine\player\Player;
-use pocketmine\plugin\PluginBase;
 use pocketmine\scheduler\Task;
 use pocketmine\world\World;
 
@@ -32,10 +32,10 @@ class UpdateApiTask extends Task
 {
     public const HEAD_IMG_SIZE = 32;
 
-    private PluginBase $plugin;
+    private PocketMap $plugin;
     private string $tmpFolder;
 
-    public function __construct(PluginBase $plugin, string $tmpFolder)
+    public function __construct(PocketMap $plugin, string $tmpFolder)
     {
         $this->plugin = $plugin;
         $this->tmpFolder = $tmpFolder;
@@ -49,8 +49,13 @@ class UpdateApiTask extends Task
 
     private function setWorldData(): void
     {
+        /** @var array<string> $worlds */
         $worlds = PocketMap::getConfigManger()->getArray("api.worlds");
-        if (empty($worlds)) $worlds = array_diff(scandir($this->plugin->getServer()->getDataPath() . "worlds"), [".", ".."]);
+        if (sizeof($worlds) == 0) {
+            $files = scandir($this->plugin->getServer()->getDataPath() . "worlds");
+            if ($files === false) return;
+            $worlds = array_diff($files, [".", ".."]);
+        }
 
         $wm = $this->plugin->getServer()->getWorldManager();
 
@@ -58,7 +63,9 @@ class UpdateApiTask extends Task
         foreach ($worlds as $name) {
             if (!$this->isWorldVisible($name) || !$wm->loadWorld($name)) continue;
 
-            $world = $wm->getWorldByName($name);
+            $world = $this->plugin->getLoadedWorld($name);
+            if ($world === null) continue;
+
             $data = $world->getProvider()->getWorldData();
             $spawn = $world->getSpawnLocation();
 
@@ -80,7 +87,7 @@ class UpdateApiTask extends Task
     {
         if ($world instanceof World) $world = $world->getFolderName();
         $list = PocketMap::getConfigManger()->getArray("api.worlds");
-        return empty($list) || in_array($world, $list);
+        return sizeof($list) == 0 || in_array($world, $list, true);
     }
 
     private function setPlayerData(): void
@@ -91,6 +98,7 @@ class UpdateApiTask extends Task
 
         // get the config of the players
         $cfg = PocketMap::getConfigManger()->getManager("api.players");
+        if ($cfg === null) return;
 
         // the players are visible eon the map
         if ($cfg->getBool("visible")) {
@@ -101,8 +109,8 @@ class UpdateApiTask extends Task
 
                 // the world is not visible, or the player is not visible
                 if (!$this->isWorldVisible($world) ||
-                    in_array($world, $cfg->getArray("hide-worlds")) ||
-                    in_array($player->getName(), $cfg->getArray("hide-players"))) continue;
+                    in_array($world, $cfg->getArray("hide-worlds"), true) ||
+                    in_array($player->getName(), $cfg->getArray("hide-players"), true)) continue;
 
                 // create empty list for the world
                 if (!isset($playerData[$world])) $playerData[$world] = [];
@@ -141,6 +149,7 @@ class UpdateApiTask extends Task
         if (file_exists($skinFile)) return;
 
         try {
+            /** @var GdImage $skinImg */
             $skinImg = SkinConverter::skinDataToImage($skin->getSkinData());
         } catch (Exception $e) {
             $this->plugin->getLogger()->warning("Could not save skin '{$skin->getSkinId()}' from player '{$player->getName()}'");
@@ -155,6 +164,7 @@ class UpdateApiTask extends Task
 
         // create the head img
         $headImg = imagecreatetruecolor(self::HEAD_IMG_SIZE, self::HEAD_IMG_SIZE);
+        if ($headImg === false) return;
         // copy the head from the skin img to the head img
         imagecopyresampled($headImg, $skinImg, 0, 0, $headSize, $headSize, self::HEAD_IMG_SIZE, self::HEAD_IMG_SIZE, $headSize, $headSize);
 

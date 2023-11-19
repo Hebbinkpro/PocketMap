@@ -29,6 +29,12 @@ use pocketmine\command\CommandSender;
 class PocketMapCommand extends BaseCommand
 {
 
+    /**
+     * @param CommandSender $sender
+     * @param string $aliasUsed
+     * @param array<mixed> $args
+     * @return void
+     */
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
         $sender->sendMessage("[PocketMap] Execute '/pmap help' for a list of all available command");

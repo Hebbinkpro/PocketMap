@@ -32,12 +32,16 @@ use pocketmine\world\World;
 class MarkerAddAreaCommand extends BaseSubCommand
 {
 
+    /**
+     * @param CommandSender $sender
+     * @param string $aliasUsed
+     * @param array<mixed>|array{name: string, pos1: Vector3, pos2?: Vector3, world?: string, id?: string} $args
+     * @return void
+     */
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
         /** @var PocketMap $plugin */
         $plugin = $this->getOwningPlugin();
-
-        /** @var array{name: string, pos1: Vector3, pos2: Vector3, world: string, id?: string} $args */
 
         if ($sender instanceof Player) {
             if (!isset($args["pos2"])) $args["pos2"] = $sender->getPosition()->floor();
@@ -46,7 +50,7 @@ class MarkerAddAreaCommand extends BaseSubCommand
             $sender->sendMessage("§cInvalid amount of arguments given");
             return;
         }
-        $world = $plugin->getServer()->getWorldManager()->getWorldByName($args["world"]);
+        $world = $plugin->getLoadedWorld($args["world"]);
         if ($world === null) {
             $sender->sendMessage("§cInvalid world given");
             return;
@@ -68,9 +72,6 @@ class MarkerAddAreaCommand extends BaseSubCommand
 
     protected function addMarker(string $name, Vector3 $pos1, Vector3 $pos2, World $world, ?string $id): bool
     {
-        /** @var PocketMap $plugin */
-        $plugin = $this->getOwningPlugin();
-
         // create a rectangular polygon positions list
         $positions = [
             $pos1,

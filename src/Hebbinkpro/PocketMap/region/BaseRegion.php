@@ -37,9 +37,9 @@ class BaseRegion
 
     /**
      * Yields all chunk coordinates that are inside the region
-     * @return int[]|Generator
+     * @return Generator<array{int,int}>
      */
-    public function getChunks(): Generator|array
+    public function getChunks(): Generator
     {
         $minX = $this->x * $this->getTotalChunks();
         $minZ = $this->z * $this->getTotalChunks();
@@ -124,8 +124,8 @@ class BaseRegion
         // there is no smaller zoom available
         if ($nextZoom > 8) return null;
 
-        $nextX = floor($this->x / 2);
-        $nextZ = floor($this->z / 2);
+        $nextX = (int)floor($this->x / 2);
+        $nextZ = (int)floor($this->z / 2);
 
         return new BaseRegion($nextZoom, $nextX, $nextZ);
     }

@@ -28,7 +28,12 @@ use pocketmine\player\Player;
 
 class RenderFullCommand extends BaseSubCommand
 {
-
+    /**
+     * @param CommandSender $sender
+     * @param string $aliasUsed
+     * @param array{world?: string}|array<mixed> $args
+     * @return void
+     */
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
         /** @var PocketMap $plugin */
@@ -42,19 +47,23 @@ class RenderFullCommand extends BaseSubCommand
             }
         }
 
-        $world = $args["world"];
+        /** @var string $worldName */
+        $worldName = $args["world"];
+
+        $world = $plugin->getLoadedWorld($worldName);
+        if ($world === null) {
+            $sender->sendMessage("§cWorld '$world' not found");
+            return;
+        }
 
         $renderer = PocketMap::getWorldRenderer($world);
         if ($renderer === null) {
-            if (!$plugin->getServer()->getWorldManager()->loadWorld($world)) {
-                $sender->sendMessage("§cWorld not found: $world");
-                return;
-            }
-            $renderer = PocketMap::getWorldRenderer($world);
+            $sender->sendMessage("§cSomething went wrong");
+            return;
         }
 
         $renderer->startFullWorldRender();
-        $sender->sendMessage("[PocketMap] Started full render of world '$world'");
+        $sender->sendMessage("[PocketMap] Started full render of world '$worldName'");
     }
 
     /**

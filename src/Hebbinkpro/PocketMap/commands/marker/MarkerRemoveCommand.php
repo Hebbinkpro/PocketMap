@@ -29,23 +29,40 @@ use pocketmine\player\Player;
 class MarkerRemoveCommand extends BaseSubCommand
 {
 
+    /**
+     * @param CommandSender $sender
+     * @param string $aliasUsed
+     * @param array{id: string, world?:string}|array<mixed> $args
+     * @return void
+     */
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
         /** @var PocketMap $plugin */
         $plugin = $this->getOwningPlugin();
 
-        if (!isset($args["world"])) {
-            if ($sender instanceof Player) $args["world"] = $sender->getWorld()->getFolderName();
-            else {
-                $sender->sendMessage("§cNo world given");
-                return;
-            }
-        }
-        $world = $plugin->getServer()->getWorldManager()->getWorldByName($args["world"]);
-        $res = PocketMap::getMarkers()->removeMarker($args["id"], $world);
 
-        if ($res) $sender->sendMessage("[PocketMap] Marker " . $args["id"] . " is removed.");
-        else $sender->sendMessage("§cMarker does not exist in world '{$args["world"]}'");
+        if ($sender instanceof Player) {
+            if (!isset($args["world"])) $args["world"] = $sender->getWorld()->getFolderName();
+        } else if (!isset($args["world"])) {
+            $sender->sendMessage("§cNo world given");
+            return;
+        }
+
+        /** @var string $worldName */
+        $worldName = $args["world"];
+        $id = $args["id"];
+
+        $world = $plugin->getLoadedWorld($worldName);
+
+        if ($world === null) {
+            $sender->sendMessage("§cWorld '$worldName' not found");
+            return;
+        }
+
+        $res = PocketMap::getMarkers()->removeMarker($id, $world);
+
+        if ($res) $sender->sendMessage("[PocketMap] Marker $id is removed.");
+        else $sender->sendMessage("§cMarker does not exist in world '$worldName'");
 
     }
 

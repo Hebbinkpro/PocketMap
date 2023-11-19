@@ -61,19 +61,25 @@ class AsyncChunkRenderTask extends AsyncRenderTask
         $regionChunksGenerator = RegionChunks::yieldAllEncodedChunks($this->encodedChunks);
         unset($this->encodedChunks); // free up some space
 
-        // yield all chunks
+        /**
+         * Yield all chunks in the region
+         * @var int $cx
+         * @var int $cz
+         * @var Chunk $chunk
+         */
         foreach ($regionChunksGenerator as [$cx, $cz, $chunk]) {
             // save the chunk to the region data
             $chunks[] = [$cx, $cz];
 
             // create the chunk image
             $chunkImg = $this->createChunkTexture($chunk, $terrainTextures, $totalBlocks, $imgPixelsPerBlock);
+            if ($chunkImg === null) continue;
 
             [$rcx, $rcz] = $region->getRegionChunkCoords($cx, $cz);
 
             // pixel coords the chunk starts
-            $dx = floor($rcx * $chunkSize);
-            $dz = floor($rcz * $chunkSize);
+            $dx = (int)floor($rcx * $chunkSize);
+            $dz = (int)floor($rcz * $chunkSize);
 
             // copy the chunk img onto the render
             // if imgPixelsPerBlock>pixelsPerBlock, this will resize it to the smaller variant
@@ -93,17 +99,18 @@ class AsyncChunkRenderTask extends AsyncRenderTask
      * @param TerrainTextures $terrainTextures the resource pack
      * @param int $totalBlocks the amount of blocks visible in the texture
      * @param int $pixelsPerBlock the amount of pixels of each block
-     * @return GdImage the texture image of the chunk
+     * @return GdImage|null the texture image of the chunk
      */
-    private function createChunkTexture(Chunk $chunk, TerrainTextures $terrainTextures, int $totalBlocks, int $pixelsPerBlock): GdImage
+    private function createChunkTexture(Chunk $chunk, TerrainTextures $terrainTextures, int $totalBlocks, int $pixelsPerBlock): ?GdImage
     {
         $textureSize = $totalBlocks * $pixelsPerBlock;
 
         $texture = imagecreatetruecolor($textureSize, $textureSize);
+        if ($texture === false) return null;
 
         // amount of blocks between two blocks to render
         // this is to prevent rendering of only the upper left corner for rendering when <16 pixels are available for a chunk
-        $diff = floor(16 / $totalBlocks);
+        $diff = (int)floor(16 / $totalBlocks);
 
         $color = $terrainTextures->getOptions()->getHeightOverlayColor();
         $alpha = $terrainTextures->getOptions()->getHeightOverlayAlpha();
@@ -111,7 +118,12 @@ class AsyncChunkRenderTask extends AsyncRenderTask
         $r = ($color >> 16) & 0xff;
         $g = ($color >> 8) & 0xff;
         $b = $color & 0xff;
-        $heightOverlay = $this->getHeightOverlay(imagecolorallocatealpha($texture, $r, $g, $b, 127 - $alpha), $pixelsPerBlock);
+
+        $c = imagecolorallocatealpha($texture, $r, $g, $b, 127 - $alpha);
+        if ($c === false) return null;
+
+        $heightOverlay = $this->getHeightOverlay($c, $pixelsPerBlock);
+        if ($heightOverlay === null) return null;
 
         // loop through all block indices that can be rendered
         for ($bdxI = 0; $bdxI < $totalBlocks; $bdxI++) {
@@ -124,7 +136,7 @@ class AsyncChunkRenderTask extends AsyncRenderTask
                 $blockTexture = $this->getBlockTexture($bdx, $bdz, $chunk, $terrainTextures, $pixelsPerBlock);
 
                 // the block doesn't have a texture for some reason
-                if ($blockTexture === null) continue;
+                if ($blockTexture === null || $highestY === null) continue;
 
                 if ($highestY % 2 != 0) {
 
@@ -143,16 +155,30 @@ class AsyncChunkRenderTask extends AsyncRenderTask
         return $texture;
     }
 
-    private function getHeightOverlay(int $color, int $pixelsPerBlock): GdImage
+    /**
+     * Create an overlay with the given color
+     * @param int $color
+     * @param int $pixelsPerBlock
+     * @return GdImage|null
+     */
+    private function getHeightOverlay(int $color, int $pixelsPerBlock): ?GdImage
     {
-
-
         $heightOverlay = imagecreatetruecolor($pixelsPerBlock, $pixelsPerBlock);
+        if ($heightOverlay === false) return null;
         imagefill($heightOverlay, 0, 0, $color);
 
         return $heightOverlay;
     }
 
+    /**
+     * Get the texture of a block at the given x,z coordinates in the chunk
+     * @param int $x
+     * @param int $z
+     * @param Chunk $chunk
+     * @param TerrainTextures $terrainTextures
+     * @param int $pixelsPerBlock
+     * @return GdImage|null
+     */
     private function getBlockTexture(int $x, int $z, Chunk $chunk, TerrainTextures $terrainTextures, int $pixelsPerBlock): ?GdImage
     {
         $y = $chunk->getHighestBlockAt($x, $z);
@@ -183,7 +209,7 @@ class AsyncChunkRenderTask extends AsyncRenderTask
                 // it's water
                 if ($waterDepth == 0) $blocks[] = $block;
                 $waterDepth++;
-            } else if (in_array($block->getTypeId(), $blockIds) || $models->get($block) === null) {
+            } else if (in_array($block->getTypeId(), $blockIds, true) || $models->get($block) === null) {
                 // only if the block is a full cube, add the height (for blocks under e.g. leaves)
                 if ($block->isFullCube()) $height++;
             } else {
@@ -198,6 +224,7 @@ class AsyncChunkRenderTask extends AsyncRenderTask
         // loop from the bottom to the top in the blocks list
         // the latest added block has to be rendered under the previous block
         $texture = imagecreatetruecolor($pixelsPerBlock, $pixelsPerBlock);
+        if ($texture === false) return null;
 
         // get the biome
         $biomeId = $chunk->getBiomeId($x, $y, $z);
@@ -210,7 +237,7 @@ class AsyncChunkRenderTask extends AsyncRenderTask
             if ($blockTexture === null) continue;
 
             if ($block->getTypeId() === BlockTypeIds::WATER) {
-                $waterAlpha = floor(32 - (4 * ColorMapParser::getWaterTransparency($biome, $terrainTextures) * $waterDepth));
+                $waterAlpha = (int)floor(32 - (4 * ColorMapParser::getWaterTransparency($biome, $terrainTextures) * $waterDepth));
                 TextureUtils::applyAlpha($blockTexture, $waterAlpha, $pixelsPerBlock);
             }
 
@@ -221,7 +248,10 @@ class AsyncChunkRenderTask extends AsyncRenderTask
                 $heightAlpha = 96 - 8 * $height;
                 if ($heightAlpha < 0) $heightAlpha = 0;
                 $color = imagecolorallocatealpha($texture, 0, 0, 0, $heightAlpha);
+                if ($color === false) continue;
+
                 $heightOverlay = $this->getHeightOverlay($color, $pixelsPerBlock);
+                if ($heightOverlay === null) continue;
 
                 imagealphablending($texture, true);
                 imagecopy($texture, $heightOverlay, 0, 0, 0, 0, $pixelsPerBlock, $pixelsPerBlock);

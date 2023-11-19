@@ -26,11 +26,17 @@ use CortexPE\Commando\BaseSubCommand;
 use CortexPE\Commando\exception\ArgumentOrderException;
 use Hebbinkpro\PocketMap\region\BaseRegion;
 use pocketmine\command\CommandSender;
+use pocketmine\math\Vector3;
 use pocketmine\player\Player;
 
 class RenderLookupCommand extends BaseSubCommand
 {
-
+    /**
+     * @param CommandSender $sender
+     * @param string $aliasUsed
+     * @param array{pos?: Vector3, zoom?: int}|array<mixed> $args
+     * @return void
+     */
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
 

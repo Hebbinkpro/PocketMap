@@ -32,12 +32,13 @@ abstract class BlockModel
      * @param Block $block
      * @param Chunk $chunk
      * @param GdImage $texture
-     * @return GdImage
+     * @return GdImage|null
      */
-    public function getModelTexture(Block $block, Chunk $chunk, GdImage $texture): GdImage
+    public function getModelTexture(Block $block, Chunk $chunk, GdImage $texture): ?GdImage
     {
 
         $modelTexture = TextureUtils::getEmptyTexture();
+        if ($modelTexture === false) return null;
 
         $geo = $this->getGeometry($block, $chunk);
         foreach ($geo as $parts) {

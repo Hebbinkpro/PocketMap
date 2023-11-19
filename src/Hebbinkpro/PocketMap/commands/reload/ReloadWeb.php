@@ -25,7 +25,12 @@ use pocketmine\command\CommandSender;
 
 class ReloadWeb extends BaseSubCommand
 {
-
+    /**
+     * @param CommandSender $sender
+     * @param string $aliasUsed
+     * @param array<mixed> $args
+     * @return void
+     */
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
 

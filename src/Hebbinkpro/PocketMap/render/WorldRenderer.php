@@ -138,6 +138,7 @@ class WorldRenderer
         if (!$this->world->isChunkLoaded($chunkX, $chunkZ)) return;
 
         $chunk = $this->world->getChunk($chunkX, $chunkZ);
+        if ($chunk === null) return;
 
         // store the chunk, logic from pocketmine\world\World->saveChunks()
         $this->world->getProvider()->saveChunk($chunkX, $chunkZ, new ChunkData(

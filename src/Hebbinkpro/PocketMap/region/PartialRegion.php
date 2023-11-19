@@ -28,7 +28,7 @@ use Hebbinkpro\PocketMap\textures\TerrainTextures;
  */
 class PartialRegion extends Region
 {
-    /** @var int[][] */
+    /** @var array<array{int,int}> */
     private array $chunks;
 
     public function __construct(string $worldName, int $zoom, int $regionX, int $regionZ, TerrainTextures $terrainTextures, bool $renderChunks = true)
@@ -49,7 +49,7 @@ class PartialRegion extends Region
         if (!$this->isChunkInRegion($chunkX, $chunkZ)) return;
 
         $pos = [$chunkX, $chunkZ];
-        if (!in_array($pos, $this->chunks)) {
+        if (!in_array($pos, $this->chunks, true)) {
             $this->chunks[] = [$chunkX, $chunkZ];
         }
     }
@@ -63,17 +63,17 @@ class PartialRegion extends Region
     public function removeChunk(int $chunkX, int $chunkZ): void
     {
         $pos = [$chunkX, $chunkZ];
-        $key = array_search($pos, $this->chunks);
-        if (!$key) return;
+        $key = array_search($pos, $this->chunks, true);
+        if (!is_int($key)) return;
 
         array_splice($this->chunks, $key, 1);
     }
 
     /**
      * Yield all chunk coordinates from the chunks in the list
-     * @return Generator|array|int[]
+     * @return Generator<array{int,int}>
      */
-    public function getChunks(): Generator|array
+    public function getChunks(): Generator
     {
         // loop through all items inside the chunk list and yield the x and z position.
         foreach ($this->chunks as $pos) {

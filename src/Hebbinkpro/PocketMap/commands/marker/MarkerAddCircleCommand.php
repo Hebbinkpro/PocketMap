@@ -33,12 +33,16 @@ use pocketmine\world\Position;
 class MarkerAddCircleCommand extends BaseSubCommand
 {
 
+    /**
+     * @param CommandSender $sender
+     * @param string $aliasUsed
+     * @param array<mixed>|array{name: string, radius: int, pos?: Vector3, world?: string, id?: string} $args
+     * @return void
+     */
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
         /** @var PocketMap $plugin */
         $plugin = $this->getOwningPlugin();
-
-        /** @var array{name: string, radius: int, pos: Vector3, world: string, id?: string} $args */
 
         if ($sender instanceof Player) {
             if (!isset($args["pos"])) $args["pos"] = $sender->getPosition();
@@ -47,7 +51,7 @@ class MarkerAddCircleCommand extends BaseSubCommand
             $sender->sendMessage("§cInvalid amount of arguments given");
             return;
         }
-        $world = $plugin->getServer()->getWorldManager()->getWorldByName($args["world"]);
+        $world = $plugin->getLoadedWorld($args["world"]);
         if ($world === null) {
             $sender->sendMessage("§cInvalid world given");
             return;

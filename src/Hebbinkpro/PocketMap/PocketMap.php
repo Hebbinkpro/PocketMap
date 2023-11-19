@@ -19,6 +19,7 @@
 
 namespace Hebbinkpro\PocketMap;
 
+use CortexPE\Commando\exception\HookAlreadyRegistered;
 use CortexPE\Commando\PacketHooker;
 use Exception;
 use Hebbinkpro\PocketMap\api\MarkerManager;
@@ -34,6 +35,7 @@ use Hebbinkpro\WebServer\exception\WebServerException;
 use Hebbinkpro\WebServer\libs\Laravel\SerializableClosure\Exceptions\PhpVersionNotSupportedException;
 use Hebbinkpro\WebServer\route\Router;
 use Hebbinkpro\WebServer\WebServer;
+use JsonException;
 use pocketmine\event\Listener;
 use pocketmine\item\StringToItemParser;
 use pocketmine\plugin\PluginBase;
@@ -86,6 +88,19 @@ class PocketMap extends PluginBase implements Listener
     }
 
     /**
+     * Get a world by its name. If the world is not loaded, it will be loaded.
+     * @param string $name
+     * @return World|null the loaded world or null when it does not exist
+     */
+    public function getLoadedWorld(string $name): ?World
+    {
+        $wm = $this->getServer()->getWorldManager();
+        if (!$wm->isWorldLoaded($name) && !$wm->loadWorld($name)) return null;
+
+        return $wm->getWorldByName($name);
+    }
+
+    /**
      * Create a world renderer for a given world
      * @param World $world
      * @return WorldRenderer
@@ -135,6 +150,9 @@ class PocketMap extends PluginBase implements Listener
         unset(self::$worldRenderers[$world->getFolderName()]);
     }
 
+    /**
+     * @throws HookAlreadyRegistered
+     */
     protected function onEnable(): void
     {
         self::$instance = $this;
@@ -154,9 +172,7 @@ class PocketMap extends PluginBase implements Listener
         // register the event listener
         $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
 
-        if (!PacketHooker::isRegistered()) {
-            PacketHooker::register($this);
-        }
+        if (!PacketHooker::isRegistered()) PacketHooker::register($this);
 
         $this->getServer()->getCommandMap()->register("pocketmap", new PocketMapCommand($this, "pocketmap", "PocketMap command", ["pmap"]));
 
@@ -168,9 +184,7 @@ class PocketMap extends PluginBase implements Listener
             // create the web server
             $this->createWebServer();
         } catch (Exception $e) {
-            $this->getLogger()->alert("Could not start the web server.");
-            $this->getLogger()->error($e);
-            $this->getServer()->getPluginManager()->disablePlugin($this);
+            $this->disable("Could not start the web server.", $e->getMessage());
             return;
         }
     }
@@ -187,7 +201,10 @@ class PocketMap extends PluginBase implements Listener
         $this->saveDefaultConfig();
 
         $config = $this->getConfig();
+
         $version = $config->get("version", -1.0);
+        if (!is_float($version)) $version = -1.0;
+
         if ($version != self::CONFIG_VERSION) {
             $this->getLogger()->warning("The current version of PocketMap is using another config version. Your current config will be replaced. Expected: v" . self::CONFIG_VERSION . ", Found: v$version");
             $this->getLogger()->warning("You can find your old config in 'backup/config_v$version.yml'");
@@ -244,12 +261,14 @@ class PocketMap extends PluginBase implements Listener
 
         // create render folders for each world
         $worldFolders = scandir($this->getServer()->getDataPath() . "worlds/");
+        if ($worldFolders === false) $worldFolders = [];
+
         foreach ($worldFolders as $worldName) {
             // it's not a world
-            if (!is_dir($this->getServer()->getDataPath() . "worlds/$worldName")
-                || !in_array("level.dat", scandir($this->getServer()->getDataPath() . "worlds/$worldName"))) {
-                continue;
-            }
+            if (!is_dir($this->getServer()->getDataPath() . "worlds/$worldName")) continue;
+
+            $contents = scandir($this->getServer()->getDataPath() . "worlds/$worldName");
+            if ($contents === false || !in_array("level.dat", $contents, true)) continue;
 
             if (!is_dir($folder . "renders/$worldName")) {
                 mkdir($folder . "renders/$worldName");
@@ -268,6 +287,10 @@ class PocketMap extends PluginBase implements Listener
     private function loadTerrainTextures(): void
     {
         $textureSettings = $this->configManager->getManager("textures");
+        if ($textureSettings === null) {
+            $this->getLogger()->error("Texture settings not found");
+            return;
+        }
 
         // get the fallback block
         $fallbackBlockId = $textureSettings->getString("fallback-block", "minecraft:bedrock");
@@ -281,7 +304,29 @@ class PocketMap extends PluginBase implements Listener
 
         $path = $this->getDataFolder() . "resource_packs/";
 
-        $this->terrainTextures = TerrainTextures::generate($this, $path, $options);
+        $terrainTextures = TerrainTextures::generate($this, $path, $options);
+        if ($terrainTextures === null) {
+            $this->disable("Cannot generate the terrain textures");
+            return;
+        }
+
+        $this->terrainTextures = $terrainTextures;
+    }
+
+    /**
+     * Disable the plugin, this should ONLY be used when the plugin is unusable to protect the plugins (maybe and servers) integrity
+     * @param string ...$reason the reason why the plugin is disabled
+     * @return void
+     */
+    private function disable(string...$reason): void
+    {
+        $this->getLogger()->emergency("Disabling the plugin");
+
+        foreach ($reason as $r) {
+            $this->getLogger()->emergency($r);
+        }
+
+        $this->getServer()->getPluginManager()->disablePlugin($this);
     }
 
     private function startTasks(): void
@@ -308,9 +353,10 @@ class PocketMap extends PluginBase implements Listener
     {
         $path = $this->getServer()->getDataPath() . "worlds/";
         $folders = scandir($path);
+        if ($folders === false) $folders = [];
 
         foreach ($folders as $world) {
-            if (!is_dir($path . $world) || in_array($world, [".", ".."]) || !is_file($path . $world . "/level.dat")) continue;
+            if (!is_dir($path . $world) || in_array($world, [".", ".."], true) || !is_file($path . $world . "/level.dat")) continue;
             $this->getServer()->getWorldManager()->loadWorld($world);
         }
     }
@@ -327,6 +373,10 @@ class PocketMap extends PluginBase implements Listener
         $this->loadWebConfig();
 
         $webSettings = $this->configManager->getManager("web-server", true, ["address" => "127.0.0.1", "port" => 3000]);
+        if ($webSettings === null) {
+            $this->disable("Web server settings not found");
+            return;
+        }
 
         // create the web server
         $this->webServer = new WebServer($webSettings->getString("address", "127.0.0.1"), $webSettings->getInt("port", 3000));
@@ -357,6 +407,7 @@ class PocketMap extends PluginBase implements Listener
             $webConfig = new Config($folder . "config.json");
 
             $version = $webConfig->get("version", -1);
+            if (!is_float($version)) $version = -1;
 
             // the correct web version is already loaded
             if ($version == self::WEB_VERSION) return;
@@ -384,14 +435,15 @@ class PocketMap extends PluginBase implements Listener
 
     public function loadWebConfig(): void
     {
-        $config = new Config($this->getDataFolder() . "web/config.json");
+        $webConfig = new Config($this->getDataFolder() . "web/config.json");
+        $webManager = ConfigManager::fromConfig($webConfig);
 
         $validWorlds = self::getConfigManger()->getArray("api.worlds");
-        $worldSettings = $config->get("worlds", []);
+        $worldSettings = $webManager->getArray("worlds", []);
 
         foreach (self::$worldRenderers as $worldName => $renderer) {
             // we aren't allowed to load this world
-            if (!empty($validWorlds) && !in_array($worldName, $validWorlds)) {
+            if (count($validWorlds) > 0 && !in_array($worldName, $validWorlds, true)) {
                 // remove from the world settings list
                 if (array_key_exists($worldName, $worldSettings)) unset($worldSettings[$worldName]);
                 continue;
@@ -415,19 +467,20 @@ class PocketMap extends PluginBase implements Listener
             ];
         }
 
-        $defaultWorld = $config->get("default-world", "world");
+        $defaultWorld = $webManager->getString("default-world", "world");
+
         // default world does not exist (anymore)
         if (!array_key_exists($defaultWorld, $worldSettings)) {
             // the default world of the server isn't allowed to be displayed, use the first world in the list
             $defaultWorld = array_keys($worldSettings)[0] ?? null;
         }
-
-        // set the values
-        $config->set("default-world", $defaultWorld);
-        $config->set("worlds", $worldSettings);
-
-        // save the config
-        $config->save();
+        try {
+            $webManager->setValue("default-world", $defaultWorld);
+            $webManager->setValue("worlds", $worldSettings);
+            $webManager->save();
+        } catch (JsonException $e) {
+            $this->disable("Cannot update the web config.", $e->getMessage());
+        }
     }
 
     public static function getConfigManger(): ConfigManager

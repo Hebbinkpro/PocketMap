@@ -39,13 +39,31 @@ class Region extends BaseRegion
         $this->renderChunks = $renderChunks;
     }
 
+    public static function getByName(string $name): ?Region
+    {
+        $parts = explode("/", $name);
+
+        if (count($parts) != 3) return null;
+
+        $renderer = PocketMap::getWorldRenderer($parts[0]);
+        if ($renderer === null) return null;
+
+        $zoom = intval($parts[1]);
+        $pos = explode(",", $parts[2]);
+        if (count($pos) < 2) return null;
+        $x = intval($pos[0]);
+        $z = intval($pos[1]);
+
+        return $renderer->getRegion($zoom, $x, $z);
+    }
+
     /**
      * Get the pixel size of a chunk inside a render of this region
      * @return int
      */
     public function getChunkPixelSize(): int
     {
-        return floor(WorldRenderer::RENDER_SIZE / $this->getTotalChunks());
+        return (int)floor(WorldRenderer::RENDER_SIZE / $this->getTotalChunks());
     }
 
     /**
@@ -58,7 +76,6 @@ class Region extends BaseRegion
         if (!$includeWorld) return parent::getName();
         return $this->getWorldName() . "/" . parent::getName();
     }
-
 
     /**
      * Get the world name of the region
@@ -94,23 +111,5 @@ class Region extends BaseRegion
     public function renderAllChunks(): bool
     {
         return $this->isChunk() || $this->renderChunks;
-    }
-
-    public static function getByName(string $name): ?Region
-    {
-        $parts = explode("/", $name);
-
-        if (count($parts) != 3) return null;
-
-        $renderer = PocketMap::getWorldRenderer($parts[0]);
-        if ($renderer === null) return null;
-
-        $zoom = intval($parts[1]);
-        $pos = explode(",", $parts[2]);
-        if (count($pos) < 2) return null;
-        $x = intval($pos[0]);
-        $z = intval($pos[1]);
-
-        return $renderer->getRegion($zoom, $x, $z);
     }
 }

@@ -31,7 +31,9 @@ class MarkerManager
     public const TYPE_POLYLINE = "polyline";
 
     private string $folder;
+    /** @var array<string, array<array{name: string, data: array{type: string}}>> */
     private array $markers;
+    /** @var array<string> */
     private array $icons;
 
     public function __construct(string $folder)
@@ -49,8 +51,15 @@ class MarkerManager
         $this->icons = [];
         if (is_file($this->folder . "icons.json")) {
             $file = file_get_contents($this->folder . "icons.json");
-            $icons = json_decode($file, true) ?? [];
 
+
+            if ($file === false) $icons = [];
+            else $icons = json_decode($file, true) ?? [];
+
+            if ($icons === false) $icons = [];
+
+
+            /** @var array<array{name: string, path: string}> $icons */
             foreach ($icons as $i) {
                 $this->icons[] = $i["name"];
             }
@@ -63,11 +72,16 @@ class MarkerManager
      */
     private function update(): void
     {
-        $this->markers = json_decode(file_get_contents($this->folder . "markers.json"), true);
+        $contents = file_get_contents($this->folder . "markers.json");
+        if ($contents === false) return;
+
+        /** @var null|array<string, array<array{name: string, data: array{type: string}}>> $markers */
+        $markers = json_decode($contents, true);
+        if ($markers !== null) $this->markers = $markers;
     }
 
     /**
-     * @return array
+     * @return array<string>
      */
     public function getIcons(): array
     {
@@ -84,7 +98,7 @@ class MarkerManager
      */
     public function addIconMarker(string $name, Position $pos, string $icon, ?string $id = null): bool
     {
-        if (!in_array($icon, $this->icons)) return false;
+        if (!in_array($icon, $this->icons, true)) return false;
 
         $data = [
             "type" => self::TYPE_ICON,
@@ -94,6 +108,13 @@ class MarkerManager
         return $this->addPositionMarker($name, $data, $pos, $id);
     }
 
+    /**
+     * @param string $name
+     * @param array{type: string} $data
+     * @param Position $pos
+     * @param string|null $id
+     * @return bool
+     */
     protected function addPositionMarker(string $name, array $data, Position $pos, ?string $id = null): bool
     {
         $data["pos"] = [
@@ -104,6 +125,13 @@ class MarkerManager
         return $this->addMarker($name, $data, $pos->getWorld(), $id);
     }
 
+    /**
+     * @param string $name
+     * @param array{type?: string} $data
+     * @param World $world
+     * @param string|null $id
+     * @return bool
+     */
     protected function addMarker(string $name, array $data, World $world, ?string $id = null): bool
     {
         $this->update();
@@ -118,7 +146,7 @@ class MarkerManager
         ];
 
         if (!isset($this->markers[$worldName])) $this->markers[$worldName] = [];
-        if ($this->getMarker($id, $world) != null) return false;
+        if ($this->getMarker($id, $world) !== null) return false;
 
         $this->markers[$worldName][$id] = $marker;
         $this->encode();
@@ -126,6 +154,11 @@ class MarkerManager
         return true;
     }
 
+    /**
+     * @param string $id
+     * @param World $world
+     * @return array{name: string, data: array{type: string}}|null
+     */
     public function getMarker(string $id, World $world): ?array
     {
         if (!isset($this->markers[$world->getFolderName()])) return null;
@@ -168,6 +201,12 @@ class MarkerManager
         return $this->addPositionMarker($name, $data, $pos, $id);
     }
 
+    /**
+     * @param string $color
+     * @param bool $fill
+     * @param string|null $fillColor
+     * @return array{color: string, fill: bool, fillColor: string}
+     */
     protected function getLeafletOptions(string $color, bool $fill, ?string $fillColor = null): array
     {
         return [
@@ -198,6 +237,14 @@ class MarkerManager
         return $this->addMultiPositionMarker($name, $data, $positions, $world, $id);
     }
 
+    /**
+     * @param string $name
+     * @param array{type: string} $data
+     * @param Vector3[] $positions
+     * @param World $world
+     * @param string|null $id
+     * @return bool
+     */
     protected function addMultiPositionMarker(string $name, array $data, array $positions, World $world, ?string $id = null): bool
     {
         // add all positions
@@ -215,7 +262,7 @@ class MarkerManager
     /**
      * Create a multipoint line
      * @param string $name
-     * @param array $positions
+     * @param Vector3[] $positions
      * @param World $world
      * @param string $color
      * @param bool $fill

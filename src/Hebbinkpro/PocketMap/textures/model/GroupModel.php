@@ -53,7 +53,7 @@ abstract class GroupModel extends BlockModel
 
     /**
      * Get the source position of the top texture
-     * @return array
+     * @return array<array<array{int, int}>>
      */
     public abstract function getTopGeometry(): array;
 
@@ -61,7 +61,7 @@ abstract class GroupModel extends BlockModel
      * A list of all destinations for each group item
      * e.g. for candles and sea pickles:
      * - [[d1], [d1, d2], [d1, d2, d3], [d1, d2, d3, d4]]
-     * @return array
+     * @return array<array<array{int, int}>>
      */
     public abstract function getDestLocations(): array;
 }
