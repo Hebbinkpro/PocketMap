@@ -30,5 +30,3 @@
 /resources/resource_packs/*/textures/item_texture.json
 /resources/markers/icons_table.md
 /resources/markers/openmoji_extractor.py
-/phpstan/vendor/
-/phpstan/composer.lock
