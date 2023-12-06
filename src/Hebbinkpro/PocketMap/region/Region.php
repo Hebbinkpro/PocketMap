@@ -74,7 +74,7 @@ class Region extends BaseRegion
     public function getName(bool $includeWorld = true): string
     {
         if (!$includeWorld) return parent::getName();
-        return $this->getWorldName() . "/" . parent::getName();
+        return $this->getWorldName() . "Region.php/" . parent::getName();
     }
 
     /**
