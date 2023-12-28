@@ -139,11 +139,13 @@ class TerrainTextures extends ResourcePackTextures
 
             $filePath = explode("/", $pack->getPath());
 
+            $sha256 = $pack->getSha256();
+
             $info = [
                 "uuid" => $pack->getPackId(),
                 "file" => $filePath[array_key_last($filePath)],
                 "version" => $pack->getPackVersion(),
-                "sha256" => $pack->getSha256()
+                "sha256" => mb_convert_encoding($sha256, "UTF-8", "ISO-8859-1")
             ];
 
             // this pack is already loaded in a previous startup
