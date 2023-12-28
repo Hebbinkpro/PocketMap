@@ -120,15 +120,6 @@ final class BlockDataValues
             BSV::SAPLING_TYPE_ACACIA => 4,
             BSV::SAPLING_TYPE_DARK_OAK => 5
         ],
-        BTN::STONE => [
-            BSV::STONE_TYPE_STONE => 0,
-            BSV::STONE_TYPE_GRANITE => 1,
-            BSV::STONE_TYPE_GRANITE_SMOOTH => 2,
-            BSV::STONE_TYPE_DIORITE => 3,
-            BSV::STONE_TYPE_DIORITE_SMOOTH => 4,
-            BSV::STONE_TYPE_ANDESITE => 5,
-            BSV::STONE_TYPE_ANDESITE_SMOOTH => 6
-        ],
         BTN::STONEBRICK => [
             BSV::STONE_BRICK_TYPE_DEFAULT => 0,
             BSV::STONE_BRICK_TYPE_MOSSY => 1,
@@ -331,8 +322,6 @@ final class BlockDataValues
                 return match ($name) {
                     BTN::SANDSTONE, BTN::RED_SANDSTONE =>
                     self::DATA_VALUES[BTN::SANDSTONE][BlockStateParser::getStateValue($bsd, BSN::SAND_STONE_TYPE)],
-                    BTN::STONE =>
-                    self::DATA_VALUES[BTN::STONE][BlockStateParser::getStateValue($bsd, BSN::STONE_TYPE)],
                     BTN::STONEBRICK =>
                     self::DATA_VALUES[BTN::STONEBRICK][BlockStateParser::getStateValue($bsd, BSN::STONE_BRICK_TYPE)],
                     default => 0
