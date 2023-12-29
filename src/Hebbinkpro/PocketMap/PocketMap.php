@@ -48,7 +48,7 @@ class PocketMap extends PluginBase implements Listener
     public const CONFIG_VERSION = 1.6;
     public const WEB_VERSION = 1.2;
 
-    public const RESOURCE_PACK_NAME = "v1.20.40.1";
+    public const RESOURCE_PACK_NAME = "v1.20.50.3";
     public const TEXTURE_SIZE = 16;
 
     private static PocketMap $instance;

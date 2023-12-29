@@ -1,7 +1,7 @@
 name: PocketMap
 main: Hebbinkpro\PocketMap\PocketMap
-version: 0.5.0
-api: [ 5.8.1 ]
+version: 0.5.1
+api: [ 5.10.0 ]
 load: STARTUP
 author: Hebbinkpro
 description: A dynamic world map for PocketMine-MP
