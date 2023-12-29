@@ -286,17 +286,24 @@ class TerrainTextures extends ResourcePackTextures
         return $this->path . PocketMap::RESOURCE_PACK_NAME . "/";
     }
 
+    /**
+     * Get a blocks texture path
+     * @param Block $block
+     * @return string|null
+     */
     public function getBlockTexturePath(Block $block): ?string
     {
-        $textureName = TextureUtils::getBlockTextureName($block);
-        if ($textureName === null) return null;
-
         $texture = $this->getTextureByBlock($block);
         if ($texture === null) return null;
 
         return $this->getRealTexturePath($texture);
     }
 
+    /**
+     * Get the texture of a block
+     * @param Block $block
+     * @return string|null
+     */
     public function getTextureByBlock(Block $block): string|null
     {
         $textureName = TextureUtils::getBlockTextureName($block);

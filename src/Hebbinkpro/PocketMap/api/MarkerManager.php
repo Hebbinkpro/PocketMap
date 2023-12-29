@@ -108,7 +108,8 @@ class MarkerManager
         return $this->addPositionMarker($name, $data, $pos, $id);
     }
 
-    public function isIcon(string $name): bool {
+    public function isIcon(string $name): bool
+    {
         return in_array($name, $this->icons, true);
     }
 
@@ -151,7 +152,7 @@ class MarkerManager
             $loop = 1;
             while ($this->getMarker($id, $world) !== null) {
                 $id = $lower . $loop;
-                $loop ++;
+                $loop++;
             }
         }
 

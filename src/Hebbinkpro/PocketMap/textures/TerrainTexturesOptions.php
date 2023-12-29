@@ -19,14 +19,13 @@
 
 namespace Hebbinkpro\PocketMap\textures;
 
-use Hebbinkpro\PocketMap\utils\TextureUtils;
 use pocketmine\block\Block;
 use pocketmine\block\VanillaBlocks;
 
 class TerrainTexturesOptions
 {
 
-    private ?string $fallbackBlock;
+    private ?Block $fallbackBlock;
     private int $heightColor;
     private int $heightAlpha;
 
@@ -34,16 +33,16 @@ class TerrainTexturesOptions
     {
         if ($fallbackBlock === null) $fallbackBlock = VanillaBlocks::BEDROCK();
 
-        $this->fallbackBlock = TextureUtils::getBlockTextureName($fallbackBlock);
+        $this->fallbackBlock = $fallbackBlock;
         $this->heightColor = $heightColor;
         $this->heightAlpha = $heightAlpha;
     }
 
     /**
-     * ID of the fallback block
-     * @return null|string the fallback texture path or null when it doesn't exist
+     * Get the fallback block
+     * @return Block|null
      */
-    public function getFallbackBlock(): ?string
+    public function getFallbackBlock(): ?Block
     {
         return $this->fallbackBlock;
     }

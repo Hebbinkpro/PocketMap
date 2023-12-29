@@ -239,7 +239,6 @@ final class BlockDataValues
                 // everything else
                 return 0;
 
-
             case Candle::class:
                 return intval($block->isLit());
 

@@ -68,6 +68,7 @@ class TextureUtils
 
     public static function getBlockTexture(Block $block, Chunk $chunk, TerrainTextures $terrainTextures, int $size): ?GdImage
     {
+        // get the block model
         if (($model = BlockModels::getInstance()->get($block)) === null) return null;
 
         $differentModel = BlockUtils::hasDifferentModelForSameState($block);
@@ -129,9 +130,9 @@ class TextureUtils
 
         if (($path = $terrainTextures->getBlockTexturePath($block)) === null) {
             // set the path to the fallback texture
-            $fallback = $terrainTextures->getOptions()->getFallbackBlock();
-            if ($fallback === null) $path = null;
-            else $path = $terrainTextures->getRealTexturePath($fallback);
+            $fallbackBlock = $terrainTextures->getOptions()->getFallbackBlock();
+            if ($fallbackBlock === null) $path = null;
+            else $path = $terrainTextures->getBlockTexturePath($fallbackBlock);
         }
 
         if (is_file($path . ".png")) $img = imagecreatefrompng($path . ".png");
@@ -309,7 +310,7 @@ class TextureUtils
 
     /**
      * Get the texture name of a block.
-     * - In MOST cases, it's just the name with minecraft: removed, or _block_ replaced with _.
+     * - In MOST cases, it's just the name with minecraft: removed, or \_block\_ replaced with _.
      * - There are some exceptions in which that's not the case and this is fixed with the match.
      * @param Block $block the name of the block
      * @return string|null the texture name
