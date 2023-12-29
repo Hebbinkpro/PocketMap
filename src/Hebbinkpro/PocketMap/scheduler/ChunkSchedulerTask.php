@@ -115,8 +115,6 @@ class ChunkSchedulerTask extends Task
 
             // the render did not start
             if (!$renderer->startRegionRender($region, true)) break;
-
-            $this->pocketMap->getLogger()->debug("[Chunk Render] Added chunk to the scheduler: " . $region->getName());
             $started[] = $name;
 
         }
