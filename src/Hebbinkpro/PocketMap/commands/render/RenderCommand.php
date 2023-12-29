@@ -25,6 +25,7 @@ use CortexPE\Commando\BaseSubCommand;
 use CortexPE\Commando\exception\ArgumentOrderException;
 use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\region\Region;
+use Hebbinkpro\PocketMap\render\WorldRenderer;
 use pocketmine\command\CommandSender;
 use pocketmine\player\Player;
 
@@ -60,8 +61,8 @@ class RenderCommand extends BaseSubCommand
             $worldName = $args["world"];
             $zoom = $args["zoom"];
 
-            if ($zoom < 0 || $zoom > 8) {
-                $sender->sendMessage("§cZoom not in range: [0, 8]");
+            if ($zoom < WorldRenderer::MIN_ZOOM || $zoom > WorldRenderer::MAX_ZOOM) {
+                $sender->sendMessage("§cZoom not in range: [".WorldRenderer::MIN_ZOOM.", ".WorldRenderer::MAX_ZOOM."]");
                 return;
             }
 

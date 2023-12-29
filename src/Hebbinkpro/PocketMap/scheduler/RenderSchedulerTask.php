@@ -26,6 +26,7 @@ use Hebbinkpro\PocketMap\region\RegionChunksLoader;
 use Hebbinkpro\PocketMap\render\AsyncChunkRenderTask;
 use Hebbinkpro\PocketMap\render\AsyncRegionRenderTask;
 use Hebbinkpro\PocketMap\render\AsyncRenderTask;
+use Hebbinkpro\PocketMap\render\WorldRenderer;
 use Logger;
 use pocketmine\plugin\PluginBase;
 use pocketmine\scheduler\Task;
@@ -72,7 +73,10 @@ class RenderSchedulerTask extends Task
         // remove the region from the list
         self::removeCurrentRender($region);
 
-        self::$logger->debug("[Scheduler] Finished render of region: " . $region->getName());
+        // only log when a region with max zoom level has finished, otherwise the console is spammed
+        if ($region->getZoom() == WorldRenderer::MAX_ZOOM) {
+            self::$logger->debug("[Scheduler] Finished render of region: " . $region->getName());
+        }
 
         // start now the render for the next zoom level
         $renderer = PocketMap::getWorldRenderer($region->getWorldName());
@@ -203,7 +207,10 @@ class RenderSchedulerTask extends Task
         // submit the task to the async pool
         $this->plugin->getServer()->getAsyncPool()->submitTask($task);
 
-        self::$logger->debug("[Scheduler] Started render of region: " . $region->getName());
+        // only log it for the region with the max zoom, otherwise the console is spammed
+        if ($region->getZoom() == WorldRenderer::MAX_ZOOM) {
+            self::$logger->debug("[Scheduler] Started render of region: " . $region->getName());
+        }
     }
 
     /**

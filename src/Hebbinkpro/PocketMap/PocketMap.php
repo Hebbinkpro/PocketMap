@@ -456,13 +456,13 @@ class PocketMap extends PluginBase implements Listener
 
             $worldSettings[$worldName] = [
                 "zoom" => [
-                    "min" => 0,
-                    "max" => 8
+                    "min" => WorldRenderer::MIN_ZOOM,
+                    "max" => WorldRenderer::MAX_ZOOM
                 ],
                 "view" => [
                     "x" => $spawnPos->getFloorX(),
                     "z" => $spawnPos->getFloorZ(),
-                    "zoom" => 4
+                    "zoom" => (int) floor(WorldRenderer::MAX_ZOOM / 2)
                 ]
             ];
         }

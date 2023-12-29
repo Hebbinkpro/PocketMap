@@ -20,6 +20,7 @@
 namespace Hebbinkpro\PocketMap\region;
 
 use Generator;
+use Hebbinkpro\PocketMap\render\WorldRenderer;
 
 class BaseRegion
 {
@@ -122,7 +123,7 @@ class BaseRegion
     {
         $nextZoom = $this->zoom + 1;
         // there is no smaller zoom available
-        if ($nextZoom > 8) return null;
+        if ($nextZoom > WorldRenderer::MAX_ZOOM) return null;
 
         $nextX = (int)floor($this->x / 2);
         $nextZ = (int)floor($this->z / 2);

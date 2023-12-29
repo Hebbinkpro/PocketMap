@@ -37,6 +37,11 @@ class WorldRenderer
     public const MIN_ZOOM = 0;
 
     /**
+     * The maximum zoom level
+     */
+    public const MAX_ZOOM = 8;
+
+    /**
      * The size of a render in pixels
      */
     public const RENDER_SIZE = 256;
