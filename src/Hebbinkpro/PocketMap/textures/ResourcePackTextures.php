@@ -138,7 +138,7 @@ class ResourcePackTextures
                 }
 
                 // set the terrain textures
-                if (sizeof($textureList) > 0) $this->terrainTextures[$name] = [];
+                if (sizeof($textureList) > 0) $this->terrainTextures[$name] = $textureList;
 
             }
         }
