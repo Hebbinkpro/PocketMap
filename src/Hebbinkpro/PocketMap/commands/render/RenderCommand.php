@@ -62,7 +62,7 @@ class RenderCommand extends BaseSubCommand
             $zoom = $args["zoom"];
 
             if ($zoom < WorldRenderer::MIN_ZOOM || $zoom > WorldRenderer::MAX_ZOOM) {
-                $sender->sendMessage("§cZoom not in range: [".WorldRenderer::MIN_ZOOM.", ".WorldRenderer::MAX_ZOOM."]");
+                $sender->sendMessage("§cZoom not in range: [" . WorldRenderer::MIN_ZOOM . ", " . WorldRenderer::MAX_ZOOM . "]");
                 return;
             }
 

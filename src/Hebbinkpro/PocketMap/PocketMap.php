@@ -462,7 +462,7 @@ class PocketMap extends PluginBase implements Listener
                 "view" => [
                     "x" => $spawnPos->getFloorX(),
                     "z" => $spawnPos->getFloorZ(),
-                    "zoom" => (int) floor(WorldRenderer::MAX_ZOOM / 2)
+                    "zoom" => (int)floor(WorldRenderer::MAX_ZOOM / 2)
                 ]
             ];
         }

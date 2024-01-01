@@ -20,6 +20,7 @@
 namespace Hebbinkpro\PocketMap\utils;
 
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
+use Hebbinkpro\PocketMap\utils\biome\NewBiomeIds;
 use pocketmine\block\Block;
 use pocketmine\block\BlockTypeIds as Ids;
 use pocketmine\data\bedrock\BiomeIds;
@@ -110,15 +111,22 @@ final class ColorMapParser
     }
 
     /**
-     * Get the name of the given biome
+     * Get the id name, the name used in resource packs and BiomeIds, of the given biome
      * @param Biome $biome the biome
-     * @return string the name of the biome
+     * @return string the id name of the biome
      */
     public static function getBiomeName(Biome $biome): string
     {
+        // get the reflector classes
         $reflector = new ReflectionClass(BiomeIds::class);
+        $reflectorNew = new ReflectionClass(NewBiomeIds::class);
 
-        $name = array_search($biome->getId(), $reflector->getConstants(), true);
+        // get all constants
+        /** @var array<string, int> $constants */
+        $constants = array_merge($reflector->getConstants(), $reflectorNew->getConstants());
+
+        // get the name of the current id
+        $name = array_search($biome->getId(), $constants, true);
         return $name === false ? "ocean" : strtolower($name);
     }
 
@@ -143,15 +151,15 @@ final class ColorMapParser
     public static function getColorFromMap(float $temp, float $rain, string $texture): int
     {
         // make the value between 0 and 1 if it isn't already
-        $temp = min(1, max(0, $temp));
-        $rain = min(1, max(0, $rain));
+        $temp = self::clamp($temp, 0.0, 1.0);
+        $rain = self::clamp($rain, 0.0, 1.0) * $temp;
 
         $img = imagecreatefrompng($texture);
         if ($img === false) return 0;
         imagealphablending($img, true);
 
         $x = (int)floor(self::COLOR_MAP_SIZE - ($temp * self::COLOR_MAP_SIZE));
-        $y = (int)floor(self::COLOR_MAP_SIZE - ($rain * self::COLOR_MAP_SIZE * $temp));
+        $y = (int)floor(self::COLOR_MAP_SIZE - ($rain * self::COLOR_MAP_SIZE));
 
         if ($x < 0 || $y < 0 || $x > self::COLOR_MAP_SIZE || $y > self::COLOR_MAP_SIZE) {
             $color = imagecolorexactalpha($img, 0, 0, 0, 127);
@@ -167,6 +175,18 @@ final class ColorMapParser
     }
 
     /**
+     * Get the value inside a range
+     * @param float|int $value the value
+     * @param float|int $min the minimum value
+     * @param float|int $max the maximum value
+     * @return float the value when inside the range, otherwise min or max
+     */
+    public static function clamp(float|int $value, float|int $min, float|int $max): float
+    {
+        return max($min, min($value, $max));
+    }
+
+    /**
      * Get the grass color in the given biome
      * @param Biome $biome the biome
      * @param TerrainTextures $terrainTextures the resource pack
@@ -178,28 +198,37 @@ final class ColorMapParser
         $temp = $biome->getTemperature();
         $rain = $biome->getRainfall();
 
-        switch ($biome->getId()) {
-            case BiomeIds::SWAMPLAND:
-                $texture = $terrainTextures->getRealTexturePath(self::COLOR_MAP_GRASS_SWAMP);
-                break;
+        return match ($biome->getId()) {
+            BiomeIds::SWAMPLAND => 0x6A7039,
+            BiomeIds::MESA, BiomeIds::MESA_PLATEAU, BiomeIds::MESA_BRYCE, BiomeIds::MESA_PLATEAU_MUTATED, BiomeIds::MESA_PLATEAU_STONE, BiomeIds::MESA_PLATEAU_STONE_MUTATED => 0x90814D,
+            BiomeIds::ROOFED_FOREST, BiomeIds::ROOFED_FOREST_MUTATED => 0x507A32,
+            NewBiomeIds::MANGROVE_SWAMP => 0x4C763C,
+            default => self::getColorFromMap($temp, $rain, $texture),
+        };
 
-            case BiomeIds::MESA:
-            case BiomeIds::MESA_PLATEAU:
-            case BiomeIds::MESA_BRYCE:
-            case BiomeIds::MESA_PLATEAU_MUTATED:
-            case BiomeIds::MESA_PLATEAU_STONE:
-            case BiomeIds::MESA_PLATEAU_STONE_MUTATED:
-                return 0x90814D;
+    }
 
-            case BiomeIds::ROOFED_FOREST:
-            case BiomeIds::ROOFED_FOREST_MUTATED:
-                $color = self::getColorFromMap($temp, $rain, $texture) & 0xFEFEFE;
-                return self::average($color, 0x28340A);
+    /**
+     * Get the foliage color inside a biome
+     * @param Biome $biome the biome
+     * @param TerrainTextures $terrainTextures the resource pack
+     * @return int the foliage color
+     */
+    public static function getFoliageColor(Biome $biome, TerrainTextures $terrainTextures): int
+    {
+        $texture = $terrainTextures->getRealTexturePath(self::COLOR_MAP_FOLIAGE);
+        $temp = $biome->getTemperature();
+        $rain = $biome->getRainfall();
 
-            // TODO: mangrove swamp
-        }
+        return match ($biome->getId()) {
+            BiomeIds::SWAMPLAND => 0x6A7039,
+            BiomeIds::MESA, BiomeIds::MESA_PLATEAU, BiomeIds::MESA_BRYCE, BiomeIds::MESA_PLATEAU_MUTATED, BiomeIds::MESA_PLATEAU_STONE, BiomeIds::MESA_PLATEAU_STONE_MUTATED => 0x9E814D,
+            BiomeIds::ROOFED_FOREST, BiomeIds::ROOFED_FOREST_MUTATED => 0x507A32,
+            NewBiomeIds::MANGROVE_SWAMP => 0x8DB127,
+            NewBiomeIds::CHERRY_GROVE => 0xB6DB61,
+            default => self::getColorFromMap($temp, $rain, $texture),
+        };
 
-        return self::getColorFromMap($temp, $rain, $texture);
     }
 
     /**
@@ -207,6 +236,7 @@ final class ColorMapParser
      * @param int $color1 the first color
      * @param int $color2 the second color
      * @return int the average color
+     * @deprecated this function isn't working like intended
      */
     public static function average(int $color1, int $color2): int
     {
@@ -226,42 +256,6 @@ final class ColorMapParser
         $average = imagecolorexactalpha($placeholder, $cr["red"], $cr["green"], $cr["blue"], $cr["alpha"]);
         imagedestroy($placeholder);
         return $average;
-    }
-
-    /**
-     * Get the foliage color inside a biome
-     * @param Biome $biome the biome
-     * @param TerrainTextures $terrainTextures the resource pack
-     * @return int the foliage color
-     */
-    public static function getFoliageColor(Biome $biome, TerrainTextures $terrainTextures): int
-    {
-        $texture = $terrainTextures->getRealTexturePath(self::COLOR_MAP_FOLIAGE);
-        $temp = $biome->getTemperature();
-        $rain = $biome->getRainfall();
-
-        switch ($biome->getId()) {
-            case BiomeIds::SWAMPLAND:
-                $texture = $terrainTextures->getRealTexturePath(self::COLOR_MAP_FOLIAGE_SWAMP);
-                break;
-
-            case BiomeIds::MESA:
-            case BiomeIds::MESA_PLATEAU:
-            case BiomeIds::MESA_BRYCE:
-            case BiomeIds::MESA_PLATEAU_MUTATED:
-            case BiomeIds::MESA_PLATEAU_STONE:
-            case BiomeIds::MESA_PLATEAU_STONE_MUTATED:
-                return 0x9E814D;
-
-            case BiomeIds::ROOFED_FOREST:
-            case BiomeIds::ROOFED_FOREST_MUTATED:
-                $color = self::getColorFromMap($temp, $rain, $texture) & 0xFEFEFE;
-                return self::average($color, 0x28340A);
-
-            // TODO: mangrove swamp
-        }
-
-        return self::getColorFromMap($temp, $rain, $texture);
     }
 
     /**
