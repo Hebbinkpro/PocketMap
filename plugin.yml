@@ -41,3 +41,9 @@ permissions:
   pocketmap.cmd.marker.remove:
     description: Allows to execute the marker remove command
     default: op
+  pocketmap.cmd.debug:
+    description: Allows to execute the debug command
+    default: op
+  pocketmap.cmd.debug.blocks:
+    description: Allows to execute the debug blocks command
+    default: op

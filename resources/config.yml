@@ -1,5 +1,5 @@
 # the config.yml version DO NOT CHANGE
-version: 1.6
+version: 1.7
 
 # Settings for the renderer
 renderer:
@@ -92,3 +92,7 @@ textures:
     # Set to 0 if you want to disable the overlay.
     # Default: 3 (min: 0, max: 127)
     alpha: 3
+
+# Enable debug settings
+# It is recommended to disable this feature because it can harm your server when not handled properly
+debug: false
