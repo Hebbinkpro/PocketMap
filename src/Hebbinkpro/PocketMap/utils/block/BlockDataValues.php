@@ -19,13 +19,19 @@
 
 namespace Hebbinkpro\PocketMap\utils\block;
 
+use pocketmine\block\BaseBanner;
+use pocketmine\block\BaseCoral;
 use pocketmine\block\Block;
+use pocketmine\block\CakeWithDyedCandle;
 use pocketmine\block\Candle;
 use pocketmine\block\ChemistryTable;
+use pocketmine\block\CoralBlock;
 use pocketmine\block\Crops;
 use pocketmine\block\Door;
 use pocketmine\block\DoublePitcherCrop;
 use pocketmine\block\DoublePlant;
+use pocketmine\block\DyedCandle;
+use pocketmine\block\FloorBanner;
 use pocketmine\block\Flower;
 use pocketmine\block\Furnace;
 use pocketmine\block\Leaves;
@@ -37,9 +43,11 @@ use pocketmine\block\Sapling;
 use pocketmine\block\Slab;
 use pocketmine\block\Torch;
 use pocketmine\block\TorchflowerCrop;
+use pocketmine\block\utils\CoralType;
 use pocketmine\block\utils\DyeColor;
 use pocketmine\block\utils\WoodType;
 use pocketmine\block\Wall;
+use pocketmine\block\WallBanner;
 use pocketmine\block\Wood;
 use pocketmine\block\WoodenDoor;
 use pocketmine\block\WoodenFence;
@@ -193,11 +201,13 @@ final class BlockDataValues
         if ($bsd === null) return 0;
         $name = $bsd->getName();
 
+        // list with all blocks using a colored trait, but not using it in their texture as data value
+        $coloredWithoutColor = [WallBanner::class, FloorBanner::class, DyedCandle::class, CakeWithDyedCandle::class];
+
         // block uses the ColoredTrait, so it's colored
-        if (BlockUtils::hasColor($block)) {
+        if (BlockUtils::hasColor($block) && !in_array($block::class, $coloredWithoutColor)) {
             // get the color of the block
             /** @var Wool $block */
-            /** @var DyeColor $color */
             $color = $block->getColor();
 
             // return the id of the color
@@ -207,10 +217,11 @@ final class BlockDataValues
         // it's a chiseled block
         if (($chisel = BlockStateParser::getStateValue($bsd, BSN::CHISEL_TYPE)) !== null) {
             return match ($chisel) {
+                BSV::CHISEL_TYPE_DEFAULT => 0,
                 BSV::CHISEL_TYPE_CHISELED => 1,
                 BSV::CHISEL_TYPE_LINES => 2,
                 BSV::CHISEL_TYPE_SMOOTH => 3,
-                default => 0 // BSV::CHISEL_TYPE_DEFAULT
+                default => 0
             };
         }
 
@@ -266,6 +277,9 @@ final class BlockDataValues
                 return 0;
 
             case DoublePlant::class:
+                // pitcher plant uses pitcher_crop stage 4 texture
+                if ($name === BTN::PITCHER_PLANT) return 4;
+
                 return self::DATA_VALUES[BTN::DOUBLE_PLANT][BlockStateParser::getStateValue($bsd, BSN::DOUBLE_PLANT_TYPE)];
 
             case Furnace::class:
@@ -317,6 +331,13 @@ final class BlockDataValues
                     default => 0
                 };
 
+            case BaseCoral::class:
+            case CoralBlock::class:
+                return self::getCoralDataValue($block->getCoralType());
+
+            case BaseBanner::class:
+                return 0;
+
             case Opaque::class:
                 return match ($name) {
                     BTN::SANDSTONE, BTN::RED_SANDSTONE =>
@@ -342,15 +363,27 @@ final class BlockDataValues
 
     }
 
+    public static function getCoralDataValue(CoralType $coral): int
+    {
+        return match ($coral) {
+            CoralType::TUBE => 0,
+            CoralType::BRAIN => 1,
+            CoralType::BUBBLE => 2,
+            CoralType::FIRE => 3,
+            CoralType::HORN => 5,
+            default => 0
+        };
+    }
+
     public static function getWoodDataValue(WoodType $wood): int
     {
         return match ($wood) {
-            WoodType::OAK => self::DATA_VALUES[BTN::WOOD][BSV::WOOD_TYPE_OAK],
-            WoodType::SPRUCE => self::DATA_VALUES[BTN::WOOD][BSV::WOOD_TYPE_SPRUCE],
-            WoodType::BIRCH => self::DATA_VALUES[BTN::WOOD][BSV::WOOD_TYPE_BIRCH],
-            WoodType::JUNGLE => self::DATA_VALUES[BTN::WOOD][BSV::WOOD_TYPE_JUNGLE],
-            WoodType::ACACIA => self::DATA_VALUES[BTN::WOOD][BSV::WOOD_TYPE_ACACIA],
-            WoodType::DARK_OAK => self::DATA_VALUES[BTN::WOOD][BSV::WOOD_TYPE_DARK_OAK],
+            WoodType::OAK => 0,
+            WoodType::SPRUCE => 1,
+            WoodType::BIRCH => 2,
+            WoodType::JUNGLE => 3,
+            WoodType::ACACIA => 4,
+            WoodType::DARK_OAK => 5,
             default => 0
         };
     }

@@ -21,6 +21,7 @@ namespace Hebbinkpro\PocketMap\textures;
 
 use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\utils\block\BlockDataValues;
+use Hebbinkpro\PocketMap\utils\block\BlockUtils;
 use Hebbinkpro\PocketMap\utils\ResourcePackUtils;
 use Hebbinkpro\PocketMap\utils\TextureUtils;
 use pocketmine\block\Block;
@@ -294,7 +295,8 @@ class TerrainTextures extends ResourcePackTextures
     public function getBlockTexturePath(Block $block): ?string
     {
         $texture = $this->getTextureByBlock($block);
-        if ($texture === null) return null;
+        // no texture, or block is invisible
+        if ($texture === null || strlen($texture) == 0) return null;
 
         return $this->getRealTexturePath($texture);
     }
@@ -306,6 +308,9 @@ class TerrainTextures extends ResourcePackTextures
      */
     public function getTextureByBlock(Block $block): string|null
     {
+        // it's a hidden block
+        if (BlockUtils::isInvisible($block)) return "";
+
         $textureName = TextureUtils::getBlockTextureName($block);
         if ($textureName === null) return null;
 

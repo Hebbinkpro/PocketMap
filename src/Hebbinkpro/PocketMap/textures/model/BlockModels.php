@@ -123,6 +123,10 @@ final class BlockModels
         $this->register(VanillaBlocks::DYED_CANDLE(), new CandleModel());
         $this->register(VanillaBlocks::SEA_PICKLE(), new SeaPickleModel());
 
+        $this->register(VanillaBlocks::CHORUS_PLANT(), new WallModel()); // it almost looks like the wall model
+        $this->register(VanillaBlocks::CHORUS_FLOWER(), new DefaultBlockModel());
+
+
         $this->registerFromBlockType(Stair::class, new DefaultBlockModel()); // TODO height difference
 
 

@@ -31,11 +31,13 @@ use Hebbinkpro\PocketMap\scheduler\RenderSchedulerTask;
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
 use Hebbinkpro\PocketMap\textures\TerrainTexturesOptions;
 use Hebbinkpro\PocketMap\utils\ConfigManager;
+use Hebbinkpro\PocketMap\utils\TextureUtils;
 use Hebbinkpro\WebServer\exception\WebServerException;
 use Hebbinkpro\WebServer\libs\Laravel\SerializableClosure\Exceptions\PhpVersionNotSupportedException;
 use Hebbinkpro\WebServer\route\Router;
 use Hebbinkpro\WebServer\WebServer;
 use JsonException;
+use pocketmine\block\RuntimeBlockStateRegistry;
 use pocketmine\event\Listener;
 use pocketmine\item\StringToItemParser;
 use pocketmine\plugin\PluginBase;
@@ -186,6 +188,24 @@ class PocketMap extends PluginBase implements Listener
         } catch (Exception $e) {
             $this->disable("Could not start the web server.", $e->getMessage());
             return;
+        }
+
+        // if debug is enabled, check all block textures
+        if ($this->configManager->getBool("debug")) {
+            // list with not found type ids
+            // this is used so that not all blocks with the same type id will be logged which causes unnecessary spam
+            $notFound = [];
+            foreach (RuntimeBlockStateRegistry::getInstance()->getAllKnownStates() as $block) {
+                $texture = $this->terrainTextures->getTextureByBlock($block);
+
+                $id = $block->getTypeId();
+                if ($texture === null && !in_array($id, $notFound)) {
+                    $notFound[] = $id;
+                    $textureName = TextureUtils::getBlockTextureName($block);
+                    $this->getLogger()->warning("Cannot find texture of block: " . $block->getName() . ", ID: " . $block->getTypeId() . ", Texture: " . $textureName);
+
+                }
+            }
         }
     }
 

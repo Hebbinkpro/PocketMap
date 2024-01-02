@@ -23,6 +23,7 @@ use pocketmine\block\Block;
 use pocketmine\block\BlockTypeIds;
 use pocketmine\block\Button;
 use pocketmine\block\Door;
+use pocketmine\block\Lever;
 use pocketmine\block\RuntimeBlockStateRegistry;
 use pocketmine\block\SimplePillar;
 use pocketmine\data\bedrock\block\BlockStateData;
@@ -79,8 +80,12 @@ final class BlockStateParser
 
         // the block uses the AnyFacingTrait
         if (BlockUtils::hasAnyFacing($block)) {
-            /** @var Button $block */
+            // lever returns LeverFacing instead of int
+            if ($block instanceof Lever) {
+                return $block->getFacing()->getFacing();
+            }
 
+            /** @var Button $block */
             return $block->getFacing();
         }
 

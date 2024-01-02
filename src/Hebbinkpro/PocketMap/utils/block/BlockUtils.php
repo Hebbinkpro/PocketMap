@@ -39,10 +39,15 @@ use ReflectionClass;
 
 class BlockUtils
 {
-    public static function isHidden(Block $block): bool
+    /**
+     * Get if the block is invisible (does not have a texture)
+     * @param Block $block
+     * @return bool
+     */
+    public static function isInvisible(Block $block): bool
     {
         return match ($block->getTypeId()) {
-            BlockTypeIds::AIR, BlockTypeIds::BARRIER => true,
+            BlockTypeIds::AIR, BlockTypeIds::BARRIER, BlockTypeIds::INVISIBLE_BEDROCK, BlockTypeIds::LIGHT => true,
             default => false
         };
     }

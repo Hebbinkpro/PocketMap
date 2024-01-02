@@ -102,6 +102,7 @@ class TextureUtils
      */
     private static function createBlockTexture(Block $block, ?BlockModel $model, Chunk $chunk, TerrainTextures $terrainTextures): ?GdImage
     {
+        if (BlockUtils::isInvisible($block)) return null;
         $pos = $block->getPosition()->floor();
 
         // get the biome

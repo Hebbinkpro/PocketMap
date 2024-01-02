@@ -34,6 +34,9 @@ final class OldBlockTypeNames
     public const STAINED_GLASS_PANE = "minecraft:stained_glass_pane";
     public const STAINED_HARDENED_CLAY = "minecraft:stained_hardened_clay";
     public const FENCE = "minecraft:fence";
+    public const CORAL = "minecraft:coral";
+    public const SHULKER_BOX = "minecraft:shulker_box";
+    public const PLANKS = "minecraft:planks";
 
     /**
      * Get the type name of a block.
@@ -53,6 +56,8 @@ final class OldBlockTypeNames
         if (($name = self::getColoredTypeName($typeName, "terracotta", self::STAINED_HARDENED_CLAY, ["glazed_terracotta"])) !== null) return $name;
         if (($name = self::getColoredTypeName($typeName, "stained_glass", self::STAINED_GLASS)) !== null) return $name;
         if (($name = self::getColoredTypeName($typeName, "stained_glass_pane", self::STAINED_GLASS_PANE)) !== null) return $name;
+        if (($name = self::getColoredTypeName($typeName, "coral", self::CORAL)) !== null) return $name;
+        if (($name = self::getColoredTypeName($typeName, "shulker_box", self::SHULKER_BOX)) !== null) return $name;
 
         // other type names that should be converted, or return the type name by default
         return match ($typeName) {
@@ -61,6 +66,8 @@ final class OldBlockTypeNames
             BTN::ACACIA_LOG, BTN::DARK_OAK_LOG
             => self::LOG2,
             BTN::OAK_FENCE => self::FENCE,
+            BTN::PITCHER_PLANT => BTN::PITCHER_CROP,
+            BTN::OAK_PLANKS => self::PLANKS,
             default => $typeName
         };
     }
