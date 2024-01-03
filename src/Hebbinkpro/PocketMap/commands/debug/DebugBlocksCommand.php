@@ -8,6 +8,7 @@ use CortexPE\Commando\BaseSubCommand;
 use CortexPE\Commando\exception\ArgumentOrderException;
 use pocketmine\block\RuntimeBlockStateRegistry;
 use pocketmine\command\CommandSender;
+use pocketmine\math\Vector3;
 use pocketmine\player\Player;
 use pocketmine\Server;
 use pocketmine\world\WorldManager;
@@ -27,15 +28,24 @@ class DebugBlocksCommand extends BaseSubCommand
         $this->registerArgument(1, new RawStringArgument("world", true));
     }
 
+    /**
+     * @param CommandSender $sender
+     * @param string $aliasUsed
+     * @param array<mixed>|array{pos?: Vector3, world?: string} $args
+     * @return void
+     */
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
-        if (!$sender instanceof Player && (!isset($args["pos"]) || !isset($args["world"]))) {
+        if ($sender instanceof Player) {
+            if (!isset($args["pos"])) $args["pos"] = $sender->getPosition();
+            if (!isset($args["world"])) $args["world"] = $sender->getWorld()->getFolderName();
+        } elseif (sizeof($args) < 2) {
             $sender->sendMessage("§cNo position given");
             return;
         }
 
-        $startPos = $args["pos"] ?? $sender->getPosition();
-        $world = isset($args["world"]) ? Server::getInstance()->getWorldManager()->getWorldByName($args["world"]) : $sender->getWorld();
+        $startPos = $args["pos"];
+        $world =  Server::getInstance()->getWorldManager()->getWorldByName($args["world"]);
 
         $blocks = RuntimeBlockStateRegistry::getInstance()->getAllKnownStates();
         $blockIndexes = array_keys($blocks);

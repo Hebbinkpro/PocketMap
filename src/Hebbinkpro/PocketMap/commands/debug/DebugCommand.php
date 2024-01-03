@@ -18,6 +18,12 @@ class DebugCommand extends BaseSubCommand
         $this->registerSubCommand(new DebugBlocksCommand($plugin, "blocks", "Loads a grid with all the registered blocks on your position"));
     }
 
+    /**
+     * @param CommandSender $sender
+     * @param string $aliasUsed
+     * @param array<mixed> $args
+     * @return void
+     */
     public function onRun(CommandSender $sender, string $aliasUsed, array $args): void
     {
         $sender->sendMessage("§e[WARNING] Executing debug commands can cause temporary lag on your server!");

@@ -205,7 +205,7 @@ final class BlockDataValues
         $coloredWithoutColor = [WallBanner::class, FloorBanner::class, DyedCandle::class, CakeWithDyedCandle::class];
 
         // block uses the ColoredTrait, so it's colored
-        if (BlockUtils::hasColor($block) && !in_array($block::class, $coloredWithoutColor)) {
+        if (BlockUtils::hasColor($block) && !in_array($block::class, $coloredWithoutColor, true)) {
             // get the color of the block
             /** @var Wool $block */
             $color = $block->getColor();
@@ -335,9 +335,6 @@ final class BlockDataValues
             case CoralBlock::class:
                 return self::getCoralDataValue($block->getCoralType());
 
-            case BaseBanner::class:
-                return 0;
-
             case Opaque::class:
                 return match ($name) {
                     BTN::SANDSTONE, BTN::RED_SANDSTONE =>
@@ -370,8 +367,7 @@ final class BlockDataValues
             CoralType::BRAIN => 1,
             CoralType::BUBBLE => 2,
             CoralType::FIRE => 3,
-            CoralType::HORN => 5,
-            default => 0
+            CoralType::HORN => 5
         };
     }
 

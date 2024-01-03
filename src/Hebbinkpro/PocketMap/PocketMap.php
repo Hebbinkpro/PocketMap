@@ -199,7 +199,7 @@ class PocketMap extends PluginBase implements Listener
                 $texture = $this->terrainTextures->getTextureByBlock($block);
 
                 $id = $block->getTypeId();
-                if ($texture === null && !in_array($id, $notFound)) {
+                if ($texture === null && !in_array($id, $notFound, true)) {
                     $notFound[] = $id;
                     $textureName = TextureUtils::getBlockTextureName($block);
                     $this->getLogger()->warning("Cannot find texture of block: " . $block->getName() . ", ID: " . $block->getTypeId() . ", Texture: " . $textureName);

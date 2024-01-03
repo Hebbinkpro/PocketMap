@@ -77,6 +77,7 @@ final class OldBlockTypeNames
      * @param string $coloredTypeName The type name from a block
      * @param string $typeName The type name that has to be at the end of the colored type name
      * @param string $oldTypeName The type name that should replace the colored type name
+     * @param array<string> $exceptions Type names that end with the same type name, but should not be replaced
      * @return string|null the old type name, or null when it doesn't match
      */
     public static function getColoredTypeName(string $coloredTypeName, string $typeName, string $oldTypeName, array $exceptions = []): ?string
