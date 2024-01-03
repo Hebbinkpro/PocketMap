@@ -19,7 +19,6 @@
 
 namespace Hebbinkpro\PocketMap\utils\block;
 
-use pocketmine\block\BaseBanner;
 use pocketmine\block\BaseCoral;
 use pocketmine\block\Block;
 use pocketmine\block\CakeWithDyedCandle;
@@ -360,17 +359,6 @@ final class BlockDataValues
 
     }
 
-    public static function getCoralDataValue(CoralType $coral): int
-    {
-        return match ($coral) {
-            CoralType::TUBE => 0,
-            CoralType::BRAIN => 1,
-            CoralType::BUBBLE => 2,
-            CoralType::FIRE => 3,
-            CoralType::HORN => 5
-        };
-    }
-
     public static function getWoodDataValue(WoodType $wood): int
     {
         return match ($wood) {
@@ -381,6 +369,17 @@ final class BlockDataValues
             WoodType::ACACIA => 4,
             WoodType::DARK_OAK => 5,
             default => 0
+        };
+    }
+
+    public static function getCoralDataValue(CoralType $coral): int
+    {
+        return match ($coral) {
+            CoralType::TUBE => 0,
+            CoralType::BRAIN => 1,
+            CoralType::BUBBLE => 2,
+            CoralType::FIRE => 3,
+            CoralType::HORN => 5
         };
     }
 }

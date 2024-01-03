@@ -11,22 +11,10 @@ use pocketmine\command\CommandSender;
 use pocketmine\math\Vector3;
 use pocketmine\player\Player;
 use pocketmine\Server;
-use pocketmine\world\WorldManager;
 
 class DebugBlocksCommand extends BaseSubCommand
 {
     public const ROW_SIZE = 64;
-
-    /**
-     * @throws ArgumentOrderException
-     */
-    protected function prepare(): void
-    {
-        $this->setPermission("pocketmap.cmd.debug.blocks");
-
-        $this->registerArgument(0, new BlockPositionArgument("pos", true));
-        $this->registerArgument(1, new RawStringArgument("world", true));
-    }
 
     /**
      * @param CommandSender $sender
@@ -45,10 +33,10 @@ class DebugBlocksCommand extends BaseSubCommand
         }
 
         $startPos = $args["pos"];
-        $world =  Server::getInstance()->getWorldManager()->getWorldByName($args["world"]);
+        $world = Server::getInstance()->getWorldManager()->getWorldByName($args["world"]);
 
         if ($world === null) {
-            $sender->sendMessage("§cWorld ".$args["world"]." is not loaded");
+            $sender->sendMessage("§cWorld " . $args["world"] . " is not loaded");
             return;
         }
 
@@ -67,11 +55,11 @@ class DebugBlocksCommand extends BaseSubCommand
 
         $y = $startPos->getFloorY();
         for ($row = 0; $row <= self::ROW_SIZE; $row++) {
-            $x = $row + ($row*$rowSpaces);
+            $x = $row + ($row * $rowSpaces);
             for ($col = 0; $col <= $colSize; $col++) {
                 if ($blockIndex >= $totalBlocks) break;
 
-                $z = $col + ($col*$colSpaces);
+                $z = $col + ($col * $colSpaces);
 
                 // get the current block
                 $block = $blocks[$blockIndexes[$blockIndex] ?? 0] ?? null;
@@ -81,7 +69,7 @@ class DebugBlocksCommand extends BaseSubCommand
                     $pos = $startPos->add($x, $y, $z);
 
                     // load the chunk the block should be placed in
-                    [$cx,$cz] = [$pos->getFloorX() >> 4, $pos->getFloorZ() >> 4];
+                    [$cx, $cz] = [$pos->getFloorX() >> 4, $pos->getFloorZ() >> 4];
                     if (!$world->isChunkLoaded($cx, $cz)) $world->loadChunk($cx, $cz);
 
                     // place the block
@@ -94,5 +82,16 @@ class DebugBlocksCommand extends BaseSubCommand
         }
 
         $sender->sendMessage("§aBlock placing completed");
+    }
+
+    /**
+     * @throws ArgumentOrderException
+     */
+    protected function prepare(): void
+    {
+        $this->setPermission("pocketmap.cmd.debug.blocks");
+
+        $this->registerArgument(0, new BlockPositionArgument("pos", true));
+        $this->registerArgument(1, new RawStringArgument("world", true));
     }
 }
