@@ -47,6 +47,11 @@ class DebugBlocksCommand extends BaseSubCommand
         $startPos = $args["pos"];
         $world =  Server::getInstance()->getWorldManager()->getWorldByName($args["world"]);
 
+        if ($world === null) {
+            $sender->sendMessage("§cWorld ".$args["world"]." is not loaded");
+            return;
+        }
+
         $blocks = RuntimeBlockStateRegistry::getInstance()->getAllKnownStates();
         $blockIndexes = array_keys($blocks);
         $totalBlocks = sizeof($blocks);
