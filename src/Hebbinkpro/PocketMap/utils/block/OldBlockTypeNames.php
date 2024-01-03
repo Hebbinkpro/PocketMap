@@ -23,6 +23,7 @@ use pocketmine\data\bedrock\block\BlockTypeNames as BTN;
 
 /**
  * Class containing all block type names that are removed/replaced in PMMP but still used in the blocks.json in the Minecraft resource packs.
+ * @deprecated because of the updated texture pack, this class is not necessary anymore
  */
 final class OldBlockTypeNames
 {
