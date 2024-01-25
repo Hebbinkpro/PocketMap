@@ -144,9 +144,8 @@ class MarkerManager
 
         $worldName = $world->getFolderName();
 
-        // id is already used
-        if ($id !== null && $this->getMarker($id, $world) !== null) return false;
-        else {
+        // no ID given
+        if ($id === null) {
             $lower = str_replace(" ", "_", strtolower($name));
             $id = $lower;
             $loop = 1;
@@ -155,6 +154,8 @@ class MarkerManager
                 $loop++;
             }
         }
+        // region with this ID already exists!
+        else if ($this->getMarker($id, $world) !== null) return false;
 
         $marker = [
             "name" => $name,
