@@ -33,8 +33,9 @@ use Hebbinkpro\PocketMap\textures\TerrainTexturesOptions;
 use Hebbinkpro\PocketMap\utils\ConfigManager;
 use Hebbinkpro\PocketMap\utils\TextureUtils;
 use Hebbinkpro\WebServer\exception\WebServerException;
+use Hebbinkpro\WebServer\http\server\HttpServerInfo;
 use Hebbinkpro\WebServer\libs\Laravel\SerializableClosure\Exceptions\PhpVersionNotSupportedException;
-use Hebbinkpro\WebServer\route\Router;
+use Hebbinkpro\WebServer\router\Router;
 use Hebbinkpro\WebServer\WebServer;
 use JsonException;
 use pocketmine\block\RuntimeBlockStateRegistry;
@@ -179,8 +180,6 @@ class PocketMap extends PluginBase implements Listener
         $this->getServer()->getCommandMap()->register("pocketmap", new PocketMapCommand($this, "pocketmap", "PocketMap command", ["pmap"]));
 
         $this->loadAllWorlds();
-
-        WebServer::register($this);
 
         try {
             // create the web server
@@ -399,8 +398,10 @@ class PocketMap extends PluginBase implements Listener
         }
 
         // create the web server
-        $this->webServer = new WebServer($webSettings->getString("address", "127.0.0.1"), $webSettings->getInt("port", 3000));
-        $router = $this->webServer->getRouter();
+        $serverInfo = new HttpServerInfo($webSettings->getString("address", "127.0.0.1"), $webSettings->getInt("port", 3000));
+        $this->webServer = new WebServer($this, $serverInfo);
+
+        $router = $serverInfo->getRouter();
 
         $webFolder = $this->getDataFolder() . "web/";
 
