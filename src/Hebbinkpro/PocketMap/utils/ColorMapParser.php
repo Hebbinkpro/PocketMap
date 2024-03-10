@@ -117,16 +117,11 @@ final class ColorMapParser
      */
     public static function getBiomeName(Biome $biome): string
     {
-        // get the reflector classes
+        // get the reflector class of the biome ids
         $reflector = new ReflectionClass(BiomeIds::class);
-        $reflectorNew = new ReflectionClass(NewBiomeIds::class);
-
-        // get all constants
-        /** @var array<string, int> $constants */
-        $constants = array_merge($reflector->getConstants(), $reflectorNew->getConstants());
 
         // get the name of the current id
-        $name = array_search($biome->getId(), $constants, true);
+        $name = array_search($biome->getId(), $reflector->getConstants(), true);
         return $name === false ? "ocean" : strtolower($name);
     }
 
@@ -202,7 +197,7 @@ final class ColorMapParser
             BiomeIds::SWAMPLAND => 0x6A7039,
             BiomeIds::MESA, BiomeIds::MESA_PLATEAU, BiomeIds::MESA_BRYCE, BiomeIds::MESA_PLATEAU_MUTATED, BiomeIds::MESA_PLATEAU_STONE, BiomeIds::MESA_PLATEAU_STONE_MUTATED => 0x90814D,
             BiomeIds::ROOFED_FOREST, BiomeIds::ROOFED_FOREST_MUTATED => 0x507A32,
-            NewBiomeIds::MANGROVE_SWAMP => 0x4C763C,
+            BiomeIds::MANGROVE_SWAMP => 0x4C763C,
             default => self::getColorFromMap($temp, $rain, $texture),
         };
 
@@ -224,8 +219,8 @@ final class ColorMapParser
             BiomeIds::SWAMPLAND => 0x6A7039,
             BiomeIds::MESA, BiomeIds::MESA_PLATEAU, BiomeIds::MESA_BRYCE, BiomeIds::MESA_PLATEAU_MUTATED, BiomeIds::MESA_PLATEAU_STONE, BiomeIds::MESA_PLATEAU_STONE_MUTATED => 0x9E814D,
             BiomeIds::ROOFED_FOREST, BiomeIds::ROOFED_FOREST_MUTATED => 0x507A32,
-            NewBiomeIds::MANGROVE_SWAMP => 0x8DB127,
-            NewBiomeIds::CHERRY_GROVE => 0xB6DB61,
+            BiomeIds::MANGROVE_SWAMP => 0x8DB127,
+            BiomeIds::CHERRY_GROVE => 0xB6DB61,
             default => self::getColorFromMap($temp, $rain, $texture),
         };
 
