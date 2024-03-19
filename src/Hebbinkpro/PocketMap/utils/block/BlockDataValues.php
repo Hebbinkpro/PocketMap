@@ -19,7 +19,7 @@
 
 namespace Hebbinkpro\PocketMap\utils\block;
 
-use pocketmine\block\BaseCoral;
+use Hebbinkpro\PocketMap\utils\block\OldBlockTypeNames as OBTN;
 use pocketmine\block\Block;
 use pocketmine\block\CakeWithDyedCandle;
 use pocketmine\block\Candle;
@@ -32,7 +32,6 @@ use pocketmine\block\DoublePlant;
 use pocketmine\block\DyedCandle;
 use pocketmine\block\FloorBanner;
 use pocketmine\block\Flower;
-use pocketmine\block\Furnace;
 use pocketmine\block\Leaves;
 use pocketmine\block\Opaque;
 use pocketmine\block\PitcherCrop;
@@ -44,12 +43,14 @@ use pocketmine\block\Torch;
 use pocketmine\block\TorchflowerCrop;
 use pocketmine\block\utils\CoralType;
 use pocketmine\block\utils\DyeColor;
+use pocketmine\block\utils\LeavesType;
 use pocketmine\block\utils\WoodType;
 use pocketmine\block\Wall;
 use pocketmine\block\WallBanner;
 use pocketmine\block\Wood;
 use pocketmine\block\WoodenDoor;
 use pocketmine\block\WoodenFence;
+use pocketmine\block\WoodenSlab;
 use pocketmine\block\Wool;
 use pocketmine\data\bedrock\block\BlockStateNames as BSN;
 use pocketmine\data\bedrock\block\BlockStateStringValues as BSV;
@@ -68,14 +69,6 @@ final class BlockDataValues
      * @var int[][]
      */
     public const DATA_VALUES = [
-        BTN::WOOD => [
-            BSV::WOOD_TYPE_OAK => 0,
-            BSV::WOOD_TYPE_SPRUCE => 1,
-            BSV::WOOD_TYPE_BIRCH => 2,
-            BSV::WOOD_TYPE_JUNGLE => 3,
-            BSV::WOOD_TYPE_ACACIA => 4,
-            BSV::WOOD_TYPE_DARK_OAK => 5
-        ],
         BTN::CHEMISTRY_TABLE => [
             BSV::CHEMISTRY_TABLE_TYPE_COMPOUND_CREATOR => 0,
             BSV::CHEMISTRY_TABLE_TYPE_MATERIAL_REDUCER => 1,
@@ -89,16 +82,6 @@ final class BlockDataValues
             BSV::DOUBLE_PLANT_TYPE_FERN => 3,
             BSV::DOUBLE_PLANT_TYPE_ROSE => 4,
             BSV::DOUBLE_PLANT_TYPE_PAEONIA => 5
-        ],
-        BTN::LEAVES => [
-            BSV::OLD_LEAF_TYPE_OAK => 0,
-            BSV::OLD_LEAF_TYPE_SPRUCE => 1,
-            BSV::OLD_LEAF_TYPE_BIRCH => 2,
-            BSV::OLD_LEAF_TYPE_JUNGLE => 3
-        ],
-        BTN::LEAVES2 => [
-            BSV::NEW_LEAF_TYPE_ACACIA => 0,
-            BSV::NEW_LEAF_TYPE_DARK_OAK => 1
         ],
         BTN::RED_FLOWER => [
             BSV::FLOWER_TYPE_POPPY => 0,
@@ -198,7 +181,7 @@ final class BlockDataValues
     {
         $bsd = BlockStateParser::getBlockStateData($block);
         if ($bsd === null) return 0;
-        $name = $bsd->getName();
+        $name = OldBlockTypeNames::getTypeName($bsd->getName());
 
         // list with all blocks using a colored trait, but not using it in their texture as data value
         $coloredWithoutColor = [WallBanner::class, FloorBanner::class, DyedCandle::class, CakeWithDyedCandle::class];
@@ -229,22 +212,22 @@ final class BlockDataValues
             case Planks::class:
             case WoodenDoor::class:
             case WoodenFence::class:
-                // get the wood type data value, if the wood type is not from the legacy kind, its just 0
+            // get the wood type data value if the wood type is not from the legacy kind, its just 0
                 return self::getWoodDataValue($block->getWoodType());
 
             case Wood::class:
                 // it's a wood block
-                if ($name === BTN::WOOD) {
-                    // textures are like: unstripped,stripped,unstripped,stripped,etc
+                if ($name === OBTN::WOOD) {
+                    // textures are like: unstripped, stripped, unstripped, stripped, etc
                     // so this beautiful formula gives you the right data value
                     return self::getWoodDataValue($block->getWoodType()) * 2 + intval($block->isStripped());
                 }
 
-                // it's a non stripped log
-                if (!$block->isStripped()) {
-                    // this is the one where we have log and log2, in log there are only 4 entries, so that's why we use %4
-                    return self::getWoodDataValue($block->getWoodType()) % 4;
-                }
+//                // it's a non-stripped log
+//                if (!$block->isStripped()) {
+//                    // this is the one where we have log and log2, in log there are only 4 entries, so that's why we use %4
+//                    return self::getWoodDataValue($block->getWoodType()) % 4;
+//                }
 
                 // everything else
                 return 0;
@@ -271,8 +254,8 @@ final class BlockDataValues
                 return intval($state ?? 0);
 
             case Door::class:
-                // iron door does not count towards wood but has a data value, so check if it's iron and else return 0
-                if ($bsd->getName() === BTN::IRON_DOOR) return count(self::DATA_VALUES[BTN::WOOD]);
+                // iron door is in the same list as all the legacy wood doors...
+                if ($bsd->getName() === BTN::IRON_DOOR) return 6;
                 return 0;
 
             case DoublePlant::class:
@@ -281,17 +264,8 @@ final class BlockDataValues
 
                 return self::DATA_VALUES[BTN::DOUBLE_PLANT][BlockStateParser::getStateValue($bsd, BSN::DOUBLE_PLANT_TYPE)];
 
-            case Furnace::class:
-                return intval($block->isLit());
-
             case Leaves::class:
-                return match ($name) {
-                    BTN::LEAVES =>
-                    self::DATA_VALUES[BTN::LEAVES][BlockStateParser::getStateValue($bsd, BSN::OLD_LEAF_TYPE)],
-                    BTN::LEAVES2 =>
-                    self::DATA_VALUES[BTN::LEAVES2][BlockStateParser::getStateValue($bsd, BSN::NEW_LEAF_TYPE)],
-                    default => 0
-                };
+                return self::getLeavesDataValue($block->getLeavesType());
 
             case RedMushroomBlock::class:
                 /** @var int|null $state */
@@ -308,10 +282,11 @@ final class BlockDataValues
             case Sapling::class:
                 return self::DATA_VALUES[BTN::SAPLING][BlockStateParser::getStateValue($bsd, BSN::SAPLING_TYPE)];
 
+            case WoodenSlab::class:
+                return self::getWoodDataValue($block->getWoodType());
+
             case Slab::class:
                 return match ($name) {
-                    BTN::WOODEN_SLAB, BTN::DOUBLE_WOODEN_SLAB =>
-                    self::DATA_VALUES[BTN::WOOD][BlockStateParser::getStateValue($bsd, BSN::WOOD_TYPE)],
                     BTN::STONE_BLOCK_SLAB, BTN::DOUBLE_STONE_BLOCK_SLAB =>
                     self::DATA_VALUES[BTN::STONE_BLOCK_SLAB][BlockStateParser::getStateValue($bsd, BSN::STONE_SLAB_TYPE)],
                     BTN::STONE_BLOCK_SLAB2, BTN::DOUBLE_STONE_BLOCK_SLAB2 =>
@@ -330,7 +305,7 @@ final class BlockDataValues
                     default => 0
                 };
 
-            case BaseCoral::class:
+//            case BaseCoral::class:
             case CoralBlock::class:
                 return self::getCoralDataValue($block->getCoralType());
 
@@ -359,6 +334,11 @@ final class BlockDataValues
 
     }
 
+    /**
+     * Get the wood type data value
+     * @param WoodType $wood
+     * @return int
+     */
     public static function getWoodDataValue(WoodType $wood): int
     {
         return match ($wood) {
@@ -368,6 +348,24 @@ final class BlockDataValues
             WoodType::JUNGLE => 3,
             WoodType::ACACIA => 4,
             WoodType::DARK_OAK => 5,
+            default => 0
+        };
+    }
+
+    /**
+     * Get the leave's type data value
+     * @param LeavesType $wood
+     * @return int
+     */
+    public static function getLeavesDataValue(LeavesType $wood): int
+    {
+        return match ($wood) {
+            LeavesType::OAK => 0,
+            LeavesType::SPRUCE => 1,
+            LeavesType::BIRCH => 2,
+            LeavesType::JUNGLE => 3,
+            LeavesType::ACACIA => 0,
+            LeavesType::DARK_OAK => 1,
             default => 0
         };
     }

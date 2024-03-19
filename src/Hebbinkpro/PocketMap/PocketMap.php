@@ -31,17 +31,22 @@ use Hebbinkpro\PocketMap\scheduler\RenderSchedulerTask;
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
 use Hebbinkpro\PocketMap\textures\TerrainTexturesOptions;
 use Hebbinkpro\PocketMap\utils\ConfigManager;
+use Hebbinkpro\PocketMap\utils\ResourcePackUtils;
 use Hebbinkpro\PocketMap\utils\TextureUtils;
 use Hebbinkpro\WebServer\exception\WebServerException;
 use Hebbinkpro\WebServer\http\server\HttpServerInfo;
-use Hebbinkpro\WebServer\libs\Laravel\SerializableClosure\Exceptions\PhpVersionNotSupportedException;
 use Hebbinkpro\WebServer\router\Router;
 use Hebbinkpro\WebServer\WebServer;
 use JsonException;
+use pocketmine\block\Block;
 use pocketmine\block\RuntimeBlockStateRegistry;
+use pocketmine\block\utils\CoralType;
+use pocketmine\block\utils\DyeColor;
+use pocketmine\block\VanillaBlocks;
 use pocketmine\event\Listener;
 use pocketmine\item\StringToItemParser;
 use pocketmine\plugin\PluginBase;
+use pocketmine\resourcepacks\ZippedResourcePack;
 use pocketmine\utils\Config;
 use pocketmine\utils\Filesystem;
 use pocketmine\world\World;
@@ -51,8 +56,15 @@ class PocketMap extends PluginBase implements Listener
     public const CONFIG_VERSION = 1.7;
     public const WEB_VERSION = 1.2;
 
-    public const RESOURCE_PACK_NAME = "v1.20.50";
+    public const RESOURCE_PACK_NAME = "v1.20.62";
     public const TEXTURE_SIZE = 16;
+
+    public const IGNORED_TEXTURES = [
+        "piston_arm_collision",
+        "sticky_piston_arm_collision",
+        "moving_block",
+        "unknown"
+    ];
 
     private static PocketMap $instance;
     /** @var WorldRenderer[] */
@@ -63,11 +75,6 @@ class PocketMap extends PluginBase implements Listener
     private RenderSchedulerTask $renderScheduler;
     private ChunkSchedulerTask $chunkScheduler;
     private MarkerManager $markers;
-
-    public static function getFolder(): string
-    {
-        return self::$instance->getDataFolder();
-    }
 
     /**
      * Get a world renderer by its world or the name of the world
@@ -191,20 +198,53 @@ class PocketMap extends PluginBase implements Listener
 
         // if debug is enabled, check all block textures
         if ($this->configManager->getBool("debug")) {
-            // list with not found type ids
-            // this is used so that not all blocks with the same type id will be logged which causes unnecessary spam
-            $notFound = [];
-            foreach (RuntimeBlockStateRegistry::getInstance()->getAllKnownStates() as $block) {
-                $texture = $this->terrainTextures->getTextureByBlock($block);
+            $this->debug();
+        }
+    }
 
-                $id = $block->getTypeId();
-                if ($texture === null && !in_array($id, $notFound, true)) {
-                    $notFound[] = $id;
-                    $textureName = TextureUtils::getBlockTextureName($block);
+    private function debug(): void
+    {
+        $this->getLogger()->notice("Debug mode enabled");
+
+        // list with not found type ids
+        // this is used so that not all blocks with the same type id will be logged which causes unnecessary spam
+        $notFound = [];
+        foreach (RuntimeBlockStateRegistry::getInstance()->getAllKnownStates() as $block) {
+            $texture = $this->terrainTextures->getTextureByBlock($block);
+
+            $id = $block->getTypeId();
+            if ($texture === null && !in_array($id, $notFound, true)) {
+                $notFound[] = $id;
+                $textureName = TextureUtils::getBlockTextureName($block);
+
+                // don't warn for ignored textures, as they will never have a texture
+                if (!in_array($textureName, self::IGNORED_TEXTURES, true)) {
                     $this->getLogger()->warning("Cannot find texture of block: " . $block->getName() . ", ID: " . $block->getTypeId() . ", Texture: " . $textureName);
-
                 }
             }
+        }
+
+        if (sizeof($notFound) <= sizeof(self::IGNORED_TEXTURES)) {
+            $this->getLogger()->notice("All textures have been registered");
+        }
+
+        $blocks = [
+            VanillaBlocks::WOOL()->setColor(DyeColor::ORANGE),
+            VanillaBlocks::JUNGLE_LEAVES(),
+            VanillaBlocks::BIRCH_PLANKS(),
+            VanillaBlocks::IRON_DOOR(),
+            VanillaBlocks::JUNGLE_SLAB(),
+            VanillaBlocks::CUT_COPPER_SLAB(),
+            VanillaBlocks::CORAL()->setCoralType(CoralType::FIRE),
+            VanillaBlocks::CORAL_BLOCK()->setCoralType(CORALType::BRAIN),
+            VanillaBlocks::OAK_WOOD(),
+            VanillaBlocks::OAK_WOOD()->setStripped(true),
+        ];
+
+        /** @var Block $block */
+        foreach ($blocks as $block) {
+            $texture = $this->terrainTextures->getTextureByBlock($block);
+            $this->getLogger()->info("Found Texture: $texture, for block: {$block->getName()}, using name: " . TextureUtils::getBlockTextureName($block));
         }
     }
 
@@ -256,7 +296,17 @@ class PocketMap extends PluginBase implements Listener
 
         // load the resource pack files
         if (!is_dir($folder . "resource_packs/" . self::RESOURCE_PACK_NAME)) {
-            Filesystem::recursiveCopy($file . "resource_packs", $folder . "resource_packs");
+            // extract the zip to the plugin data
+            $src = $file . "resource_packs/" . self::RESOURCE_PACK_NAME . ".zip";
+            $dest = $folder . "resource_packs/" . self::RESOURCE_PACK_NAME . ".zip";
+            copy($src, $dest);
+
+            // extract the zipped vanilla resource pack
+            $pack = new ZippedResourcePack($dest);
+            ResourcePackUtils::extractResourcePack($folder . "resource_packs/", $pack, null, self::RESOURCE_PACK_NAME);
+
+            // remove the zip
+            unlink($dest);
         }
 
         // create the renders folder
@@ -354,7 +404,7 @@ class PocketMap extends PluginBase implements Listener
         $this->renderScheduler = new RenderSchedulerTask($this);
         $this->getScheduler()->scheduleRepeatingTask($this->renderScheduler, $this->configManager->getInt("renderer.scheduler.run-period", 5));
 
-        // start the chunk update task, this check every period if regions have to be updated
+        // start the chunk update task, this checks every period if regions have to be updated
         $this->chunkScheduler = new ChunkSchedulerTask($this);
         $this->getScheduler()->scheduleRepeatingTask($this->chunkScheduler, $this->configManager->getInt("renderer.chunk-scheduler.run-period", 10));
 
@@ -382,7 +432,6 @@ class PocketMap extends PluginBase implements Listener
 
     /**
      * Create the web server and set the routes
-     * @throws PhpVersionNotSupportedException
      * @throws WebServerException
      */
     private function createWebServer(): void
@@ -399,7 +448,6 @@ class PocketMap extends PluginBase implements Listener
 
         // create the web server
         $serverInfo = new HttpServerInfo($webSettings->getString("address", "127.0.0.1"), $webSettings->getInt("port", 3000));
-        $this->webServer = new WebServer($this, $serverInfo);
 
         $router = $serverInfo->getRouter();
 
@@ -415,6 +463,7 @@ class PocketMap extends PluginBase implements Listener
         $router->route("/api/pocketmap", $this->registerApiRoutes());
 
         // start the web server
+        $this->webServer = new WebServer($this, $serverInfo);
         $this->webServer->start();
     }
 
@@ -460,7 +509,7 @@ class PocketMap extends PluginBase implements Listener
         $webManager = ConfigManager::fromConfig($webConfig);
 
         $validWorlds = self::getConfigManger()->getArray("api.worlds");
-        $worldSettings = $webManager->getArray("worlds", []);
+        $worldSettings = $webManager->getArray("worlds");
 
         foreach (self::$worldRenderers as $worldName => $renderer) {
             // we aren't allowed to load this world
@@ -511,7 +560,6 @@ class PocketMap extends PluginBase implements Listener
 
     /**
      * Register all API routes to the web server
-     * @throws PhpVersionNotSupportedException
      * @throws WebServerException
      */
     private function registerApiRoutes(): Router

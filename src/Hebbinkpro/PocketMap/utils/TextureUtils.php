@@ -26,6 +26,7 @@ use Hebbinkpro\PocketMap\textures\model\BlockModels;
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
 use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
 use Hebbinkpro\PocketMap\utils\block\BlockUtils;
+use Hebbinkpro\PocketMap\utils\block\OldBlockTypeNames;
 use pocketmine\block\Block;
 use pocketmine\math\Facing;
 use pocketmine\world\biome\Biome;
@@ -320,8 +321,10 @@ class TextureUtils
         $stateData = BlockStateParser::getBlockStateData($block);
         if ($stateData === null) return null;
 
+        $name = OldBlockTypeNames::getTypeName($stateData->getName());
+
         // replace _block_ with _
-        return str_replace("_block_", "_", self::removeBlockTypeNamePrefix($stateData->getName()));
+        return str_replace("_block_", "_", self::removeBlockTypeNamePrefix($name));
     }
 
     public static function removeBlockTypeNamePrefix(string $name): string

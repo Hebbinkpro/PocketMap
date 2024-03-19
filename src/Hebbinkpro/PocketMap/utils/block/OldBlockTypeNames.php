@@ -23,21 +23,15 @@ use pocketmine\data\bedrock\block\BlockTypeNames as BTN;
 
 /**
  * Class containing all block type names that are removed/replaced in PMMP but still used in the blocks.json in the Minecraft resource packs.
- * @deprecated because of the updated texture pack, this class is not necessary anymore
  */
 final class OldBlockTypeNames
 {
-    public const LOG = "minecraft:log";
-    public const LOG2 = "minecraft:log2";
-    public const CONCRETE = "minecraft:concrete";
-    public const CONCRETE_POWDER = "minecraft:concretePowder";
-    public const STAINED_GLASS = "minecraft:stained_glass";
-    public const STAINED_GLASS_PANE = "minecraft:stained_glass_pane";
-    public const STAINED_HARDENED_CLAY = "minecraft:stained_hardened_clay";
-    public const FENCE = "minecraft:fence";
-    public const CORAL = "minecraft:coral";
-    public const SHULKER_BOX = "minecraft:shulker_box";
-    public const PLANKS = "minecraft:planks";
+    public const LEAVES = "minecraft:leaves";
+    public const LEAVES2 = "minecraft:leaves2";
+    public const WOOD = "minecraft:wood";
+    public const WOODEN_SLAB = "minecraft:wooden_slab";
+    public const DOUBLE_WOODEN_SLAB = "minecraft:double_wooden_slab";
+    public const GRASS = "minecraft:grass";
 
     /**
      * Get the type name of a block.
@@ -48,27 +42,28 @@ final class OldBlockTypeNames
      */
     public static function getTypeName(string $typeName): string
     {
-
-        // some colored blocks inside the texture packs use the old naming system
-        // because pmmp is slowly adding the new naming system for all colored blocks, this will break these blocks on the map
-        // because the new naming system isn't in the texture pack for some reason, so we have to convert them...
-        if (($name = self::getColoredTypeName($typeName, "concrete", self::CONCRETE)) !== null) return $name;
-        if (($name = self::getColoredTypeName($typeName, "concrete_powder", self::CONCRETE_POWDER)) !== null) return $name;
-        if (($name = self::getColoredTypeName($typeName, "terracotta", self::STAINED_HARDENED_CLAY, ["glazed_terracotta"])) !== null) return $name;
-        if (($name = self::getColoredTypeName($typeName, "stained_glass", self::STAINED_GLASS)) !== null) return $name;
-        if (($name = self::getColoredTypeName($typeName, "stained_glass_pane", self::STAINED_GLASS_PANE)) !== null) return $name;
-        if (($name = self::getColoredTypeName($typeName, "coral", self::CORAL)) !== null) return $name;
-        if (($name = self::getColoredTypeName($typeName, "shulker_box", self::SHULKER_BOX)) !== null) return $name;
-
         // other type names that should be converted, or return the type name by default
         return match ($typeName) {
-            BTN::OAK_LOG, BTN::BIRCH_LOG, BTN::SPRUCE_LOG, BTN::JUNGLE_LOG
-            => self::LOG,
-            BTN::ACACIA_LOG, BTN::DARK_OAK_LOG
-            => self::LOG2,
-            BTN::OAK_FENCE => self::FENCE,
-            BTN::PITCHER_PLANT => BTN::PITCHER_CROP,
-            BTN::OAK_PLANKS => self::PLANKS,
+            BTN::OAK_WOOD, BTN::BIRCH_WOOD, BTN::SPRUCE_WOOD, BTN::JUNGLE_WOOD, BTN::ACACIA_WOOD, BTN::DARK_OAK_WOOD,
+            BTN::STRIPPED_OAK_WOOD, BTN::STRIPPED_BIRCH_WOOD, BTN::STRIPPED_SPRUCE_WOOD, BTN::STRIPPED_JUNGLE_WOOD,
+            BTN::STRIPPED_ACACIA_WOOD, BTN::STRIPPED_DARK_OAK_WOOD
+            => self::WOOD,
+
+            BTN::OAK_LEAVES, BTN::BIRCH_LEAVES, BTN::SPRUCE_LEAVES, BTN::JUNGLE_LEAVES
+            => self::LEAVES,
+
+            BTN::ACACIA_LEAVES, BTN::DARK_OAK_LEAVES
+            => self::LEAVES2,
+
+            BTN::OAK_SLAB, BTN::BIRCH_SLAB, BTN::SPRUCE_SLAB, BTN::JUNGLE_SLAB, BTN::ACACIA_SLAB, BTN::DARK_OAK_SLAB
+            => self::WOODEN_SLAB,
+
+            BTN::OAK_DOUBLE_SLAB, BTN::BIRCH_DOUBLE_SLAB, BTN::SPRUCE_DOUBLE_SLAB, BTN::JUNGLE_DOUBLE_SLAB,
+            BTN::ACACIA_DOUBLE_SLAB, BTN::DARK_OAK_DOUBLE_SLAB
+            => self::DOUBLE_WOODEN_SLAB,
+
+            BTN::GRASS_BLOCK => self::GRASS,
+
             default => $typeName
         };
     }
@@ -79,6 +74,7 @@ final class OldBlockTypeNames
      * @param string $oldTypeName The type name that should replace the colored type name
      * @param array<string> $exceptions Type names that end with the same type name, but should not be replaced
      * @return string|null the old type name, or null when it doesn't match
+     * @deprecated currently not needed, but you never know what Mojang is going to do
      */
     public static function getColoredTypeName(string $coloredTypeName, string $typeName, string $oldTypeName, array $exceptions = []): ?string
     {

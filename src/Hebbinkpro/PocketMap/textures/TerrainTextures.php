@@ -29,7 +29,6 @@ use pocketmine\plugin\PluginBase;
 use pocketmine\resourcepacks\ResourcePackManager;
 use pocketmine\resourcepacks\ZippedResourcePack;
 use pocketmine\utils\Filesystem;
-use ZipArchive;
 
 class TerrainTextures extends ResourcePackTextures
 {
@@ -155,7 +154,7 @@ class TerrainTextures extends ResourcePackTextures
                 continue;
             }
 
-            if ($this->extractResourcePack($pack, $key)) {
+            if (ResourcePackUtils::extractResourcePack($this->path, $pack, $key)) {
                 $loaded[$uuid] = $info;
             }
         }
@@ -194,62 +193,6 @@ class TerrainTextures extends ResourcePackTextures
         return $this->path;
     }
 
-    /**
-     * Extracts the given resource pack from the resource_packs folder
-     * @param ZippedResourcePack $pack the pack to extract
-     * @param string|null $key the encryption key
-     * @return bool if the extraction was successful
-     */
-    private function extractResourcePack(ZippedResourcePack $pack, string $key = null): bool
-    {
-        // TODO: encrypted packs
-        if ($key !== null) return false;
-        $uuid = $pack->getPackId();
-
-
-        // open the zip archive
-        $archive = new ZipArchive();
-        if ($archive->open($pack->getPath()) !== true) return false;
-
-        $rpPath = $this->path . $uuid . "/";
-        if (!is_dir($rpPath)) mkdir($rpPath . ResourcePackUtils::BLOCK_TEXTURES, 0777, true);
-
-        $prefix = ResourcePackUtils::getPrefix($archive);
-        if ($prefix === null) return false;
-
-        $manifest = $archive->getFromName($prefix . ResourcePackUtils::MANIFEST);
-        if ($manifest === false) return false;
-
-        file_put_contents($rpPath . ResourcePackUtils::MANIFEST, $manifest);
-
-        $blocks = $archive->getFromName($prefix . ResourcePackUtils::BLOCKS);
-        if ($blocks !== false) file_put_contents($rpPath . ResourcePackUtils::BLOCKS, $blocks);
-
-        $terrainTexture = $archive->getFromName($prefix . ResourcePackUtils::TERRAIN_TEXTURE);
-        if ($terrainTexture !== false) file_put_contents($rpPath . ResourcePackUtils::TERRAIN_TEXTURE, $terrainTexture);
-
-        $blockTextures = ResourcePackUtils::getAllBlockTextures($archive, $prefix);
-
-        // store all textures
-        foreach ($blockTextures as $path) {
-            $texture = $archive->getFromName($prefix . $path);
-            if ($texture !== false) {
-                $blockPath = str_replace($rpPath . ResourcePackUtils::BLOCK_TEXTURES, "", $rpPath . $path);
-                if (sizeof($parts = explode("/", $blockPath)) > 1) {
-                    array_pop($parts);
-                    $blockFolderPath = $rpPath . ResourcePackUtils::BLOCK_TEXTURES . implode("/", $parts);
-                    if (!is_dir($blockFolderPath)) mkdir($blockFolderPath, 0777, true);
-                }
-
-                file_put_contents($rpPath . $path, $texture);
-            }
-        }
-
-        // close the archive
-        $archive->close();
-
-        return true;
-    }
 
     /**
      * @param array{vanilla: string, resource_packs: array<string, array{uuid: string, file: string, version: string, sha256: string}>} $packs
