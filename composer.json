@@ -50,11 +50,6 @@
           "reference": "master"
         }
       }
-    },
-    "webserver": {
-      "type": "path",
-      "url": "../../virions/WebServer",
-      "canonical": false
     }
   },
   "config": {
