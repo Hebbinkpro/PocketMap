@@ -32,11 +32,12 @@ class ResourcePackUtils
 
     /**
      * Extracts the given resource pack from the resource_packs folder
+     * @param string $dest the destination path
      * @param ZippedResourcePack $pack the pack to extract
      * @param string|null $key the encryption key
      * @return bool if the extraction was successful
      */
-    public static function extractResourcePack(string $path, ZippedResourcePack $pack, string $key = null, string $name = null): bool
+    public static function extractResourcePack(string $dest, ZippedResourcePack $pack, string $key = null, string $name = null): bool
     {
         // TODO: encrypted packs
         if ($key !== null) return false;
@@ -48,7 +49,7 @@ class ResourcePackUtils
         $archive = new ZipArchive();
         if ($archive->open($pack->getPath()) !== true) return false;
 
-        $rpPath = $path . $name . "/";
+        $rpPath = $dest . $name . "/";
         if (!is_dir($rpPath)) mkdir($rpPath . ResourcePackUtils::BLOCK_TEXTURES, 0777, true);
 
         $prefix = ResourcePackUtils::getPrefix($archive);
