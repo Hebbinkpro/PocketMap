@@ -1,6 +1,6 @@
 name: PocketMap
 main: Hebbinkpro\PocketMap\PocketMap
-version: 0.5.2
+version: 0.6.0
 api: [ 5.13.0 ]
 load: STARTUP
 author: Hebbinkpro

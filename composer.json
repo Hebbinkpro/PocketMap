@@ -9,18 +9,17 @@
     }
   ],
   "require": {
-    "hebbinkpro/pmmp-webserver": "0.4.0",
+    "hebbinkpro/pmmp-webserver": "^0.4.1",
     "muqsit/simple-packet-handler": "dev-pm5"
   },
   "require-dev": {
-    "pocketmine/pocketmine-mp": "^5.13.0",
     "php": "^8.1",
+    "pocketmine/pocketmine-mp": "^5.13.0",
+    "himbeer/libskin": "^2.0.1",
+    "paroxity/commando": "^3.1.0",
     "phpstan/phpstan": "^1.10.3",
     "phpstan/phpstan-strict-rules": "^1.5.0",
-    "phpstan/extension-installer": "^1.2.0",
-    "pocketmine/bedrock-data": "^2.9.0+bedrock-1.20.70",
-    "himbeer/libskin": "^2.0.1",
-    "paroxity/commando": "^3.1.0"
+    "phpstan/extension-installer": "^1.2.0"
   },
   "autoload": {
     "psr-4": {
@@ -51,6 +50,11 @@
           "reference": "master"
         }
       }
+    },
+    "webserver": {
+      "type": "path",
+      "url": "../../virions/WebServer",
+      "canonical": false
     }
   },
   "config": {
