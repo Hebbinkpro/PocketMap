@@ -27,8 +27,59 @@ class ResourcePackUtils
 {
     public const MANIFEST = "manifest.json";
     public const BLOCKS = "blocks.json";
+    public const BIOMES_CLIENT = "biomes_client.json";
     public const TERRAIN_TEXTURE = "textures/terrain_texture.json";
     public const BLOCK_TEXTURES = "textures/blocks/";
+    public const COLORMAP_TEXTURES = "textures/colormap/";
+
+    public static function extractResourcePack(string $dest, ZippedResourcePack $pack, string $key = null, string $name = null): bool
+    {
+        // TODO: encrypted packs
+        if ($key !== null) return false;
+
+        // set the name to the uuid if not given
+        if ($name === null) $name = $pack->getPackId();
+
+        // open the zip archive
+        $archive = new ZipArchive();
+        if ($archive->open($pack->getPath()) !== true) return false;
+
+        $rpPath = $dest . $name . "/";
+        if (!is_dir($rpPath)) mkdir($rpPath . ResourcePackUtils::BLOCK_TEXTURES, 0777, true);
+
+        $prefix = ResourcePackUtils::getPrefix($archive);
+        if ($prefix === null) return false;
+        var_dump($prefix);
+
+        // extract all json files
+        $toExtract = [
+            $prefix . self::MANIFEST,
+            $prefix . self::BLOCKS,
+            $prefix . self::BIOMES_CLIENT,
+            $prefix . self::TERRAIN_TEXTURE,
+        ];
+
+        // extract the files from directories
+        for ($i = 0; $i < $archive->numFiles; $i++) {
+            $name = Utils::assumeNotFalse($archive->getNameIndex($i), "This index should be valid");
+
+            if (!str_starts_with($name, $prefix)) continue;
+            $name = substr($name, strlen($prefix));
+
+            if (str_starts_with($name, self::BLOCK_TEXTURES) || str_starts_with($name, self::COLORMAP_TEXTURES)) {
+                $toExtract[] = $prefix . $name;
+            }
+        }
+
+        var_dump($toExtract);
+
+        // extract all files
+        $res = $archive->extractTo($rpPath, $toExtract);
+        var_dump($res);
+
+        $archive->close();
+        return true;
+    }
 
     /**
      * Extracts the given resource pack from the resource_packs folder
@@ -37,7 +88,7 @@ class ResourcePackUtils
      * @param string|null $key the encryption key
      * @return bool if the extraction was successful
      */
-    public static function extractResourcePack(string $dest, ZippedResourcePack $pack, string $key = null, string $name = null): bool
+    public static function oldExtractResourcePack(string $dest, ZippedResourcePack $pack, string $key = null, string $name = null): bool
     {
         // TODO: encrypted packs
         if ($key !== null) return false;
