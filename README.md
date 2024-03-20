@@ -1,7 +1,7 @@
 # PocketMap
 
 A dynamic web-based world map for PocketMine-MP servers.<br>
-For a full overview of all functions of the plugin, go to the [documentation](#documentation)
+For a full overview over all functions of the plugin, go to the [documentation](#documentation)
 
 ## What is new in v0.5
 
@@ -318,9 +318,15 @@ $markers->addPolylineMarker(string $name, array $positions, World $world, ?strin
 3. Add the following to the world markers:
 
 ```json5
-"<id>": {// replace <id> with the custom identifier for the marker
-"name": string, // the name of the marker
-"data": {...}             // the data field of the marker
+{
+  "<id>": {
+    // replace <id> with the custom identifier for the marker
+    "name": "string",
+    // the name of the marker
+    "data": {
+      // ... the data fields of the marker
+    }
+  }
 }
 ```
 
@@ -336,13 +342,9 @@ These are commonly used fields for the data types given below
 
 ```json5
 {
-  "x": int
-  |
-  float,
+  "x": "int|float",
   // the x coordinate in the world
-  "z": int
-  |
-  float
+  "z": "int |float"
   // the z coordinate in the world
 }
 ```
@@ -380,11 +382,8 @@ These are commonly used fields for the data types given below
   "type": "circle",
   // the data type
   "options": {
-    ...,
-    // default options
-    "radius": int
-    |
-    float
+    // ... default options
+    "radius": "int|float"
     // the radius (in blocks) of the circle
   },
   "pos": position
@@ -400,7 +399,8 @@ These are commonly used fields for the data types given below
   // the data type
   "options": options,
   // options
-  "positions": position[]     // list of all corner positions
+  "positions": []
+  // list of all corner positions
 }
 ```
 
@@ -412,7 +412,8 @@ These are commonly used fields for the data types given below
   // the data type
   "options": options,
   // options
-  "positions": position[]     // list of all positions of the line
+  "positions": []
+  // list of all positions of the line
 }
 ```
 

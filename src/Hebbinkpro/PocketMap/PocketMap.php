@@ -50,6 +50,7 @@ use pocketmine\resourcepacks\ZippedResourcePack;
 use pocketmine\utils\Config;
 use pocketmine\utils\Filesystem;
 use pocketmine\world\World;
+use ZipArchive;
 
 class PocketMap extends PluginBase implements Listener
 {
@@ -202,52 +203,6 @@ class PocketMap extends PluginBase implements Listener
         }
     }
 
-    private function debug(): void
-    {
-        $this->getLogger()->notice("Debug mode enabled");
-
-        // list with not found type ids
-        // this is used so that not all blocks with the same type id will be logged which causes unnecessary spam
-        $notFound = [];
-        foreach (RuntimeBlockStateRegistry::getInstance()->getAllKnownStates() as $block) {
-            $texture = $this->terrainTextures->getTextureByBlock($block);
-
-            $id = $block->getTypeId();
-            if ($texture === null && !in_array($id, $notFound, true)) {
-                $notFound[] = $id;
-                $textureName = TextureUtils::getBlockTextureName($block);
-
-                // don't warn for ignored textures, as they will never have a texture
-                if (!in_array($textureName, self::IGNORED_TEXTURES, true)) {
-                    $this->getLogger()->warning("Cannot find texture of block: " . $block->getName() . ", ID: " . $block->getTypeId() . ", Texture: " . $textureName);
-                }
-            }
-        }
-
-        if (sizeof($notFound) <= sizeof(self::IGNORED_TEXTURES)) {
-            $this->getLogger()->notice("All textures have been registered");
-        }
-
-        $blocks = [
-            VanillaBlocks::WOOL()->setColor(DyeColor::ORANGE),
-            VanillaBlocks::JUNGLE_LEAVES(),
-            VanillaBlocks::BIRCH_PLANKS(),
-            VanillaBlocks::IRON_DOOR(),
-            VanillaBlocks::JUNGLE_SLAB(),
-            VanillaBlocks::CUT_COPPER_SLAB(),
-            VanillaBlocks::CORAL()->setCoralType(CoralType::FIRE),
-            VanillaBlocks::CORAL_BLOCK()->setCoralType(CORALType::BRAIN),
-            VanillaBlocks::OAK_WOOD(),
-            VanillaBlocks::OAK_WOOD()->setStripped(true),
-        ];
-
-        /** @var Block $block */
-        foreach ($blocks as $block) {
-            $texture = $this->terrainTextures->getTextureByBlock($block);
-            $this->getLogger()->info("Found Texture: $texture, for block: {$block->getName()}, using name: " . TextureUtils::getBlockTextureName($block));
-        }
-    }
-
     /**
      * Load the config
      * @return void
@@ -332,7 +287,7 @@ class PocketMap extends PluginBase implements Listener
             $src = $folder . "markers/icons.zip";
 
             // open the icons.zip and extract all the icons
-            $zip = new \ZipArchive();
+            $zip = new ZipArchive();
             $zip->open($src);
             $zip->extractTo($folder . "markers/icons");
             $zip->close();
@@ -611,6 +566,52 @@ class PocketMap extends PluginBase implements Listener
         $router->getStatic("/markers/icons", $this->getDataFolder() . "markers/icons");
 
         return $router;
+    }
+
+    private function debug(): void
+    {
+        $this->getLogger()->notice("Debug mode enabled");
+
+        // list with not found type ids
+        // this is used so that not all blocks with the same type id will be logged which causes unnecessary spam
+        $notFound = [];
+        foreach (RuntimeBlockStateRegistry::getInstance()->getAllKnownStates() as $block) {
+            $texture = $this->terrainTextures->getTextureByBlock($block);
+
+            $id = $block->getTypeId();
+            if ($texture === null && !in_array($id, $notFound, true)) {
+                $notFound[] = $id;
+                $textureName = TextureUtils::getBlockTextureName($block);
+
+                // don't warn for ignored textures, as they will never have a texture
+                if (!in_array($textureName, self::IGNORED_TEXTURES, true)) {
+                    $this->getLogger()->warning("Cannot find texture of block: " . $block->getName() . ", ID: " . $block->getTypeId() . ", Texture: " . $textureName);
+                }
+            }
+        }
+
+        if (sizeof($notFound) <= sizeof(self::IGNORED_TEXTURES)) {
+            $this->getLogger()->notice("All textures have been registered");
+        }
+
+        $blocks = [
+            VanillaBlocks::WOOL()->setColor(DyeColor::ORANGE),
+            VanillaBlocks::JUNGLE_LEAVES(),
+            VanillaBlocks::BIRCH_PLANKS(),
+            VanillaBlocks::IRON_DOOR(),
+            VanillaBlocks::JUNGLE_SLAB(),
+            VanillaBlocks::CUT_COPPER_SLAB(),
+            VanillaBlocks::CORAL()->setCoralType(CoralType::FIRE),
+            VanillaBlocks::CORAL_BLOCK()->setCoralType(CORALType::BRAIN),
+            VanillaBlocks::OAK_WOOD(),
+            VanillaBlocks::OAK_WOOD()->setStripped(true),
+        ];
+
+        /** @var Block $block */
+        foreach ($blocks as $block) {
+            $texture = $this->terrainTextures->getTextureByBlock($block);
+            $this->getLogger()->info("Found Texture: $texture, for block: {$block->getName()}, using name: " . TextureUtils::getBlockTextureName($block));
+        }
     }
 
     protected function onDisable(): void

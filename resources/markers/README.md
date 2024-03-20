@@ -15,7 +15,7 @@ files to the `makers/icons` folder or by providing an url.
 1. Add your png icon to the `markers/icons` folder
 2. Open the `markers/icons/icons.json` file. This file contains a list with all the available icons.
 
-```json
+```json5
 [
   {
     "name": "performing_arts",
@@ -25,7 +25,7 @@ files to the `makers/icons` folder or by providing an url.
     "name": "framed_picture",
     "path": "openmoji/1F5BC"
   },
-  ...
+  // ...
 ]
 ```
 
@@ -49,12 +49,10 @@ files to the `makers/icons` folder or by providing an url.
 2. Add your icon to the list by adding an object with the name, this is the UNIQUE identifier of the icon, and the url
    of the icon.
 
-```json
+```json5
 {
-  "name": "<icon_name>",
-  // the name of the icon by which it is identified
-  "url": "<url>"
-  // url of the image
+  "name": "<icon_name>", // the name of the icon by which it is identified
+  "url": "<url>" // url of the image
 }
 ```
 

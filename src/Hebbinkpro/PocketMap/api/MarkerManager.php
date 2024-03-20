@@ -153,8 +153,7 @@ class MarkerManager
                 $id = $lower . $loop;
                 $loop++;
             }
-        }
-        // region with this ID already exists!
+        } // region with this ID already exists!
         else if ($this->getMarker($id, $world) !== null) return false;
 
         $marker = [
