@@ -317,6 +317,27 @@ class PocketMap extends PluginBase implements Listener
         // create the markers folder
         if (!is_dir($folder . "markers")) {
             Filesystem::recursiveCopy($file . "markers", $folder . "markers");
+
+
+        }
+
+        if (!is_dir($folder . "markers/icons") || !is_dir($folder . "markers/icons/icons.json")) {
+            if (!is_file($folder . "markers/icons.zip")) {
+                // copy the icons.zip to the plugin data
+                copy($file . "markers/icons.zip", $folder . "markers/icons.zip");
+            }
+
+            mkdir($folder . "markers/icons");
+
+            $src = $folder . "markers/icons.zip";
+
+            // open the icons.zip and extract all the icons
+            $zip = new \ZipArchive();
+            $zip->open($src);
+            $zip->extractTo($folder . "markers/icons");
+            $zip->close();
+
+            unlink($src);
         }
 
         if (!is_dir($folder . "tmp")) {
@@ -586,7 +607,7 @@ class PocketMap extends PluginBase implements Listener
         // get markers
         $router->getFile("/markers", $this->getDataFolder() . "markers/markers.json", "[]");
         // get marker icons
-        $router->getFile("/markers/icons", $this->getDataFolder() . "markers/icons.json", "[]");
+        $router->getFile("/markers/icons", $this->getDataFolder() . "markers/icons/icons.json", "[]");
         $router->getStatic("/markers/icons", $this->getDataFolder() . "markers/icons");
 
         return $router;

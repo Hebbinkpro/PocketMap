@@ -49,8 +49,8 @@ class MarkerManager
         $this->update();
 
         $this->icons = [];
-        if (is_file($this->folder . "icons.json")) {
-            $file = file_get_contents($this->folder . "icons.json");
+        if (is_file($this->folder . "icons/icons.json")) {
+            $file = file_get_contents($this->folder . "icons/icons.json");
 
 
             if ($file === false) $icons = [];

@@ -13,7 +13,7 @@ files to the `makers/icons` folder or by providing an url.
 ### Adding icons using pngs
 
 1. Add your png icon to the `markers/icons` folder
-2. Open the `markers/icons.json` file. This file contains a list with all the available icons.
+2. Open the `markers/icons/icons.json` file. This file contains a list with all the available icons.
 
 ```json
 [
@@ -59,6 +59,8 @@ files to the `makers/icons` folder or by providing an url.
 ```
 
 ## Default icons
+
+You can find all the default icons [here](icons_table.md)
 
 ### OpenMoji Icons
 
