@@ -276,13 +276,15 @@ class PocketMap extends PluginBase implements Listener
 
         }
 
-        if (!is_dir($folder . "markers/icons") || !is_dir($folder . "markers/icons/icons.json")) {
+        if (!is_dir($folder . "markers/icons")) {
+            mkdir($folder . "markers/icons");
+        }
+
+        if (!is_dir($folder . "markers/icons/icons.json")) {
             if (!is_file($folder . "markers/icons.zip")) {
                 // copy the icons.zip to the plugin data
                 copy($file . "markers/icons.zip", $folder . "markers/icons.zip");
             }
-
-            mkdir($folder . "markers/icons");
 
             $src = $folder . "markers/icons.zip";
 
