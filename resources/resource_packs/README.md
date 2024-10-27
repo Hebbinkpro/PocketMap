@@ -9,7 +9,7 @@ the [official bedrock-samples repository](https://github.com/Mojang/bedrock-samp
 
 ### Latest Version
 
-**v1.20.10.1**
+**v1.21.40**
 
 ## Custom Resource Packs - _Not Supported_
 

@@ -57,7 +57,7 @@ class PocketMap extends PluginBase implements Listener
     public const CONFIG_VERSION = 1.7;
     public const WEB_VERSION = 1.2;
 
-    public const RESOURCE_PACK_NAME = "v1.20.62";
+    public const RESOURCE_PACK_NAME = "v1.21.40";
     public const TEXTURE_SIZE = 16;
 
     public const IGNORED_TEXTURES = [
@@ -612,7 +612,8 @@ class PocketMap extends PluginBase implements Listener
         /** @var Block $block */
         foreach ($blocks as $block) {
             $texture = $this->terrainTextures->getTextureByBlock($block);
-            $this->getLogger()->info("Found Texture: $texture, for block: {$block->getName()}, using name: " . TextureUtils::getBlockTextureName($block));
+            if ($texture !== null) $this->getLogger()->info("Found Texture: $texture, for block: {$block->getName()}, using name: " . TextureUtils::getBlockTextureName($block));
+            else $this->getLogger()->warning("No Texture found for block: {$block->getName()}, using name: " . TextureUtils::getBlockTextureName($block));
         }
     }
 
