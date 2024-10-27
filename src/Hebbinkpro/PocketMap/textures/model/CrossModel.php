@@ -76,7 +76,7 @@ class CrossModel extends BlockModel
                 if ($c === false) continue;
 
                 $index = imagecolorsforindex($texture, $c);
-                if (isset($index["alpha"]) && $index["alpha"] < 127) {
+                if ($index["alpha"] < 127) {
                     $color = $c;
                     break;
                 }

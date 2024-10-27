@@ -231,7 +231,8 @@ final class BlockDataValues
             BlockTypeIds::GRASS => 2,
             BlockTypeIds::FERN => 3,
             BlockTypeIds::ROSE_BUSH => 4, // ROSE
-            BlockTypeIds::PEONY => 5 // PAEONIA
+            BlockTypeIds::PEONY => 5, // PAEONIA
+            default => 0
         };
     }
 
