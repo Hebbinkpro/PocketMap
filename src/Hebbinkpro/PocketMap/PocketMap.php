@@ -38,10 +38,7 @@ use Hebbinkpro\WebServer\http\server\HttpServerInfo;
 use Hebbinkpro\WebServer\router\Router;
 use Hebbinkpro\WebServer\WebServer;
 use JsonException;
-use pocketmine\block\Block;
 use pocketmine\block\RuntimeBlockStateRegistry;
-use pocketmine\block\utils\CoralType;
-use pocketmine\block\utils\DyeColor;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\event\Listener;
 use pocketmine\item\StringToItemParser;
@@ -596,20 +593,9 @@ class PocketMap extends PluginBase implements Listener
             $this->getLogger()->notice("All textures have been registered");
         }
 
-        $blocks = [
-            VanillaBlocks::WOOL()->setColor(DyeColor::ORANGE),
-            VanillaBlocks::JUNGLE_LEAVES(),
-            VanillaBlocks::BIRCH_PLANKS(),
-            VanillaBlocks::IRON_DOOR(),
-            VanillaBlocks::JUNGLE_SLAB(),
-            VanillaBlocks::CUT_COPPER_SLAB(),
-            VanillaBlocks::CORAL()->setCoralType(CoralType::FIRE),
-            VanillaBlocks::CORAL_BLOCK()->setCoralType(CORALType::BRAIN),
-            VanillaBlocks::OAK_WOOD(),
-            VanillaBlocks::OAK_WOOD()->setStripped(true),
-        ];
 
-        /** @var Block $block */
+        $blocks = VanillaBlocks::getAll();
+
         foreach ($blocks as $block) {
             $texture = $this->terrainTextures->getTextureByBlock($block);
             if ($texture !== null) $this->getLogger()->info("Found Texture: $texture, for block: {$block->getName()}, using name: " . TextureUtils::getBlockTextureName($block));

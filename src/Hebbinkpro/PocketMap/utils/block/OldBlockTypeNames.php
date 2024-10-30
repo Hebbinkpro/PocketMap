@@ -42,48 +42,26 @@ final class OldBlockTypeNames
      */
     public static function getTypeName(string $typeName): string
     {
+
         // other type names that should be converted, or return the type name by default
         return match ($typeName) {
-            BTN::OAK_WOOD, BTN::BIRCH_WOOD, BTN::SPRUCE_WOOD, BTN::JUNGLE_WOOD, BTN::ACACIA_WOOD, BTN::DARK_OAK_WOOD,
-            BTN::STRIPPED_OAK_WOOD, BTN::STRIPPED_BIRCH_WOOD, BTN::STRIPPED_SPRUCE_WOOD, BTN::STRIPPED_JUNGLE_WOOD,
-            BTN::STRIPPED_ACACIA_WOOD, BTN::STRIPPED_DARK_OAK_WOOD
-            => self::WOOD,
-
+            // leaves are still split between leaves and leaves2
             BTN::OAK_LEAVES, BTN::BIRCH_LEAVES, BTN::SPRUCE_LEAVES, BTN::JUNGLE_LEAVES
             => self::LEAVES,
-
             BTN::ACACIA_LEAVES, BTN::DARK_OAK_LEAVES
             => self::LEAVES2,
 
-            BTN::OAK_SLAB, BTN::BIRCH_SLAB, BTN::SPRUCE_SLAB, BTN::JUNGLE_SLAB, BTN::ACACIA_SLAB, BTN::DARK_OAK_SLAB
-            => self::WOODEN_SLAB,
-
-            BTN::OAK_DOUBLE_SLAB, BTN::BIRCH_DOUBLE_SLAB, BTN::SPRUCE_DOUBLE_SLAB, BTN::JUNGLE_DOUBLE_SLAB,
-            BTN::ACACIA_DOUBLE_SLAB, BTN::DARK_OAK_DOUBLE_SLAB
-            => self::DOUBLE_WOODEN_SLAB,
-
+            // grass_block is named grass
             BTN::GRASS_BLOCK => self::GRASS,
+
+            // some stone double slabs do not exist
+            BTN::CUT_RED_SANDSTONE_DOUBLE_SLAB => BTN::CUT_RED_SANDSTONE_SLAB,
+            BTN::CUT_SANDSTONE_DOUBLE_SLAB => BTN::CUT_SANDSTONE_SLAB,
+            BTN::MOSSY_STONE_BRICK_DOUBLE_SLAB => BTN::MOSSY_STONE_BRICK_SLAB,
+            BTN::SMOOTH_QUARTZ_DOUBLE_SLAB => BTN::SMOOTH_QUARTZ_SLAB,
+            BTN::NORMAL_STONE_DOUBLE_SLAB => BTN::NORMAL_STONE_SLAB,
 
             default => $typeName
         };
-    }
-
-    /**
-     * @param string $coloredTypeName The type name from a block
-     * @param string $typeName The type name that has to be at the end of the colored type name
-     * @param string $oldTypeName The type name that should replace the colored type name
-     * @param array<string> $exceptions Type names that end with the same type name, but should not be replaced
-     * @return string|null the old type name, or null when it doesn't match
-     * @deprecated currently not needed, but you never know what Mojang is going to do
-     */
-    public static function getColoredTypeName(string $coloredTypeName, string $typeName, string $oldTypeName, array $exceptions = []): ?string
-    {
-        if (!str_ends_with($coloredTypeName, strtolower($typeName))) return null;
-
-        foreach ($exceptions as $exception) {
-            if (str_ends_with($coloredTypeName, strtolower($exception))) return null;
-        }
-
-        return $oldTypeName;
     }
 }

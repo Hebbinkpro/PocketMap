@@ -19,7 +19,6 @@
 
 namespace Hebbinkpro\PocketMap\utils\block;
 
-use Hebbinkpro\PocketMap\utils\block\OldBlockTypeNames as OBTN;
 use pocketmine\block\Block;
 use pocketmine\block\BlockTypeIds;
 use pocketmine\block\CakeWithDyedCandle;
@@ -34,7 +33,6 @@ use pocketmine\block\DyedCandle;
 use pocketmine\block\FloorBanner;
 use pocketmine\block\Leaves;
 use pocketmine\block\PitcherCrop;
-use pocketmine\block\Planks;
 use pocketmine\block\RedMushroomBlock;
 use pocketmine\block\TorchflowerCrop;
 use pocketmine\block\utils\CoralType;
@@ -42,9 +40,7 @@ use pocketmine\block\utils\DyeColor;
 use pocketmine\block\utils\LeavesType;
 use pocketmine\block\utils\WoodType;
 use pocketmine\block\WallBanner;
-use pocketmine\block\Wood;
 use pocketmine\block\WoodenDoor;
-use pocketmine\block\WoodenFence;
 use pocketmine\block\WoodenSlab;
 use pocketmine\block\Wool;
 use pocketmine\data\bedrock\block\BlockStateNames as BSN;
@@ -66,7 +62,7 @@ final class BlockDataValues
     {
         $bsd = BlockStateParser::getBlockStateData($block);
         if ($bsd === null) return 0;
-        $name = OldBlockTypeNames::getTypeName($bsd->getName());
+        $name = $bsd->getName();
 
         // list with all blocks using a colored trait, but not using it in their texture as data value
         $coloredWithoutColor = [WallBanner::class, FloorBanner::class, DyedCandle::class, CakeWithDyedCandle::class];
@@ -83,29 +79,6 @@ final class BlockDataValues
 
         // go through the switch to get the correct data values
         switch ($block::class) {
-            case Planks::class:
-            case WoodenDoor::class:
-            case WoodenFence::class:
-            // get the wood type data value if the wood type is not from the legacy kind, its just 0
-                return self::getWoodDataValue($block->getWoodType());
-
-            case Wood::class:
-                // it's a wood block
-                if ($name === OBTN::WOOD) {
-                    // textures are like: unstripped, stripped, unstripped, stripped, etc
-                    // so this beautiful formula gives you the right data value
-                    return self::getWoodDataValue($block->getWoodType()) * 2 + intval($block->isStripped());
-                }
-
-//                // it's a non-stripped log
-//                if (!$block->isStripped()) {
-//                    // this is the one where we have log and log2, in log there are only 4 entries, so that's why we use %4
-//                    return self::getWoodDataValue($block->getWoodType()) % 4;
-//                }
-
-                // everything else
-                return 0;
-
             case Candle::class:
                 return intval($block->isLit());
 
@@ -122,9 +95,13 @@ final class BlockDataValues
             case DoublePitcherCrop::class:
                 return $block->getAge() + 1 + PitcherCrop::MAX_AGE;
 
+            case WoodenDoor::class:
+                // use the wood type to determine the index
+                return self::getWoodDataValue($block->getWoodType());
+
             case Door::class:
-                // iron door is in the same list as all the legacy wood doors...
-                if ($bsd->getName() === BTN::IRON_DOOR) return 6;
+                // iron door is in the same list as all the wood doors
+                if ($name === BTN::IRON_DOOR) return 6;
                 return 0;
 
             case DoublePlant::class:

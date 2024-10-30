@@ -54,8 +54,7 @@
   },
   "config": {
     "allow-plugins": {
-      "phpstan/extension-installer": true,
-      "wikimedia/composer-merge-plugin": true
+      "phpstan/extension-installer": true
     }
   },
   "scripts": {

@@ -19,6 +19,7 @@
 
 namespace Hebbinkpro\PocketMap\utils\block;
 
+use Generator;
 use pocketmine\block\Block;
 use pocketmine\block\BlockTypeIds;
 use pocketmine\block\Chest;
@@ -29,6 +30,7 @@ use pocketmine\block\utils\AnyFacingTrait;
 use pocketmine\block\utils\ColoredTrait;
 use pocketmine\block\utils\HorizontalFacingTrait;
 use pocketmine\block\utils\PillarRotationTrait;
+use pocketmine\block\utils\PoweredByRedstoneTrait;
 use pocketmine\block\utils\SignLikeRotationTrait;
 use pocketmine\block\utils\SupportType;
 use pocketmine\block\Wall;
@@ -136,23 +138,50 @@ class BlockUtils
     }
 
     /**
+     * Get if the block has the given trait
      * @param Block $block
-     * @return ReflectionClass<Block>[]
+     * @param trait-string $trait
+     * @return bool
      */
-    public static function getParents(Block $block): array
+    public static function hasTrait(Block $block, string $trait): bool
     {
         $reflection = new ReflectionClass($block::class);
 
-        $parents = [];
-        while (true) {
-            if ($reflection->getParentClass() === false) break;
-            $parents[] = $reflection->getParentClass();
-            $reflection = $reflection->getParentClass();
+        // check self
+        $traits = array_keys($reflection->getTraits());
+        if (in_array($trait, $traits, true)) return true;
+
+        // check parents
+        /** @var ReflectionClass<Block> $parent */
+        foreach (self::getParents($block) as $parent) {
+            $traits = array_keys($parent->getTraits());
+            if (in_array($trait, $traits, true)) return true;
         }
 
-        return $parents;
+        return false;
     }
 
+    /**
+     * Iterates through all parents and yields a parent when found.
+     * @param Block $block
+     * @return Generator<ReflectionClass<Block>>
+     */
+    public static function getParents(Block $block): Generator
+    {
+        $reflection = new ReflectionClass($block::class);
+
+        while (($parent = $reflection->getParentClass()) !== false) {
+            yield $parent;
+
+            $reflection = $parent;
+        }
+    }
+
+    /**
+     * Check if the block can have multiple items on the same block
+     * @param Block $block
+     * @return bool
+     */
     public static function hasCount(Block $block): bool
     {
         return match ($block->getTypeId()) {
@@ -161,31 +190,53 @@ class BlockUtils
         };
     }
 
+    /**
+     * Check if the block has sign rotation
+     * @param Block $block
+     * @return bool
+     */
     public static function hasSignLikeRotation(Block $block): bool
     {
-        return in_array(SignLikeRotationTrait::class, self::getTraits($block), true);
+        return self::hasTrait($block, SignLikeRotationTrait::class);
     }
 
+    /**
+     * Check if a block can face in any direction
+     * @param Block $block
+     * @return bool
+     */
     public static function hasAnyFacing(Block $block): bool
     {
-        if (in_array(AnyFacingTrait::class, self::getTraits($block), true)) return true;
-
-        return match ($block->getTypeId()) {
-            BlockTypeIds::LEVER => true,
-            default => false
-        };
+        if ($block->getTypeId() == BlockTypeIds::LEVER) return true;
+        return self::hasTrait($block, AnyFacingTrait::class);
     }
 
+    /**
+     * Check if a block has pillar rotation
+     * @param Block $block
+     * @return bool
+     */
     public static function hasPillarRotation(Block $block): bool
     {
-        return in_array(PillarRotationTrait::class, self::getTraits($block), true);
+        return self::hasTrait($block, PillarRotationTrait::class);
     }
 
+    /**
+     * Chec if the block can be colored
+     * @param Block $block
+     * @return bool
+     */
     public static function hasColor(Block $block): bool
     {
-        return in_array(ColoredTrait::class, self::getTraits($block), true);
+        return self::hasTrait($block, ColoredTrait::class);
     }
 
+    /**
+     * Check if the top side of the block occupies the whole block
+     * @param Block $block
+     * @param float $epsilon the precision
+     * @return bool
+     */
     public static function hasFullTop(Block $block, float $epsilon = 0.000001): bool
     {
 
@@ -194,5 +245,15 @@ class BlockUtils
         }
 
         return false;
+    }
+
+    /**
+     * Check if redstone can activate the block
+     * @param Block $block
+     * @return bool
+     */
+    public static function isRedstoneActivated(Block $block): bool
+    {
+        return self::hasTrait($block, PoweredByRedstoneTrait::class);
     }
 }
