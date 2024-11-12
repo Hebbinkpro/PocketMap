@@ -42,15 +42,28 @@ abstract class BlockModel
 
         $geo = $this->getGeometry($block, $chunk);
         foreach ($geo as $parts) {
-            $srcStart = $parts[0];
-            $srcSize = $parts[1];
-            $dstStart = $parts[2] ?? $srcStart;
-            $dstSize = $parts[3] ?? $srcSize;
+            $srcStart = $parts[0];                  // [x,y] of the part on the texture
+            $srcSize = $parts[1];                   // [width, height] of the part on the texture
+            $dstStart = $parts[2] ?? $srcStart;     // [x,y] of the part in the model
+            $dstSize = $parts[3] ?? $srcSize;    // [width, height] of the part in the model
+            $rotation = $parts[4] ?? 0;             // rotation angle in degrees
 
+            if ($rotation != 0) {
+                // time to rotate
+
+                // convert clockwise to anti-clockwise rotation and make sure it is between 0 and 360
+                $rotation = (360 - $rotation) % 360;
+
+                // crop to image to get the desired texture
+                $tmpTexture = imagecrop($texture, ["x" => $srcStart[0], "y" => $srcStart[1], "width" => $srcSize[0], "height" => $srcSize[1]]);
+                // rotate the texture and assign it to $texture
+                $texture = imagerotate($tmpTexture, $rotation, 0);
+            }
+
+            # copy the texture onto the model
             imagealphablending($texture, true);
             imagecopyresized($modelTexture, $texture, $dstStart[0], $dstStart[1], $srcStart[0], $srcStart[1], $dstSize[0], $dstSize[1], $srcSize[0], $srcSize[1]);
             imagesavealpha($texture, true);
-
         }
 
         imagedestroy($texture);
@@ -60,9 +73,10 @@ abstract class BlockModel
     /**
      * Get the block geometry.
      * A geometry is an array of parts, and a part is one of the following:
-     * - [start,size]
-     * - [start,size,destStart]
-     * - [start,size,destStart,destSize]
+     *  - [start,size]
+     *  - [start,size,destStart]
+     *  - [start,size,destStart,destSize]
+     *  - [start,size,destStart,destSize,rotation]
      * If dest values are not given, the source values will be used
      * @return int[][][]
      */
