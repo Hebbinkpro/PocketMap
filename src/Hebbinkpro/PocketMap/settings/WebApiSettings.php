@@ -63,7 +63,7 @@ class WebApiSettings extends ConfigSettings
 
         $defaultWorld = strval($api["default-world"] ?? "");
         $mapSettings = MapSettings::fromArray($api["map-settings"]);
-        $worldSettings = array_map(fn($data) => MapSettings::fromArray($data), $api["worlds-settings"]);
+        $worldSettings = array_map(fn($data) => MapSettings::fromArray($data), $api["world-settings"]);
         $mapConfig = new MapConfig($defaultWorld, $mapSettings, $worldSettings);
 
         $players = $api["players"] ?? [];

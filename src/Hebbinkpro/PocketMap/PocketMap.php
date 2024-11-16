@@ -230,7 +230,7 @@ class PocketMap extends PluginBase implements Listener
             $this->reloadConfig();
         }
 
-        $this->settingsManager->load($config);
+        $this->settingsManager->load($this->getConfig());
     }
 
     /**
