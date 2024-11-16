@@ -82,7 +82,12 @@ class MarkerAddAreaCommand extends BaseSubCommand
         ];
 
         $marker = new PolygonMarker($id, $name, $positions);
-        return PocketMap::getMarkers()->addMarker($world, $marker);
+
+        $markers = PocketMap::getMarkers();
+        if ($markers->isMarker($world, $marker->getId())) return false;
+
+        $markers->addMarker($world, $marker);
+        return true;
     }
 
     /**

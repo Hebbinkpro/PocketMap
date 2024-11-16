@@ -187,23 +187,40 @@ class MarkerManager
      * @param World $world the world of the marker
      * @param BaseMarker $marker the marker
      * @param bool $store if the markers should be stored directly after adding the marker
-     * @return bool if the marker is added
      */
-    public function addMarker(World $world, BaseMarker $marker, bool $store = true): bool
+    public function addMarker(World $world, BaseMarker $marker, bool $store = true): void
     {
         $worldName = $world->getFolderName();
         if (!isset($this->markers[$worldName])) $this->markers[$worldName] = [];
-
-        // marker exists
-        if (isset($this->markers[$worldName][$marker->getId()])) return false;
 
         // set the marker
         $this->markers[$world->getFolderName()][$marker->getId()] = $marker;
 
         // store the markers
         if ($store) $this->storeMarkers();
+    }
 
-        return true;
+    /**
+     * Get a marker by its world and id
+     * @param World $world
+     * @param string $id
+     * @return BaseMarker|null
+     */
+    public function getMarker(World $world, string $id): ?BaseMarker
+    {
+        if (!isset($this->markers[$world->getFolderName()][$id])) return null;
+        return $this->markers[$world->getFolderName()][$id];
+    }
+
+    /**
+     * Check if there exists a marker in the world with the given id
+     * @param World $world
+     * @param string $id
+     * @return bool
+     */
+    public function isMarker(World $world, string $id): bool
+    {
+        return isset($this->markers[$world->getFolderName()][$id]);
     }
 
     /**
@@ -230,15 +247,12 @@ class MarkerManager
     /**
      * Remove a marker from the world
      * @param World $world the world of the marker
-     * @param BaseMarker|string $marker the marker to remove, or its ID
+     * @param string $id
      * @param bool $store
      * @return void
      */
-    public function removeMarker(World $world, BaseMarker|string $marker, bool $store = true): void
+    public function removeMarker(World $world, string $id, bool $store = true): void
     {
-        if (is_string($marker)) $id = $marker;
-        else $id = $marker->getId();
-
         unset($this->markers[$world->getFolderName()][$id]);
 
         if ($store) $this->storeMarkers();

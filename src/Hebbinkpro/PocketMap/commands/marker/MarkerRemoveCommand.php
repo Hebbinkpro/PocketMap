@@ -59,6 +59,12 @@ class MarkerRemoveCommand extends BaseSubCommand
             return;
         }
 
+        $markers = PocketMap::getMarkers();
+        if (!$markers->isMarker($world, $id)) {
+            $sender->sendMessage("§cNo marker with id '$id' found");
+            return;
+        }
+
         PocketMap::getMarkers()->removeMarker($world, $id);
         $sender->sendMessage("[PocketMap] Marker $id has been removed.");
 

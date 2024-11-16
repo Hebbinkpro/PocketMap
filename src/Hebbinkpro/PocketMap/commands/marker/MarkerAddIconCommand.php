@@ -70,8 +70,10 @@ class MarkerAddIconCommand extends BaseSubCommand
 
 
         $marker = new IconMarker($id, $name, $pos, $icon);
-        $res = $markers->addMarker($pos->getWorld(), $marker);
-        if ($res) $sender->sendMessage("[PocketMap] Marker '$name' is added to world '{$args["world"]}'");
+        if ($markers->isMarker($pos->getWorld(), $marker->getId())) {
+            $markers->addMarker($pos->getWorld(), $marker);
+            $sender->sendMessage("[PocketMap] Marker '$name' is added to world '{$args["world"]}'");
+        }
         else $sender->sendMessage("§cThe given marker ID is already in use");
     }
 
