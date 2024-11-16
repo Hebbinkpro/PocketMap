@@ -64,5 +64,5 @@ abstract class BaseMarker implements JsonSerializable
 
     abstract protected function serializeData(): array;
 
-    abstract public function getMarkerType(): MarkerType;
+    abstract public static function getMarkerType(): MarkerType;
 }

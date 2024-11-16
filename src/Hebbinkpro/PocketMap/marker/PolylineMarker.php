@@ -21,7 +21,7 @@ namespace Hebbinkpro\PocketMap\marker;
 
 class PolylineMarker extends PolyMarker
 {
-    public function getMarkerType(): MarkerType
+    public static function getMarkerType(): MarkerType
     {
         return MarkerType::POLYLINE;
     }

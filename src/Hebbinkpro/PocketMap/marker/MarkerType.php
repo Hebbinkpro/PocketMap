@@ -25,4 +25,5 @@ enum MarkerType: string
     case CIRCLE = "circle";
     case POLYGON = "polygon";
     case POLYLINE = "polyline";
+    case CUSTOM = "custom";
 }

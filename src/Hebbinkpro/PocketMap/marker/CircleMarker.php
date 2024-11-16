@@ -34,7 +34,7 @@ class CircleMarker extends PositionMarker
         $this->options = $options ?? new LeafletPathOptions();
     }
 
-    public function getMarkerType(): MarkerType
+    public static function getMarkerType(): MarkerType
     {
         return MarkerType::CIRCLE;
     }

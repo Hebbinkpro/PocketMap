@@ -22,7 +22,7 @@ namespace Hebbinkpro\PocketMap\marker;
 class PolygonMarker extends PolyMarker
 {
 
-    public function getMarkerType(): MarkerType
+    public static function getMarkerType(): MarkerType
     {
         return MarkerType::POLYGON;
     }

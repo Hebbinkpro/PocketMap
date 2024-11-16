@@ -32,6 +32,8 @@ class MarkerManager
     private array $markers = [];
     /** @var string[] List of all available icon names */
     private array $icons = [];
+    /** @var array<string, class-string<CustomMarker>> */
+    private array $customMarkers = [];
 
     public function __construct(PocketMap $plugin)
     {
@@ -167,6 +169,16 @@ class MarkerManager
 
                 $options = LeafletPathOptions::parseOptions($data["options"]);
                 return new PolygonMarker($id, $name, $positions, $options);
+
+            case MarkerType::CUSTOM:
+                if (!isset($data["custom_type"])) return null;
+
+                // get the registered marker for this custom type
+                $customMarker = $this->customMarkers[$data["custom_type"]] ?? null;
+                if ($customMarker === null) return null;
+
+                return $customMarker::parse($data);
+
         }
 
         return null;
@@ -265,5 +277,19 @@ class MarkerManager
     public function getIcons(): array
     {
         return $this->icons;
+    }
+
+    /**
+     * @param class-string<CustomMarker> $customMarkerClass
+     * @return bool if successful
+     */
+    public function registerCustomMarker(string $customMarkerClass): bool
+    {
+        // invalid class
+        if (!is_subclass_of($customMarkerClass, CustomMarker::class)) return false;
+
+        $type = $customMarkerClass::getCustomMarkerType();
+        $this->customMarkers[$type] = $customMarkerClass;
+        return true;
     }
 }
