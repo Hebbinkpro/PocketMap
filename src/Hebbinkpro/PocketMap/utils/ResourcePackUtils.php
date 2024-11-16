@@ -82,6 +82,36 @@ class ResourcePackUtils
     }
 
     /**
+     * Get the prefix to the resource pack data inside the archive
+     * @param ZipArchive $archive
+     * @return string|null
+     */
+    public static function getPrefix(ZipArchive $archive): ?string
+    {
+
+        if ($archive->getFromName(self::MANIFEST) !== false) return "";
+
+        $manifestPath = null;
+        $manifestIdx = null;
+        for ($i = 0; $i < $archive->numFiles; ++$i) {
+            $name = Utils::assumeNotFalse($archive->getNameIndex($i), "This index should be valid");
+            if (
+                ($manifestPath === null || strlen($name) < strlen($manifestPath)) &&
+                preg_match('#.*/' . self::MANIFEST . '$#', $name) === 1
+            ) {
+                $manifestPath = $name;
+                $manifestIdx = $i;
+            }
+        }
+
+        if ($manifestPath === null || $manifestIdx === null || $archive->getFromIndex($manifestIdx) === false) {
+            return null;
+        }
+
+        return str_replace(self::MANIFEST, "", $manifestPath);
+    }
+
+    /**
      * Extracts the given resource pack from the resource_packs folder
      * @param string $dest the destination path
      * @param ZippedResourcePack $pack the pack to extract
@@ -138,36 +168,6 @@ class ResourcePackUtils
         $archive->close();
 
         return true;
-    }
-
-    /**
-     * Get the prefix to the resource pack data inside the archive
-     * @param ZipArchive $archive
-     * @return string|null
-     */
-    public static function getPrefix(ZipArchive $archive): ?string
-    {
-
-        if ($archive->getFromName(self::MANIFEST) !== false) return "";
-
-        $manifestPath = null;
-        $manifestIdx = null;
-        for ($i = 0; $i < $archive->numFiles; ++$i) {
-            $name = Utils::assumeNotFalse($archive->getNameIndex($i), "This index should be valid");
-            if (
-                ($manifestPath === null || strlen($name) < strlen($manifestPath)) &&
-                preg_match('#.*/' . self::MANIFEST . '$#', $name) === 1
-            ) {
-                $manifestPath = $name;
-                $manifestIdx = $i;
-            }
-        }
-
-        if ($manifestPath === null || $manifestIdx === null || $archive->getFromIndex($manifestIdx) === false) {
-            return null;
-        }
-
-        return str_replace(self::MANIFEST, "", $manifestPath);
     }
 
     /**

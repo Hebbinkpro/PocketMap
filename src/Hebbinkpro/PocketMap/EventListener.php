@@ -49,7 +49,7 @@ class EventListener implements Listener
     {
         $this->plugin = $plugin;
         $this->chunkCooldown = [];
-        $this->chunkCooldownTime = PocketMap::getConfigManger()->getInt("renderer.chunk-scheduler.chunk-cooldown", 60);
+        $this->chunkCooldownTime = PocketMap::getSettingsManager()->getChunkScheduler()->getCooldown();
     }
 
     public function onWorldLoad(WorldLoadEvent $e): void

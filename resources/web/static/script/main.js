@@ -34,7 +34,7 @@ window.addEventListener("load", async () => {
         world = config["default-world"];
     }
 
-    worldConfig = config["worlds"][world];
+    worldConfig = config["worlds"][world] ?? config["default-settings"];
 
     let mapPos = {
         x: worldConfig.view.x / 16,

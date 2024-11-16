@@ -40,7 +40,7 @@ class RegionChunksLoader
         $this->regionChunks = RegionChunks::getEmpty($region);
         $this->chunkCoords = $region->getChunks();
         $this->finished = false;
-        $this->maxChunksPerRun = PocketMap::getConfigManger()->getInt("renderer.chunk-scheduler.chunks-per-run", 128);
+        $this->maxChunksPerRun = PocketMap::getSettingsManager()->getChunkScheduler()->getCpr();
     }
 
     /**

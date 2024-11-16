@@ -53,6 +53,8 @@ class PocketMapCommand extends BaseCommand
         $this->registerSubCommand(new MarkerCommand($plugin, "marker", "Manage map markers", ["m"]));
 
         // Only register the sub command if debug is enabled
-        if (PocketMap::getConfigManger()->getBool("debug")) $this->registerSubCommand(new DebugCommand($plugin, "debug", "Execute debug commands"));
+        if (PocketMap::getSettingsManager()->getPocketMap()->debugEnabled()) {
+            $this->registerSubCommand(new DebugCommand($plugin, "debug", "Execute debug commands"));
+        }
     }
 }

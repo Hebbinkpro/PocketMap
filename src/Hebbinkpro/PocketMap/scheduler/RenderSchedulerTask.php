@@ -43,7 +43,7 @@ class RenderSchedulerTask extends Task
      * @var array<array{path: string, loader: RegionChunksLoader, mode: int}>
      * TODO figure out what the mode does...
      */
-    private array $scheduledChunkLoaders; //
+    private array $scheduledChunkLoaders;
     /** @var array<string, array{path: string, region: Region}> */
     private array $scheduledRenders;
     private int $maxRunningRenders;
@@ -56,8 +56,9 @@ class RenderSchedulerTask extends Task
         $this->scheduledChunkLoaders = [];
         $this->scheduledRenders = [];
 
-        $this->maxRunningRenders = PocketMap::getConfigManger()->getInt("renderer.scheduler.renders", 4);
-        $this->maxScheduled = PocketMap::getConfigManger()->getInt("renderer.scheduler.queue-size", 32);
+        $scheduler = PocketMap::getSettingsManager()->getScheduler();
+        $this->maxRunningRenders = $scheduler->getRenders();
+        $this->maxScheduled = $scheduler->getQueue();
 
         self::$logger = $plugin->getLogger();
     }
@@ -246,7 +247,7 @@ class RenderSchedulerTask extends Task
             // if all chunks should be rendered, prepare for the ChunkRenderTask
             if ($region->renderAllChunks()) {
                 $worldName = $region->getWorldName();
-                // world does not exist (is not loaded and cannot be loaded)
+                // the world does not exist (is not loaded and cannot be loaded)
                 if (!$wm->isWorldLoaded($worldName) && !$wm->loadWorld($worldName)) continue;
 
                 $world = $wm->getWorldByName($worldName);
@@ -267,12 +268,12 @@ class RenderSchedulerTask extends Task
     }
 
     /**
-     * Get the amount of renders that is currently running
+     * Get the number of renders that are currently running
      * @return int
      */
     public function getCurrentRendersCount(): int
     {
-        return count($this->runningRenders) + count($this->scheduledChunkLoaders);
+        return sizeof($this->runningRenders) + sizeof($this->scheduledChunkLoaders);
     }
 
     /**

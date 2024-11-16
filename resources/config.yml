@@ -1,5 +1,9 @@
 # the config.yml version DO NOT CHANGE
-version: 1.7
+version: 1.8
+
+# If PocketMap is allowed to load worlds
+# Default: true
+load-worlds: true
 
 # Settings for the renderer
 renderer:
@@ -59,6 +63,26 @@ api:
   # Default: []
   worlds: [ ]
 
+  # the world that will be shown when the page is loaded
+  # when no default world is given (""), the default server world will be used
+  default-world: ""
+
+  # These settings apply when the page is loaded
+  map-settings:
+    # the allowed zoom levels [min, max]
+    zoom: [ 0, 8 ]
+    # the center of the map [x, z, zoom]
+    view: [ 256, 256, 4 ]
+
+  # same as the default settings, but allows configuring it for each world separately
+  # if the world is not in this list, the default settings will be used.
+  world-settings:
+    # settings for the world with name 'world'
+    world:
+      # it has the same settings as default-settings
+      zoom: [ 0, 8 ]
+      view: [ 256, 256, 4 ]
+
   # Settings for the visibility of players on the map
   players:
     # If players should be visible on the map
@@ -66,14 +90,14 @@ api:
     visible: true
     # Make the y coordinate of the player visible via the API
     # Default: false
-    show-y-coord: false
+    show-y: false
     # List of worlds where players should always be hidden
     # If show-players is true but the player is in one of these worlds, the player is not visible.
     # Default: []
     hide-worlds: [ ]
     # List of players that will always be invisible on the map
     # Default: []
-    hide-players: [ ]
+    hidden-players: [ ]
 
 # Settings for the textures used in the map
 textures:

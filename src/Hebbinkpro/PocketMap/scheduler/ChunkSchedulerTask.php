@@ -50,8 +50,9 @@ class ChunkSchedulerTask extends Task
         $this->queuedRegions = [];
         $this->chunkGenerators = [];
 
-        $this->maxGeneratorYield = PocketMap::getConfigManger()->getInt("renderer.chunk-scheduler.generator-yield", 32);
-        $this->maxQueueSize = PocketMap::getConfigManger()->getInt("renderer.chunk-scheduler.queue-size", 256);
+        $chunkScheduler = PocketMap::getSettingsManager()->getChunkScheduler();
+        $this->maxGeneratorYield = $chunkScheduler->getYield();
+        $this->maxQueueSize = $chunkScheduler->getQueue();
     }
 
     /**

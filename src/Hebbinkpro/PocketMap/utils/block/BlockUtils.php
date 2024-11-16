@@ -138,30 +138,6 @@ class BlockUtils
     }
 
     /**
-     * Get if the block has the given trait
-     * @param Block $block
-     * @param trait-string $trait
-     * @return bool
-     */
-    public static function hasTrait(Block $block, string $trait): bool
-    {
-        $reflection = new ReflectionClass($block::class);
-
-        // check self
-        $traits = array_keys($reflection->getTraits());
-        if (in_array($trait, $traits, true)) return true;
-
-        // check parents
-        /** @var ReflectionClass<Block> $parent */
-        foreach (self::getParents($block) as $parent) {
-            $traits = array_keys($parent->getTraits());
-            if (in_array($trait, $traits, true)) return true;
-        }
-
-        return false;
-    }
-
-    /**
      * Iterates through all parents and yields a parent when found.
      * @param Block $block
      * @return Generator<ReflectionClass<Block>>
@@ -198,6 +174,30 @@ class BlockUtils
     public static function hasSignLikeRotation(Block $block): bool
     {
         return self::hasTrait($block, SignLikeRotationTrait::class);
+    }
+
+    /**
+     * Get if the block has the given trait
+     * @param Block $block
+     * @param trait-string $trait
+     * @return bool
+     */
+    public static function hasTrait(Block $block, string $trait): bool
+    {
+        $reflection = new ReflectionClass($block::class);
+
+        // check self
+        $traits = array_keys($reflection->getTraits());
+        if (in_array($trait, $traits, true)) return true;
+
+        // check parents
+        /** @var ReflectionClass<Block> $parent */
+        foreach (self::getParents($block) as $parent) {
+            $traits = array_keys($parent->getTraits());
+            if (in_array($trait, $traits, true)) return true;
+        }
+
+        return false;
     }
 
     /**

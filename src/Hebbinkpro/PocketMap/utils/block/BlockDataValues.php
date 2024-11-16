@@ -141,6 +141,18 @@ final class BlockDataValues
 
     }
 
+    public static function getChemistryDataValue(int $blockId): int
+    {
+
+        return match ($blockId) {
+            BlockTypeIds::COMPOUND_CREATOR => 0,
+            BlockTypeIds::MATERIAL_REDUCER => 1,
+            BlockTypeIds::ELEMENT_CONSTRUCTOR => 2,
+            BlockTypeIds::LAB_TABLE => 3,
+            default => 0
+        };
+    }
+
     /**
      * Get the wood type data value
      * @param WoodType $wood
@@ -155,6 +167,19 @@ final class BlockDataValues
             WoodType::JUNGLE => 3,
             WoodType::ACACIA => 4,
             WoodType::DARK_OAK => 5,
+            default => 0
+        };
+    }
+
+    public static function getDoublePlantDataValue(int $blockId): int
+    {
+        return match ($blockId) {
+            BlockTypeIds::SUNFLOWER => 0,
+            BlockTypeIds::LILAC => 1, // SYRINGA
+            BlockTypeIds::GRASS => 2,
+            BlockTypeIds::FERN => 3,
+            BlockTypeIds::ROSE_BUSH => 4, // ROSE
+            BlockTypeIds::PEONY => 5, // PAEONIA
             default => 0
         };
     }
@@ -185,31 +210,6 @@ final class BlockDataValues
             CoralType::BUBBLE => 2,
             CoralType::FIRE => 3,
             CoralType::HORN => 5
-        };
-    }
-
-    public static function getChemistryDataValue(int $blockId): int
-    {
-
-        return match ($blockId) {
-            BlockTypeIds::COMPOUND_CREATOR => 0,
-            BlockTypeIds::MATERIAL_REDUCER => 1,
-            BlockTypeIds::ELEMENT_CONSTRUCTOR => 2,
-            BlockTypeIds::LAB_TABLE => 3,
-            default => 0
-        };
-    }
-
-    public static function getDoublePlantDataValue(int $blockId): int
-    {
-        return match ($blockId) {
-            BlockTypeIds::SUNFLOWER => 0,
-            BlockTypeIds::LILAC => 1, // SYRINGA
-            BlockTypeIds::GRASS => 2,
-            BlockTypeIds::FERN => 3,
-            BlockTypeIds::ROSE_BUSH => 4, // ROSE
-            BlockTypeIds::PEONY => 5, // PAEONIA
-            default => 0
         };
     }
 

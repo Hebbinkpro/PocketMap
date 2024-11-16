@@ -22,6 +22,7 @@ namespace Hebbinkpro\PocketMap\api;
 use Exception;
 use GdImage;
 use Hebbinkpro\PocketMap\PocketMap;
+use Hebbinkpro\PocketMap\settings\WebApiSettings;
 use Himbeer\LibSkin\LibSkin;
 use Himbeer\LibSkin\SkinConverter;
 use pocketmine\player\Player;
@@ -33,39 +34,37 @@ class UpdateApiTask extends Task
     public const HEAD_IMG_SIZE = 32;
 
     private PocketMap $plugin;
-    private string $tmpFolder;
+    private array $visibleWorlds;
+    private string $apiFolder;
+    private WebApiSettings $apiSettings;
 
-    public function __construct(PocketMap $plugin, string $tmpFolder)
+    public function __construct(PocketMap $plugin)
     {
         $this->plugin = $plugin;
-        $this->tmpFolder = $tmpFolder;
+        $this->apiFolder = $this->plugin->getTmpApiFolder();
     }
 
     public function onRun(): void
     {
+        $this->apiSettings = PocketMap::getSettingsManager()->getApi();
+
+        $worlds = $this->apiSettings->getWorlds();
+        if (sizeof($worlds) == 0) $worlds = $this->plugin->getWorldNames();
+        $this->visibleWorlds = $worlds;
+
         $this->setWorldData();
         $this->setPlayerData();
     }
 
     private function setWorldData(): void
     {
-        /** @var array<string> $worlds */
-        $worlds = PocketMap::getConfigManger()->getArray("api.worlds");
-        if (sizeof($worlds) == 0) {
-            $files = scandir($this->plugin->getServer()->getDataPath() . "worlds");
-            if ($files === false) return;
-            $worlds = array_diff($files, [".", ".."]);
-        }
-
-        $wm = $this->plugin->getServer()->getWorldManager();
-
         $worldData = [];
-        foreach ($worlds as $name) {
-            if (!$this->isWorldVisible($name) || !$wm->loadWorld($name)) continue;
-
+        foreach ($this->visibleWorlds as $name) {
+            // get a loaded world
             $world = $this->plugin->getLoadedWorld($name);
             if ($world === null) continue;
 
+            // set the world data
             $data = $world->getProvider()->getWorldData();
             $spawn = $world->getSpawnLocation();
 
@@ -80,14 +79,8 @@ class UpdateApiTask extends Task
             ];
         }
 
-        file_put_contents($this->tmpFolder . "worlds.json", json_encode($worldData));
-    }
-
-    private function isWorldVisible(World|string $world): bool
-    {
-        if ($world instanceof World) $world = $world->getFolderName();
-        $list = PocketMap::getConfigManger()->getArray("api.worlds");
-        return sizeof($list) == 0 || in_array($world, $list, true);
+        // store the world data
+        file_put_contents($this->apiFolder . "worlds.json", json_encode($worldData));
     }
 
     private function setPlayerData(): void
@@ -97,55 +90,54 @@ class UpdateApiTask extends Task
         $playerData = [];
 
         // get the config of the players
-        $cfg = PocketMap::getConfigManger()->getManager("api.players");
-        if ($cfg === null) return;
-
-        // the players are visible eon the map
-        if ($cfg->getBool("visible")) {
-            // loop through all players
-            foreach ($onlinePlayers as $player) {
-                $this->updatePlayerSkin($player);
-                $world = $player->getWorld()->getFolderName();
-
-                // the world is not visible, or the player is not visible
-                if (!$this->isWorldVisible($world) ||
-                    in_array($world, $cfg->getArray("hide-worlds"), true) ||
-                    in_array($player->getName(), $cfg->getArray("hide-players"), true)) continue;
-
-                // create empty list for the world
-                if (!isset($playerData[$world])) $playerData[$world] = [];
-
-
-                $pos = $player->getPosition();
-                $skin = $player->getSkin();
-                // add the player to the list
-                $data = [
-                    "name" => $player->getName(),
-                    "uuid" => $player->getUniqueId(),
-                    "skin" => [
-                        "id" => $skin->getSkinId(),
-                        "size" => self::HEAD_IMG_SIZE
-                    ],
-                    "pos" => [
-                        "x" => $pos->getFloorX(),
-                        "z" => $pos->getFloorZ()
-                    ]
-                ];
-
-                if ($cfg->getBool("show-y-coordinate")) $data["pos"]["y"] = $pos->getFloorY();
-
-                $playerData[$world]["{$player->getUniqueId()}"] = $data;
-            }
+        if (!$this->apiSettings->playersVisible()) {
+            file_put_contents($this->apiFolder . "players.json", []);
+            return;
         }
 
 
-        file_put_contents($this->tmpFolder . "players.json", json_encode($playerData));
+        // loop through all players
+        foreach ($onlinePlayers as $player) {
+            $this->updatePlayerSkin($player);
+            $world = $player->getWorld()->getFolderName();
+
+            // the world is not visible, or the player is not visible
+            if (!$this->isWorldVisible($world) ||
+                in_array($world, $this->apiSettings->getPlayerHideWorlds(), true) ||
+                in_array($player->getName(), $this->apiSettings->getHiddenPlayers(), true)) continue;
+
+            // create an empty list for the world
+            if (!isset($playerData[$world])) $playerData[$world] = [];
+
+            $pos = $player->getPosition();
+            $skin = $player->getSkin();
+
+            // add the player to the list
+            $data = [
+                "name" => $player->getName(),
+                "uuid" => $player->getUniqueId(),
+                "skin" => [
+                    "id" => $skin->getSkinId(),
+                    "size" => self::HEAD_IMG_SIZE
+                ],
+                "pos" => [
+                    "x" => $pos->getFloorX(),
+                    "z" => $pos->getFloorZ()
+                ]
+            ];
+
+            if ($this->apiSettings->showY()) $data["pos"]["y"] = $pos->getFloorY();
+
+            $playerData[$world]["{$player->getUniqueId()}"] = $data;
+        }
+
+        file_put_contents($this->apiFolder . "players.json", json_encode($playerData));
     }
 
     private function updatePlayerSkin(Player $player): void
     {
         $skin = $player->getSkin();
-        $skinFile = $this->tmpFolder . "skin/{$skin->getSkinId()}.png";
+        $skinFile = $this->apiFolder . "skin/{$skin->getSkinId()}.png";
         if (file_exists($skinFile)) return;
 
         try {
@@ -170,5 +162,11 @@ class UpdateApiTask extends Task
 
         // save the head img
         imagepng($headImg, $skinFile);
+    }
+
+    private function isWorldVisible(World|string $world): bool
+    {
+        if ($world instanceof World) $world = $world->getFolderName();
+        return in_array($world, $this->visibleWorlds);
     }
 }
