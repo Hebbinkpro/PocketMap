@@ -28,8 +28,6 @@ use Hebbinkpro\WebServer\WebServer;
 
 class WebServerManager
 {
-    public const WEB_VERSION = 1.2;
-
     private PocketMap $pocketMap;
     private WebServerSettings $setting;
     private WebServer $server;
@@ -48,9 +46,13 @@ class WebServerManager
         $serverInfo = new HttpServerInfo($this->setting->getAddress(), $this->setting->getPort());
         $this->addRoutes($serverInfo->getRouter());
 
-
         $this->server = new WebServer($this->pocketMap, $serverInfo);
-        $this->server->detectSSL();
+
+        // check if https is enabled
+        if ($this->setting->enableHttps()) {
+            // detect the SSL settings automatically
+            $this->server->detectSSL();
+        }
     }
 
     /**

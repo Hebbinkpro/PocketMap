@@ -371,7 +371,8 @@ class PocketMap extends PluginBase implements Listener
         $worldsFolder = $this->getServer()->getDataPath() . "worlds/";
         $worlds = [];
         foreach (scandir($worldsFolder) as $world) {
-            if (is_dir($world) and is_file($worldsFolder . $world . "/level.dat")) {
+            $worldFolder = $worldsFolder . $world . "/";
+            if (is_dir($worldFolder) && is_file($worldFolder . "level.dat")) {
                 $worlds[] = $world;
             }
         }

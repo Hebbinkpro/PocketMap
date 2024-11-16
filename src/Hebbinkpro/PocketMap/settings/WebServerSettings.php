@@ -24,7 +24,7 @@ use pocketmine\utils\Config;
 final class WebServerSettings extends ConfigSettings
 {
 
-    public function __construct(private string $address, private int $port)
+    public function __construct(private string $address, private int $port, private bool $https)
     {
     }
 
@@ -34,8 +34,9 @@ final class WebServerSettings extends ConfigSettings
 
         $address = strval($web["address"] ?? "127.0.0.1");
         $port = intval($web["port"] ?? 3000);
+        $https = boolval($web["https"] ?? false);
 
-        return new self($address, $port);
+        return new self($address, $port, $https);
     }
 
     /**
@@ -54,5 +55,10 @@ final class WebServerSettings extends ConfigSettings
     public function getPort(): int
     {
         return $this->port;
+    }
+
+    public function enableHttps(): bool
+    {
+        return $this->https;
     }
 }

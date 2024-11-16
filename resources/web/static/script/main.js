@@ -36,10 +36,15 @@ window.addEventListener("load", async () => {
 
     worldConfig = config["worlds"][world] ?? config["default-settings"];
 
+    console.log(config)
+    console.log(urlQuery)
+    console.log(world)
+    console.log(worldConfig)
+
     let mapPos = {
-        x: worldConfig.view.x / 16,
-        z: -worldConfig.view.z / 16,
-        zoom: worldConfig.view.zoom,
+        x: worldConfig.view[0] / 16,
+        z: -worldConfig.view[1] / 16,
+        zoom: worldConfig.view[2],
     }
 
     if (urlQuery.get("x") !== null) mapPos.x = parseFloat(urlQuery.get("x")) / 16;
@@ -47,8 +52,8 @@ window.addEventListener("load", async () => {
     if (urlQuery.get("zoom") !== null) mapPos.zoom = parseInt(urlQuery.get("zoom"));
 
     let mapLayer = L.tileLayer(API_URL + `render/${world}/{z}/{x},{y}.png`, {
-        minZoom: worldConfig.zoom.min,
-        maxZoom: worldConfig.zoom.max,
+        minZoom: worldConfig.zoom[0],
+        maxZoom: worldConfig.zoom[1],
         zoomReverse: true,
         attribution: "&copy; 2023 Hebbinkpro",
     });

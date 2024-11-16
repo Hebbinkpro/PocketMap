@@ -52,6 +52,11 @@ web-server:
   # Set this to the port you want to use for the web server
   # Default: 3000
   port: 3000
+  # If HTTPS should be used
+  # To use HTTPS, the following files are required in plugin_data/PocketMap:
+  # - cert/<domain>.cert - The domain certificate
+  # - cert/<domain>.pk - [Optional] The private key
+  https: false
 
 # Settings for the PocketMap API used for the website
 api:
