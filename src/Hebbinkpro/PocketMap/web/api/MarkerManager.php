@@ -17,7 +17,7 @@
  * (at your option) any later version.
  */
 
-namespace Hebbinkpro\PocketMap\api;
+namespace Hebbinkpro\PocketMap\web\api;
 
 use pocketmine\math\Vector3;
 use pocketmine\world\Position;

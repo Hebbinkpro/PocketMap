@@ -20,7 +20,7 @@
 namespace Hebbinkpro\PocketMap\commands\marker;
 
 use CortexPE\Commando\args\StringEnumArgument;
-use Hebbinkpro\PocketMap\api\MarkerManager;
+use Hebbinkpro\PocketMap\web\api\MarkerManager;
 use pocketmine\command\CommandSender;
 
 class MarkerIconArgument extends StringEnumArgument
