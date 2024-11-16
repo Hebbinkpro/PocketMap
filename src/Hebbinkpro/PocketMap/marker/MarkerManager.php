@@ -30,6 +30,9 @@ class MarkerManager
     private PocketMap $plugin;
     /** @var array<string, array<string, BaseMarker>> {worldName: {markerId: BaseMarker}} */
     private array $markers = [];
+    /** @var array<string, array> List of markers which could not be loaded for some reason, but should still be stored */
+    private array $unloadedMarkers = [];
+
     /** @var string[] List of all available icon names */
     private array $icons = [];
     /** @var array<string, class-string<CustomMarker>> */
@@ -89,6 +92,7 @@ class MarkerManager
         $markersFile = $this->plugin->getMarkersFolder() . "markers.json";
 
         $this->markers = [];
+        $this->unloadedMarkers = [];
         if (!is_file($markersFile)) {
             // file does not exist, so create a new empty file
             file_put_contents($markersFile, json_encode([]));
@@ -99,9 +103,14 @@ class MarkerManager
         $data = json_decode(file_get_contents($markersFile));
         foreach ($data as $worldName => $markers) {
             $this->markers[$worldName] = [];
+            $this->unloadedMarkers[$worldName] = [];
             foreach ($markers as $id => $markerData) {
                 $marker = $this->parseMarker($id, $markerData);
-                if ($marker === null) continue;
+                if ($marker === null) {
+                    // store marker in the unloaded markers list
+                    $this->unloadedMarkers[$worldName][$id] = $markerData;
+                    continue;
+                }
                 $this->markers[$worldName][$id] = $marker;
             }
         }
@@ -232,7 +241,9 @@ class MarkerManager
      */
     public function isMarker(World $world, string $id): bool
     {
-        return isset($this->markers[$world->getFolderName()][$id]);
+        // check if the marker is not in the markers or unloaded markers list
+        return isset($this->markers[$world->getFolderName()][$id])
+            || isset($this->unloadedMarkers[$world->getFolderName()][$id]);
     }
 
     /**
@@ -245,7 +256,7 @@ class MarkerManager
         // serialize all the markers
         $contents = [];
         foreach ($this->markers as $worldName => $markers) {
-            $contents[$worldName] = [];
+            $contents[$worldName] = $this->unloadedMarkers[$worldName] ?? [];
             foreach ($markers as $id => $marker) {
                 $contents[$worldName][$id] = $marker->jsonSerialize();
             }
@@ -280,16 +291,16 @@ class MarkerManager
     }
 
     /**
-     * @param class-string<CustomMarker> $customMarkerClass
+     * @param class-string<CustomMarker> $classname
      * @return bool if successful
      */
-    public function registerCustomMarker(string $customMarkerClass): bool
+    public function registerCustomMarker(string $classname): bool
     {
         // invalid class
-        if (!is_subclass_of($customMarkerClass, CustomMarker::class)) return false;
+        if (!is_subclass_of($classname, CustomMarker::class)) return false;
 
-        $type = $customMarkerClass::getCustomMarkerType();
-        $this->customMarkers[$type] = $customMarkerClass;
+        $type = $classname::getCustomMarkerType();
+        $this->customMarkers[$type] = $classname;
         return true;
     }
 }

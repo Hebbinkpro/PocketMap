@@ -298,17 +298,26 @@ if (class_exists(PocketMap::class)) {
   plugin's `onEnable` function.
 - You cannot use the `MarkerManager` in the plugin's `onLoad` function.
 
-#### Available functions
+#### Changes in PocketMap v0.7
+
+In PocketMap v0.7 there are a lot of changes in the way markers are handled.
+All markers now extend the `Hebbinkpro\PocketMap\marker\BaseMarker`, and `BaseMarker`'s can be added to the marker
+manager,
+replacing the `MarkerManager->add...Marker()` functions, allowing for more customization.
+
+It is since v0.7 also possible to create your own markers, see [Custom Markers](#custom-markers).
+
+#### Important functions
 
 ```php
-$markers->getIcons(): array
-$markers->getMarker(string $id, World $world): ?array
-$markers->removeMarker(string $id, World $world): bool
+$markers->getMarker(World $world, string $id): ?BaseMarker
+$markers->addMarker(World $world, BaseMarker $marker): void
+$markers->isMarker(World $world, string $id): bool
+$markers->removeMarker(World $world, string $id): void
 
-$markers->addIconMarker(string $name, Position $pos, string $icon, ?string $id = null): bool
-$markers->addCircleMarker(string $name, Position $pos, int $radius, ?string $id = null, string $color = "red", bool $fill = false, ?string $fillColor = null): bool
-$markers->addPolygonMarker(string $name, array $positions, World $world, ?string $id = null, string $color = "red", bool $fill = false, ?string $fillColor = null): bool
-$markers->addPolylineMarker(string $name, array $positions, World $world, ?string $id = null, string $color = "red", bool $fill = false, ?string $fillColor = null): bool
+$markers->getIcons(): array
+$markers->isIcon(): bool
+
 ```
 
 ### Stored Markers
@@ -351,16 +360,7 @@ These are commonly used fields for the data types given below
 
 ##### Options
 
-```json5
-{
-  "color": "red",
-  // the border color
-  "fill": false,
-  // if the marker is filled
-  "fillColor": "red"
-  // the color of the filled area
-}
-```
+See [Leaflet's Path options](https://leafletjs.com/reference.html#path) for all available options.
 
 #### Icon
 
@@ -417,7 +417,38 @@ These are commonly used fields for the data types given below
 }
 ```
 
+### Custom Markers
 
+Creating custom markers is not as simple as it looks, since custom markers require their own parsing and serialization
+method, and their own JavaScript implementation.
 
+#### PHP Implementation
 
+To create a custom marker, you start by creating a class which extends `Hebbinkpro\PocketMap\marker\CustomMarker`,
+we will call it `YourCustomMarker` from now on.
 
+You will have to implement three functions:
+
+- `serializeMarkerData(): array`, This function should return an array representing the JSON data of your marker, to be
+  used in the JavaScript code
+- `parseMarker(array $data): ?self`, This function is the inverse of the serialize function, and parses the JSON data
+  into a `YourCustomMarker` instance and should return `null` when the data is incomplete.
+- `getCustomMarkerType(): string`,This function should return the custom type, the identifier, of your marker
+
+The serialization and parsing are needed to easily create a marker in PHP with the correct data types, etc.
+But we also need a way to store the PHP object such that the web server can read the stored data, for which JSON is
+chosen.
+
+Look at the implementation of the build-in markers, or at the `MarkerManager::parseMarker(array $data): ?BaseMarker`
+function for examples how to implement serialization and parsing.
+
+If you managed to implement your marker class, you have to register it to the `MarkerManager`
+using `MarkerManager::registerCustomMarker(class-string<CustomMarker> $classname): bool`.
+After the marker is registered, PocketMap is able to load your markers.
+
+#### JavaScript implementation
+
+Take a look at the `loadMarkers()` function in `web/static/main.js` in the plugin data of PocketMap.
+In this function, all marker types are implemented such that they show up on the map.
+You can implement your own custom marker in the `"custom"` case,
+where `customType` is the type you gave your marker in `YourCustomMarker::getCustomMarkerType()`.

@@ -273,6 +273,10 @@ async function loadMarkers() {
                 }
                 m = L.polyline(positions, data["options"]);
                 break;
+            case "custom":
+                let customType = data["custom_type"];
+                // TODO implement custom marker types
+                break;
         }
 
         if (m != null) {
