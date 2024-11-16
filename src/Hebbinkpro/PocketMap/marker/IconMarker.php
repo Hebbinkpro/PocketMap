@@ -17,27 +17,29 @@
  * (at your option) any later version.
  */
 
-namespace Hebbinkpro\PocketMap\commands\marker;
+namespace Hebbinkpro\PocketMap\marker;
 
-use Hebbinkpro\PocketMap\marker\PolylineMarker;
-use Hebbinkpro\PocketMap\PocketMap;
 use pocketmine\math\Vector3;
-use pocketmine\world\World;
 
-class MarkerAddLineCommand extends MarkerAddAreaCommand
+class IconMarker extends PositionMarker
 {
+    private string $icon;
 
-    protected function addMarker(string $name, Vector3 $pos1, Vector3 $pos2, World $world, ?string $id): bool
+    public function __construct(?string $id, string $name, Vector3 $position, string $icon)
     {
+        parent::__construct($id, $name, $position);
+        $this->icon = $icon;
+    }
 
-        // create a rectangular polygon positions list
-        $positions = [
-            $pos1,
-            $pos2
+    public function getMarkerType(): MarkerType
+    {
+        return MarkerType::ICON;
+    }
+
+    protected function serializeMarkerData(): array
+    {
+        return [
+            "icon" => $this->icon,
         ];
-
-
-        $marker = new PolylineMarker($id, $name, $positions);
-        return PocketMap::getMarkers()->addMarker($world, $marker);
     }
 }

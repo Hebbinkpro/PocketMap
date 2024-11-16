@@ -17,7 +17,7 @@
  * (at your option) any later version.
  */
 
-namespace Hebbinkpro\PocketMap\web\api;
+namespace Hebbinkpro\PocketMap\web;
 
 use Exception;
 use GdImage;

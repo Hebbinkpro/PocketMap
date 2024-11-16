@@ -23,6 +23,7 @@ use CortexPE\Commando\exception\HookAlreadyRegistered;
 use CortexPE\Commando\PacketHooker;
 use Exception;
 use Hebbinkpro\PocketMap\commands\PocketMapCommand;
+use Hebbinkpro\PocketMap\marker\MarkerManager;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
 use Hebbinkpro\PocketMap\scheduler\ChunkSchedulerTask;
 use Hebbinkpro\PocketMap\scheduler\RenderSchedulerTask;
@@ -31,9 +32,8 @@ use Hebbinkpro\PocketMap\textures\TerrainTextures;
 use Hebbinkpro\PocketMap\textures\TerrainTexturesOptions;
 use Hebbinkpro\PocketMap\utils\ResourcePackUtils;
 use Hebbinkpro\PocketMap\utils\TextureUtils;
-use Hebbinkpro\PocketMap\web\api\MarkerManager;
-use Hebbinkpro\PocketMap\web\api\UpdateApiTask;
 use Hebbinkpro\PocketMap\web\MapConfig;
+use Hebbinkpro\PocketMap\web\UpdateApiTask;
 use Hebbinkpro\PocketMap\web\WebServerManager;
 use pocketmine\block\RuntimeBlockStateRegistry;
 use pocketmine\block\VanillaBlocks;
@@ -169,11 +169,14 @@ class PocketMap extends PluginBase implements Listener
         // create instances
         self::$instance = $this;
         $this->settingsManager = new SettingsManager();
-        $this->markers = new MarkerManager($this->getDataFolder() . "markers/");
 
         // load all resources
         $this->loadConfig();
         $this->generateFolderStructure();
+
+        // load the markers
+        $this->markers = new MarkerManager($this);
+        $this->markers->load();
 
         // load the web files
         $this->loadWebFiles();
@@ -344,7 +347,7 @@ class PocketMap extends PluginBase implements Listener
 
     public function getMarkersFolder(): string
     {
-        return $this->getDataFolder() . "markers/";
+        return $this->getDataFolder() . "marker/";
     }
 
     public function getTmpFolder(): string
@@ -617,6 +620,8 @@ class PocketMap extends PluginBase implements Listener
 
     protected function onDisable(): void
     {
+        // store the markers
+        $this->markers->storeMarkers();
         // close the socket
         $this->webServer->stopServer();
     }

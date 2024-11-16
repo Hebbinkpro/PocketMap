@@ -17,27 +17,16 @@
  * (at your option) any later version.
  */
 
-namespace Hebbinkpro\PocketMap\commands\marker;
+namespace Hebbinkpro\PocketMap\marker\leaflet;
 
-use Hebbinkpro\PocketMap\marker\PolylineMarker;
-use Hebbinkpro\PocketMap\PocketMap;
-use pocketmine\math\Vector3;
-use pocketmine\world\World;
-
-class MarkerAddLineCommand extends MarkerAddAreaCommand
+/**
+ * Implementation of Stroke-linejoin according to https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/stroke-linejoin
+ */
+enum StrokeLinejoin: string
 {
-
-    protected function addMarker(string $name, Vector3 $pos1, Vector3 $pos2, World $world, ?string $id): bool
-    {
-
-        // create a rectangular polygon positions list
-        $positions = [
-            $pos1,
-            $pos2
-        ];
-
-
-        $marker = new PolylineMarker($id, $name, $positions);
-        return PocketMap::getMarkers()->addMarker($world, $marker);
-    }
+    case ARCS = "arcs";
+    case BEVEL = "bevel";
+    case MITER = "miter";
+    case MITER_CLIP = "miter-clip";
+    case ROUND = "round";
 }

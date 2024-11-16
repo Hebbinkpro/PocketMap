@@ -23,6 +23,7 @@ use CortexPE\Commando\args\BlockPositionArgument;
 use CortexPE\Commando\args\RawStringArgument;
 use CortexPE\Commando\BaseSubCommand;
 use CortexPE\Commando\exception\ArgumentOrderException;
+use Hebbinkpro\PocketMap\marker\PolygonMarker;
 use Hebbinkpro\PocketMap\PocketMap;
 use pocketmine\command\CommandSender;
 use pocketmine\math\Vector3;
@@ -65,7 +66,7 @@ class MarkerAddAreaCommand extends BaseSubCommand
 
         if ($this->addMarker($name, $pos1, $pos2, $world, $id)) {
             $sender->sendMessage("[PocketMap] Marker '$name' is added to world '{$args["world"]}'");
-        } else $sender->sendMessage("§cSomething went wrong");
+        } else $sender->sendMessage("§cThe given marker ID is already in use");
 
 
     }
@@ -80,7 +81,8 @@ class MarkerAddAreaCommand extends BaseSubCommand
             new Vector3($pos2->getX(), 0, $pos1->getZ())
         ];
 
-        return PocketMap::getMarkers()->addPolygonMarker($name, $positions, $world, $id);
+        $marker = new PolygonMarker($id, $name, $positions);
+        return PocketMap::getMarkers()->addMarker($world, $marker);
     }
 
     /**

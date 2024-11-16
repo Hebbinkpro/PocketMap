@@ -23,6 +23,7 @@ use CortexPE\Commando\args\BlockPositionArgument;
 use CortexPE\Commando\args\RawStringArgument;
 use CortexPE\Commando\BaseSubCommand;
 use CortexPE\Commando\exception\ArgumentOrderException;
+use Hebbinkpro\PocketMap\marker\IconMarker;
 use Hebbinkpro\PocketMap\PocketMap;
 use pocketmine\command\CommandSender;
 use pocketmine\math\Vector3;
@@ -67,14 +68,11 @@ class MarkerAddIconCommand extends BaseSubCommand
             return;
         }
 
-        if ($id !== null && $markers->getMarker($id, $world) !== null) {
-            $sender->sendMessage("§cThe id '$id' is already in use");
-            return;
-        }
 
-        $res = $markers->addIconMarker($name, $pos, $icon, $id);
+        $marker = new IconMarker($id, $name, $pos, $icon);
+        $res = $markers->addMarker($pos->getWorld(), $marker);
         if ($res) $sender->sendMessage("[PocketMap] Marker '$name' is added to world '{$args["world"]}'");
-        else $sender->sendMessage("§cSomething went wrong");
+        else $sender->sendMessage("§cThe given marker ID is already in use");
     }
 
     /**

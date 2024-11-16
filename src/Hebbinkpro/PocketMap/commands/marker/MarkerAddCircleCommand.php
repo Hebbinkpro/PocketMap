@@ -24,6 +24,7 @@ use CortexPE\Commando\args\IntegerArgument;
 use CortexPE\Commando\args\RawStringArgument;
 use CortexPE\Commando\BaseSubCommand;
 use CortexPE\Commando\exception\ArgumentOrderException;
+use Hebbinkpro\PocketMap\marker\CircleMarker;
 use Hebbinkpro\PocketMap\PocketMap;
 use pocketmine\command\CommandSender;
 use pocketmine\math\Vector3;
@@ -62,9 +63,11 @@ class MarkerAddCircleCommand extends BaseSubCommand
         $pos = Position::fromObject($args["pos"], $world);
         $id = $args["id"] ?? null;
 
-        $res = PocketMap::getMarkers()->addCircleMarker($name, $pos, $r, $id);
+
+        $marker = new CircleMarker($id, $name, $pos, $r);
+        $res = PocketMap::getMarkers()->addMarker($pos->getWorld(), $marker);
         if ($res) $sender->sendMessage("[PocketMap] Marker '$name' is added to world '{$args["world"]}'");
-        else $sender->sendMessage("§cSomething went wrong");
+        else $sender->sendMessage("§cThe given marker ID is already in use");
     }
 
     /**

@@ -17,27 +17,25 @@
  * (at your option) any later version.
  */
 
-namespace Hebbinkpro\PocketMap\commands\marker;
+namespace Hebbinkpro\PocketMap\marker;
 
-use Hebbinkpro\PocketMap\marker\PolylineMarker;
-use Hebbinkpro\PocketMap\PocketMap;
-use pocketmine\math\Vector3;
-use pocketmine\world\World;
+use Hebbinkpro\PocketMap\marker\leaflet\LeafletPathOptions;
 
-class MarkerAddLineCommand extends MarkerAddAreaCommand
+abstract class PolyMarker extends PositionsMarker
 {
 
-    protected function addMarker(string $name, Vector3 $pos1, Vector3 $pos2, World $world, ?string $id): bool
+    private LeafletPathOptions $options;
+
+    public function __construct(?string $id, string $name, array $positions, ?LeafletPathOptions $options = null)
     {
+        parent::__construct($id, $name, $positions);
+        $this->options = $options ?? new LeafletPathOptions();
+    }
 
-        // create a rectangular polygon positions list
-        $positions = [
-            $pos1,
-            $pos2
+    protected function serializeMarkerData(): array
+    {
+        return [
+            "options" => $this->options->jsonSerialize(),
         ];
-
-
-        $marker = new PolylineMarker($id, $name, $positions);
-        return PocketMap::getMarkers()->addMarker($world, $marker);
     }
 }
