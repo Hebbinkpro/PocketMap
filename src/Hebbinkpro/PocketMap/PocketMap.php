@@ -23,6 +23,8 @@ use CortexPE\Commando\exception\HookAlreadyRegistered;
 use CortexPE\Commando\PacketHooker;
 use Exception;
 use Hebbinkpro\PocketMap\commands\PocketMapCommand;
+use Hebbinkpro\PocketMap\extension\DebugWorldMarkers;
+use Hebbinkpro\PocketMap\extension\ExtensionManager;
 use Hebbinkpro\PocketMap\marker\MarkerManager;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
 use Hebbinkpro\PocketMap\scheduler\ChunkSchedulerTask;
@@ -161,6 +163,12 @@ class PocketMap extends PluginBase implements Listener
         unset(self::$worldRenderers[$world->getFolderName()]);
     }
 
+    protected function onLoad(): void
+    {
+        $extensions = ExtensionManager::getInstance();
+        $extensions->registerExtension($this, "DebugWorldMarkers", DebugWorldMarkers::class);
+    }
+
     /**
      * @throws HookAlreadyRegistered
      */
@@ -203,6 +211,9 @@ class PocketMap extends PluginBase implements Listener
         if ($this->settingsManager->getPocketMap()->debugEnabled()) {
             $this->enableDebug();
         }
+
+        // enable the extensions
+        ExtensionManager::getInstance()->enableAll();
     }
 
     /**
