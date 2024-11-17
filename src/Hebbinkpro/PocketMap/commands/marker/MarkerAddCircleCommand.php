@@ -66,7 +66,7 @@ class MarkerAddCircleCommand extends BaseSubCommand
 
         $marker = new CircleMarker($id, $name, $pos, $r);
         $markers = PocketMap::getMarkers();
-        if ($markers->isMarker($pos->getWorld(), $marker->getId())) {
+        if (!$markers->isMarker($pos->getWorld(), $marker->getId())) {
             $markers->addMarker($pos->getWorld(), $marker);
             $sender->sendMessage("[PocketMap] Marker '$name' is added to world '{$args["world"]}'");
         }

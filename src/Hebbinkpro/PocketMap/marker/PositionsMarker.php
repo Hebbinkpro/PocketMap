@@ -60,10 +60,10 @@ abstract class PositionsMarker extends BaseMarker
 
     protected function serializeData(): array
     {
+        $data = $this->serializeMarkerData();
         $positions = array_map(fn($pos) => ["x" => $pos->getX(), "z" => $pos->getZ()], $this->positions);
+        $data["positions"] = $positions;
 
-        return [
-            "positions" => $positions,
-        ];
+        return $data;
     }
 }

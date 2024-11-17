@@ -29,6 +29,7 @@ class MapSettings implements JsonSerializable
     private int $viewX;
     private int $viewY;
     private int $viewZoom;
+    private string $spawnMarker;
 
     /**
      * @param int $minZoom
@@ -36,14 +37,16 @@ class MapSettings implements JsonSerializable
      * @param int $viewX
      * @param int $viewY
      * @param int $viewZoom
+     * @param string $spawnMarker
      */
-    public function __construct(int $minZoom, int $maxZoom, int $viewX, int $viewY, int $viewZoom)
+    public function __construct(int $minZoom, int $maxZoom, int $viewX, int $viewY, int $viewZoom, string $spawnMarker)
     {
         $this->minZoom = $minZoom;
         $this->maxZoom = $maxZoom;
         $this->viewX = $viewX;
         $this->viewY = $viewY;
         $this->viewZoom = $viewZoom;
+        $this->spawnMarker = $spawnMarker;
     }
 
     public static function fromArray(array $data): self
@@ -56,8 +59,9 @@ class MapSettings implements JsonSerializable
         $viewX = intval($view[0] ?? 256);
         $viewY = intval($view[1] ?? 256);
         $viewZoom = intval($view[2] ?? 4);
+        $spawnMarker = strval($data["spawn-marker"] ?? "compass");
 
-        return new self($minZoom, $maxZoom, $viewX, $viewY, $viewZoom);
+        return new self($minZoom, $maxZoom, $viewX, $viewY, $viewZoom, $spawnMarker);
     }
 
     public function jsonSerialize(): array
@@ -65,6 +69,7 @@ class MapSettings implements JsonSerializable
         return [
             "zoom" => [$this->minZoom, $this->maxZoom],
             "view" => [$this->viewX, $this->viewY, $this->viewZoom],
+            "spawnMarker" => $this->spawnMarker,
         ];
     }
 }

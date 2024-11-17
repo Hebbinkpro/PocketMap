@@ -23,8 +23,10 @@ use Hebbinkpro\DebugWorld\DebugWorld;
 use Hebbinkpro\DebugWorld\DebugWorldGenerator;
 use Hebbinkpro\PocketMap\marker\CircleMarker;
 use Hebbinkpro\PocketMap\marker\leaflet\LeafletPathOptions;
+use Hebbinkpro\PocketMap\marker\PolygonMarker;
 use Hebbinkpro\PocketMap\PocketMap;
 use pocketmine\block\RuntimeBlockStateRegistry;
+use pocketmine\block\VanillaBlocks;
 use pocketmine\event\Listener;
 use pocketmine\event\world\WorldLoadEvent;
 use pocketmine\math\Vector3;
@@ -69,20 +71,29 @@ class DebugWorldMarkers extends BaseExtension implements Listener
     private function hasDebugWorldMarkers(World $world): bool
     {
         $markers = PocketMap::getMarkers();
-        return $markers->isMarker($world, "debug_0");
+        $airState = VanillaBlocks::AIR()->getStateId();
+        return $markers->isMarker($world, "debug_$airState");
     }
 
     private function registerDebugWorldMarkers(World $world): void
     {
         $markers = PocketMap::getMarkers();
         // filled marker which is invisible
-        $markerOptions = new LeafletPathOptions(opacity: 1, fill: true, fillOpacity: 0);
+        $markerOptions = new LeafletPathOptions(opacity: 0., fill: true, fillOpacity: 0.);
 
         $blocks = array_values(RuntimeBlockStateRegistry::getInstance()->getAllKnownStates());
 
         // get the grid size
         $states = sizeof($blocks);
         $size = (int)ceil(sqrt($states));
+
+        $square = [
+            new Vector3(0, 0, 0),
+            new Vector3($size * 2, 0, 0),
+            new Vector3($size * 2, 0, $size * 2),
+            new Vector3(0, 0, $size * 2),
+        ];
+        $markers->addMarker($world, new PolygonMarker("debug_grid", "Block Grid", $square, new LeafletPathOptions(fill: false, fillOpacity: 0)));
 
         foreach ($blocks as $i => $block) {
             $state = $block->getStateId();
