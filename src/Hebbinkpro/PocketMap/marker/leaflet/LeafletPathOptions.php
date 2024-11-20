@@ -39,25 +39,25 @@ class LeafletPathOptions implements JsonSerializable
     /** @var float|null Stroke opacity */
     public float|null $opacity;
     /** @var StrokeLinecap|null A string that defines shape to be used at the end of the stroke. */
-    public StrokeLinecap|null $lineCap;
+    public StrokeLinecap|null $lineCap = StrokeLinecap::ROUND;
     /** @var StrokeLinejoin|null A string that defines shape to be used at the corners of the stroke. */
-    public StrokeLinejoin|null $lineJoin;
+    public StrokeLinejoin|null $lineJoin = StrokeLinejoin::ROUND;
     /** @var string|null A string that defines the stroke dash pattern. Doesn't work on Canvas-powered layers in some old browsers. */
-    public string|null $dashArray;
+    public string|null $dashArray = null;
     /** @var string|null A string that defines the distance into the dash pattern to start the dash. Doesn't work on Canvas-powered layers in some old browsers. */
-    public string|null $dashOffset;
+    public string|null $dashOffset = null;
     /** @var bool|null Whether to fill the path with color. Set it to false to disable filling on polygons or circles. */
-    public bool|null $fill;
+    public bool|null $fill = false;
     /** @var string|null Fill color. Defaults to the value of the color option */
-    public string|null $fillColor;
+    public string|null $fillColor = "#3388ff";
     /** @var float|null Fill opacity. */
-    public float|null $fillOpacity;
+    public float|null $fillOpacity = 0.2;
     /** @var FillRule|null A string that defines how the inside of a shape is determined. */
-    public FillRule|null $fillRule;
+    public FillRule|null $fillRule = FillRule::EVENODD;
     /** @var bool|null When true, a mouse event on this path will trigger the same event on the map (unless L.DomEvent.stopPropagation is used). */
-    public bool|null $bubblingMouseEvents;
+    public bool|null $bubblingMouseEvents = true;
     /** @var bool If false, the layer will not emit mouse events and will act as a part of the underlying map. */
-    public bool|null $interactive;
+    public bool|null $interactive = true;
 
     /**
      * Construct new leaflet options, All arguments are OPTIONAL.

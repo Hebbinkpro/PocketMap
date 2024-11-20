@@ -78,7 +78,7 @@ class MarkerManager
         $this->icons = [];
         foreach ($icons as $icon) {
             if (!isset($icon["name"])) continue;
-            $this->icons[] = $icon["name"];
+            $this->icons[] = $icons["name"];
         }
 
     }
@@ -100,7 +100,7 @@ class MarkerManager
             return;
         }
 
-        $data = json_decode(file_get_contents($markersFile), true);
+        $data = json_decode(file_get_contents($markersFile));
         foreach ($data as $worldName => $markers) {
             $this->markers[$worldName] = [];
             $this->unloadedMarkers[$worldName] = [];

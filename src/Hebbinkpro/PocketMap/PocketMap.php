@@ -43,7 +43,6 @@ use pocketmine\event\Listener;
 use pocketmine\item\StringToItemParser;
 use pocketmine\plugin\PluginBase;
 use pocketmine\resourcepacks\ZippedResourcePack;
-use pocketmine\ServerProperties;
 use pocketmine\utils\Filesystem;
 use pocketmine\world\World;
 use ZipArchive;
@@ -359,7 +358,7 @@ class PocketMap extends PluginBase implements Listener
 
     public function getMarkersFolder(): string
     {
-        return $this->getDataFolder() . "markers/";
+        return $this->getDataFolder() . "marker/";
     }
 
     public function getTmpFolder(): string
@@ -463,7 +462,7 @@ class PocketMap extends PluginBase implements Listener
         // determine the default world
         $defaultWorld = $mapConfig->getDefaultWorld();
         if (strlen($defaultWorld) == 0) {
-            $defaultWorld = $this->getServer()->getConfigGroup()->getConfigString(ServerProperties::DEFAULT_WORLD_NAME, "world");
+            $defaultWorld = $this->getServer()->getWorldManager()->getDefaultWorld()->getFolderName();
         }
 
         // not all worlds are visible

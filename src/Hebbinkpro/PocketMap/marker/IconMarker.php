@@ -31,7 +31,7 @@ class IconMarker extends PositionMarker
         $this->icon = $icon;
     }
 
-    public static function getMarkerType(): MarkerType
+    public function getMarkerType(): MarkerType
     {
         return MarkerType::ICON;
     }

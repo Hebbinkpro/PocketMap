@@ -78,9 +78,6 @@ api:
     zoom: [ 0, 8 ]
     # the center of the map [x, z, zoom]
     view: [ 256, 256, 4 ]
-    # Show the world spawn on the map using the given icon as marker
-    # To disable the spawn marker, set the value to ""
-    spawn-marker: compass
 
   # same as the default settings, but allows configuring it for each world separately
   # if the world is not in this list, the default settings will be used.
