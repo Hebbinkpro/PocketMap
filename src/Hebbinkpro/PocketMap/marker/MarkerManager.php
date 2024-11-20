@@ -100,7 +100,7 @@ class MarkerManager
             return;
         }
 
-        $data = json_decode(file_get_contents($markersFile));
+        $data = json_decode(file_get_contents($markersFile), true);
         foreach ($data as $worldName => $markers) {
             $this->markers[$worldName] = [];
             $this->unloadedMarkers[$worldName] = [];

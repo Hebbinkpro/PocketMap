@@ -24,10 +24,10 @@ use pocketmine\math\Vector3;
 
 class CircleMarker extends PositionMarker
 {
-    private int $radius;
+    private float $radius;
     private LeafletPathOptions $options;
 
-    public function __construct(?string $id, string $name, Vector3 $position, int $radius, ?LeafletPathOptions $options = null)
+    public function __construct(?string $id, string $name, Vector3 $position, float $radius, ?LeafletPathOptions $options = null)
     {
         parent::__construct($id, $name, $position);
         $this->radius = $radius;
