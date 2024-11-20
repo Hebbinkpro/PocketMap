@@ -20,7 +20,6 @@
 namespace Hebbinkpro\PocketMap\commands;
 
 use CortexPE\Commando\BaseCommand;
-use Hebbinkpro\PocketMap\commands\debug\DebugCommand;
 use Hebbinkpro\PocketMap\commands\marker\MarkerCommand;
 use Hebbinkpro\PocketMap\commands\reload\ReloadCommand;
 use Hebbinkpro\PocketMap\commands\render\RenderCommand;
@@ -51,10 +50,5 @@ class PocketMapCommand extends BaseCommand
         $this->registerSubCommand(new RenderCommand($plugin, "render", "Render a region of the world map", ["r"]));
         $this->registerSubCommand(new ReloadCommand($plugin, "reload", "Reload some parts of the plugin", ["rl"]));
         $this->registerSubCommand(new MarkerCommand($plugin, "marker", "Manage map markers", ["m"]));
-
-        // Only register the sub command if debug is enabled
-        if (PocketMap::getSettingsManager()->getPocketMap()->debugEnabled()) {
-            $this->registerSubCommand(new DebugCommand($plugin, "debug", "Execute debug commands"));
-        }
     }
 }
