@@ -78,7 +78,7 @@ class MarkerManager
         $this->icons = [];
         foreach ($icons as $icon) {
             if (!isset($icon["name"])) continue;
-            $this->icons[] = $icons["name"];
+            $this->icons[] = $icon["name"];
         }
 
     }
@@ -278,6 +278,18 @@ class MarkerManager
     {
         unset($this->markers[$world->getFolderName()][$id]);
 
+        if ($store) $this->storeMarkers();
+    }
+
+    /**
+     * Remove all the markers of the given world
+     * @param World $world
+     * @param bool $store
+     * @return void
+     */
+    public function removeMarkersFromWorld(World $world, bool $store = true): void
+    {
+        unset($this->markers[$world->getFolderName()]);
         if ($store) $this->storeMarkers();
     }
 

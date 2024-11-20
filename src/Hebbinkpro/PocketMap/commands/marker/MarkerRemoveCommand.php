@@ -61,6 +61,12 @@ class MarkerRemoveCommand extends BaseSubCommand
 
         $markers = PocketMap::getMarkers();
         if (!$markers->isMarker($world, $id)) {
+            if ($id === "all") {
+                PocketMap::getMarkers()->removeMarkersFromWorld($world);
+                $sender->sendMessage("[PocketMap] All markers from world '{$world->getFolderName()}' have been removed.");
+                return;
+            }
+
             $sender->sendMessage("§cNo marker with id '$id' found");
             return;
         }
