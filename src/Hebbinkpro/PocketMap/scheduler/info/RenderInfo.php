@@ -23,7 +23,6 @@ use Hebbinkpro\PocketMap\region\Region;
 
 class RenderInfo
 {
-    //array{path: string, region: Region}
     private string $path;
     private Region $region;
 

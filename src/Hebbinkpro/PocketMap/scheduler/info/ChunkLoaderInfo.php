@@ -25,18 +25,15 @@ class ChunkLoaderInfo
 {
     private string $path;
     private RegionChunksLoader $loader;
-    private int $mode;
 
     /**
      * @param string $path
      * @param RegionChunksLoader $loader
-     * @param int $mode
      */
-    public function __construct(string $path, RegionChunksLoader $loader, int $mode)
+    public function __construct(string $path, RegionChunksLoader $loader)
     {
         $this->path = $path;
         $this->loader = $loader;
-        $this->mode = $mode;
     }
 
     /**
@@ -53,14 +50,6 @@ class ChunkLoaderInfo
     public function getLoader(): RegionChunksLoader
     {
         return $this->loader;
-    }
-
-    /**
-     * @return int
-     */
-    public function getMode(): int
-    {
-        return $this->mode;
     }
 
 
