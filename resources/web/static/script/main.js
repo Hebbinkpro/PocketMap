@@ -36,11 +36,6 @@ window.addEventListener("load", async () => {
 
     worldConfig = config["worlds"][world] ?? config["default-settings"];
 
-    console.log(config)
-    console.log(urlQuery)
-    console.log(world)
-    console.log(worldConfig)
-
     let mapPos = {
         x: worldConfig.view[0] / 16,
         z: -worldConfig.view[1] / 16,
@@ -55,7 +50,7 @@ window.addEventListener("load", async () => {
         minZoom: worldConfig.zoom[0],
         maxZoom: worldConfig.zoom[1],
         zoomReverse: true,
-        attribution: "&copy; 2023 Hebbinkpro",
+        attribution: "&copy; 2024 Hebbinkpro",
     });
 
     map = L.map("map", {
@@ -232,11 +227,15 @@ function getCoordString(player) {
 }
 
 async function loadMarkers() {
-    let icons = await getMarkerIcons()
-    let worldData = (await getWorlds())[world]
-    let worldSpawnMarker = L.marker(getLatLngPos(worldData["spawn"]), {icon: icons["compass"]})
-    worldSpawnMarker.bindPopup("World Spawn")
-    worldSpawnMarker.addTo(map)
+    let icons = await getMarkerIcons();
+    let worldData = (await getWorlds())[world];
+
+    let spawnMarker = worldConfig["spawnMarker"] ?? "";
+    if (spawnMarker !== "") {
+        let worldSpawnMarker = L.marker(getLatLngPos(worldData["spawn"], 0.5, 0.5), {icon: icons[spawnMarker]})
+        worldSpawnMarker.bindPopup("World Spawn")
+        worldSpawnMarker.addTo(map)
+    }
 
     let req = await fetch(API_URL + "markers");
     let markers = (await req.json())[world];
@@ -252,24 +251,25 @@ async function loadMarkers() {
         let data = marker["data"];
         switch (data["type"]) {
             case "icon":
-                m = L.marker(getLatLngPos(data["pos"], -0.5, 0.5), {icon: icons[data["icon"]]})
+                m = L.marker(getLatLngPos(data["pos"], 0.5, 0.5), {icon: icons[data["icon"]]})
                 break;
             case "circle":
                 // convert radius from blocks to lat lng
                 data["options"]["radius"] /= 16;
-                m = L.circle(getLatLngPos(data["pos"], -0.5, 0.5), data["options"]);
+                m = L.circle(getLatLngPos(data["pos"], 0.5, 0.5), data["options"]);
                 break;
             case "polygon":
                 positions = [];
                 for (let i in data["positions"]) {
-                    positions.push(getLatLngPos(data["positions"][i], -0.5, 0.5));
+                    // dont apply offset to squares
+                    positions.push(getLatLngPos(data["positions"][i]));
                 }
                 m = L.polygon(positions, data["options"])
                 break;
             case "polyline":
                 positions = [];
                 for (let i in data["positions"]) {
-                    positions.push(getLatLngPos(data["positions"][i], -0.5, 0.5));
+                    positions.push(getLatLngPos(data["positions"][i], 0.5, 0.5));
                 }
                 m = L.polyline(positions, data["options"]);
                 break;

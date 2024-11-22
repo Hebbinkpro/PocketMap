@@ -30,7 +30,7 @@ use pocketmine\event\world\WorldLoadEvent;
 use pocketmine\math\Vector3;
 use pocketmine\world\World;
 
-class DebugWorldMarkers extends BaseExtension implements Listener
+class DebugWorldExtension extends BaseExtension implements Listener
 {
 
     private DebugWorld $debugWorld;
@@ -50,7 +50,7 @@ class DebugWorldMarkers extends BaseExtension implements Listener
     public static function getRequiredClasses(): array
     {
         return [
-            DebugWorld::class,
+            DebugWorldExtension::class,
             DebugWorldGenerator::class,
         ];
     }
@@ -63,7 +63,7 @@ class DebugWorldMarkers extends BaseExtension implements Listener
         if (!$this->debugWorld->isDebugWorld($world) || $this->hasDebugWorldMarkers($world)) return;
 
         // register the debug world markers
-        $this->registerDebugWorldMarkers($world);
+        $this->addDebugWorldMarkers($world);
     }
 
     private function hasDebugWorldMarkers(World $world): bool
@@ -72,11 +72,13 @@ class DebugWorldMarkers extends BaseExtension implements Listener
         return $markers->isMarker($world, "debug_0");
     }
 
-    private function registerDebugWorldMarkers(World $world): void
+    private function addDebugWorldMarkers(World $world): void
     {
+        $this->getPlugin()->getLogger()->debug("[Extension] [DebugWorld] Adding markers to debug world '{$world->getFolderName()}'");
+
         $markers = PocketMap::getMarkers();
         // filled marker which is invisible
-        $markerOptions = new LeafletPathOptions(opacity: 1, fill: true, fillOpacity: 0);
+        $markerOptions = new LeafletPathOptions(opacity: 0, fill: true, fillOpacity: 0);
 
         $blocks = array_values(RuntimeBlockStateRegistry::getInstance()->getAllKnownStates());
 

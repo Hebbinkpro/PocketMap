@@ -23,7 +23,7 @@ use CortexPE\Commando\exception\HookAlreadyRegistered;
 use CortexPE\Commando\PacketHooker;
 use Exception;
 use Hebbinkpro\PocketMap\commands\PocketMapCommand;
-use Hebbinkpro\PocketMap\extension\DebugWorldMarkers;
+use Hebbinkpro\PocketMap\extension\DebugWorldExtension;
 use Hebbinkpro\PocketMap\extension\ExtensionManager;
 use Hebbinkpro\PocketMap\marker\MarkerManager;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
@@ -167,7 +167,7 @@ class PocketMap extends PluginBase implements Listener
     protected function onLoad(): void
     {
         $extensions = ExtensionManager::getInstance();
-        $extensions->registerExtension($this, "DebugWorldMarkers", DebugWorldMarkers::class);
+        $extensions->registerExtension($this, "DebugWorldMarkers", DebugWorldExtension::class);
     }
 
     /**
@@ -359,7 +359,7 @@ class PocketMap extends PluginBase implements Listener
 
     public function getMarkersFolder(): string
     {
-        return $this->getDataFolder() . "marker/";
+        return $this->getDataFolder() . "markers/";
     }
 
     public function getTmpFolder(): string
