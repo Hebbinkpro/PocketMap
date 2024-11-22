@@ -56,7 +56,7 @@ class RenderFullCommand extends BaseSubCommand
             return;
         }
 
-        $renderer = PocketMap::getWorldRenderer($world);
+        $renderer = PocketMap::getWorldRenderer($world->getFolderName());
         if ($renderer === null) {
             $sender->sendMessage("§cSomething went wrong");
             return;

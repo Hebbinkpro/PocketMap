@@ -76,14 +76,11 @@ class PocketMap extends PluginBase implements Listener
 
     /**
      * Get a world renderer by its world or the name of the world
-     * @param World|string $world The world or the name of the world
+     * @param string $worldName The world name of the world
      * @return WorldRenderer|null the WorldRenderer or null when it wasn't found
      */
-    public static function getWorldRenderer(World|string $world): ?WorldRenderer
+    public static function getWorldRenderer(string $worldName): ?WorldRenderer
     {
-        if (is_string($world)) $worldName = $world;
-        else $worldName = $world->getFolderName();
-
         return self::$worldRenderers[$worldName] ?? null;
     }
 

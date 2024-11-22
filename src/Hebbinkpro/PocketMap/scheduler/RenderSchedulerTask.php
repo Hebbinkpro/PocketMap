@@ -27,8 +27,9 @@ use Hebbinkpro\PocketMap\render\AsyncChunkRenderTask;
 use Hebbinkpro\PocketMap\render\AsyncRegionRenderTask;
 use Hebbinkpro\PocketMap\render\AsyncRenderTask;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
+use Hebbinkpro\PocketMap\scheduler\info\ChunkLoaderInfo;
+use Hebbinkpro\PocketMap\scheduler\info\RenderInfo;
 use Logger;
-use pocketmine\plugin\PluginBase;
 use pocketmine\scheduler\Task;
 
 class RenderSchedulerTask extends Task
@@ -36,20 +37,17 @@ class RenderSchedulerTask extends Task
     /** @var string[] */
     private static array $unfinishedRenders = [];
     private static Logger $logger;
-    private PluginBase $plugin;
+    private PocketMap $plugin;
     /** @var AsyncRenderTask[] */
     private array $runningRenders;
-    /**
-     * @var array<array{path: string, loader: RegionChunksLoader, mode: int}>
-     * TODO figure out what the mode does...
-     */
+    /** @var ChunkLoaderInfo[] */
     private array $scheduledChunkLoaders;
-    /** @var array<string, array{path: string, region: Region}> */
+    /** @var array<string, RenderInfo> */
     private array $scheduledRenders;
     private int $maxRunningRenders;
     private int $maxScheduled;
 
-    public function __construct(PluginBase $plugin)
+    public function __construct(PocketMap $plugin)
     {
         $this->plugin = $plugin;
         $this->runningRenders = [];
@@ -114,8 +112,8 @@ class RenderSchedulerTask extends Task
         // check if the region is already scheduled
         $scheduled = array_key_exists($region->getName(), $this->scheduledRenders);
 
-        // when the action is not forced, and it isn't already scheduled
-        if (!$force && !$scheduled && count($this->scheduledRenders) >= $this->maxScheduled) return false;
+        // when the action is not forced, and it isn't yet scheduled
+        if (!$force && !$scheduled && sizeof($this->scheduledRenders) >= $this->maxScheduled) return false;
 
         // this render is already scheduled
         if (($replace || !$force) && $scheduled) {
@@ -132,10 +130,7 @@ class RenderSchedulerTask extends Task
         self::$unfinishedRenders[] = $region->getName();
 
         // add the path and region to the queue
-        $this->scheduledRenders[$region->getName()] = [
-            "path" => $path,
-            "region" => $region
-        ];
+        $this->scheduledRenders[$region->getName()] = new RenderInfo($path, $region);
 
         return true;
     }
@@ -159,28 +154,20 @@ class RenderSchedulerTask extends Task
      */
     private function loadRegionChunks(): void
     {
-        $notCompleted = [];
+        foreach (array_keys($this->scheduledChunkLoaders) as $key) {
+            $chunkLoader = $this->scheduledChunkLoaders[$key];
+            $path = $chunkLoader->getPath();
+            $loader = $chunkLoader->getLoader();
 
-        foreach ($this->scheduledChunkLoaders as $rcl) {
-            /** @var string $path */
-            $path = $rcl["path"];
-            /** @var RegionChunksLoader $loader */
-            $loader = $rcl["loader"];
+            // is not completely loaded
+            if (!$loader->run()) continue;
 
-            // is completely loaded
-            if ($loader->run()) {
-                $regionChunks = $loader->getRegionChunks();
-                $this->startChunkRenderTask($regionChunks, $path);
-                continue;
-            }
+            $regionChunks = $loader->getRegionChunks();
+            $this->startChunkRenderTask($regionChunks, $path);
 
-            // add to the not completed list
-            $notCompleted[] = $rcl;
+            // remove loader from the list
+            unset($this->scheduledChunkLoaders[$key]);
         }
-
-        // clear the list and set the contents to the notCompleted regions.
-        unset($this->scheduledChunkLoaders);
-        $this->scheduledChunkLoaders = $notCompleted;
     }
 
     /**
@@ -222,43 +209,35 @@ class RenderSchedulerTask extends Task
      */
     private function runRegionRenders(): void
     {
-        $completed = [];
         // check if the current renders are completed
-        foreach ($this->runningRenders as $i => $render) {
-            // render has ended
-            if ($render->isFinished()) {
-                $completed[] = $i;
-            }
-        }
+        foreach (array_keys($this->runningRenders) as $i) {
+            $render = $this->runningRenders[$i];
 
-        // remove all completed renders
-        foreach ($completed as $i) {
+            // render is not finished
+            if (!$render->isFinished()) continue;
+
+            // remove the finished render
             unset($this->runningRenders[$i]);
         }
 
         $wm = $this->plugin->getServer()->getWorldManager();
         // add new renders until the cap is reached or no new renders are available
-        while ($this->getCurrentRendersCount() < $this->maxRunningRenders && count($this->scheduledRenders) > 0) {
-            $rr = array_shift($this->scheduledRenders);
-            $path = $rr["path"];
-            /** @var Region $region */
-            $region = $rr["region"];
+        while ($this->getCurrentRendersCount() < $this->maxRunningRenders && sizeof($this->scheduledRenders) > 0) {
+            $render = array_shift($this->scheduledRenders);
+            $path = $render->getPath();
+            $region = $render->getRegion();
 
             // if all chunks should be rendered, prepare for the ChunkRenderTask
             if ($region->renderAllChunks()) {
                 $worldName = $region->getWorldName();
                 // the world does not exist (is not loaded and cannot be loaded)
-                if (!$wm->isWorldLoaded($worldName) && !$wm->loadWorld($worldName)) continue;
+                if ($this->plugin->getLoadedWorld($worldName)) continue;
 
                 $world = $wm->getWorldByName($worldName);
                 if ($world === null) continue;
 
                 $loader = new RegionChunksLoader($region, $world->getProvider());
-                $this->scheduledChunkLoaders[] = [
-                    "path" => $path,
-                    "loader" => $loader,
-                    "mode" => 0
-                ];
+                $this->scheduledChunkLoaders[] = new ChunkLoaderInfo($path, $loader, 0);
 
                 continue;
             }

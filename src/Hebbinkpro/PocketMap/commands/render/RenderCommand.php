@@ -72,7 +72,7 @@ class RenderCommand extends BaseSubCommand
                 return;
             }
 
-            $renderer = PocketMap::getWorldRenderer($world);
+            $renderer = PocketMap::getWorldRenderer($world->getFolderName());
             if ($renderer === null) {
                 $sender->sendMessage("§cSomething went wrong");
                 return;
@@ -94,7 +94,7 @@ class RenderCommand extends BaseSubCommand
                 $sender->sendMessage("§cWorld '{$region->getWorldName()}' not found");
                 return;
             }
-            $renderer = PocketMap::getWorldRenderer($world);
+            $renderer = PocketMap::getWorldRenderer($world->getFolderName());
         }
 
         if ($renderer === null) {

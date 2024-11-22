@@ -139,7 +139,7 @@ class WorldRenderer
      */
     public function saveChunk(int $chunkX, int $chunkZ): void
     {
-        // chunk isn't loaded, so it is already saved
+        // the chunk isn't loaded, so it is already saved
         if (!$this->world->isChunkLoaded($chunkX, $chunkZ)) return;
 
         $chunk = $this->world->getChunk($chunkX, $chunkZ);
