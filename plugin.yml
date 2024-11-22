@@ -2,10 +2,11 @@ name: PocketMap
 main: Hebbinkpro\PocketMap\PocketMap
 version: 0.6.1
 api: [ 5.20.0 ]
-load: STARTUP
 author: Hebbinkpro
 description: A dynamic world map for PocketMine-MP
 website: https://github.com/Hebbinkpro/PocketMap
+softdepend:
+  - DebugWorld
 
 permissions:
   pocketmap.cmd:
