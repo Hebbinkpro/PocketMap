@@ -20,6 +20,7 @@
 namespace Hebbinkpro\PocketMap\textures\model;
 
 use Hebbinkpro\PocketMap\utils\block\BlockUtils;
+use pocketmine\block\BaseRail;
 use pocketmine\block\Block;
 use pocketmine\block\Button;
 use pocketmine\block\Crops;
@@ -126,9 +127,9 @@ final class BlockModels
         $this->register(VanillaBlocks::CHORUS_PLANT(), new WallModel()); // it almost looks like the wall model
         $this->register(VanillaBlocks::CHORUS_FLOWER(), new DefaultBlockModel());
 
-
         $this->registerFromBlockType(Stair::class, new DefaultBlockModel()); // TODO height difference
 
+        $this->registerFromBlockType(BaseRail::class, new RailModel());
 
     }
 
@@ -145,7 +146,7 @@ final class BlockModels
 
     /**
      * Register a model for all blocks of the same type
-     * @param string $blockType parent class name
+     * @param class-string<Block> $blockType parent class name
      * @param BlockModel $model
      * @return void
      */

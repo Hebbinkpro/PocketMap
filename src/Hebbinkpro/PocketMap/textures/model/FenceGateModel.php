@@ -31,15 +31,18 @@ class FenceGateModel extends HorizontalFacingModel
      */
     public function getGeometry(Block $block, Chunk $chunk): array
     {
+        $rotation = $this->getRotation($block);
         if ($block instanceof FenceGate && $block->isOpen()) {
             return [
                 [
                     [0, 0],
-                    [2, 9]
+                    [2, 9],
+                    $rotation
                 ],
                 [
                     [14, 0],
-                    [2, 9]
+                    [2, 9],
+                    $rotation
                 ]
             ];
         }
@@ -47,7 +50,8 @@ class FenceGateModel extends HorizontalFacingModel
         return [
             [
                 [0, 7],
-                [16, 2]
+                [16, 2],
+                $rotation
             ]
         ];
     }

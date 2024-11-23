@@ -19,13 +19,17 @@
 
 namespace Hebbinkpro\PocketMap\utils\block;
 
+use pocketmine\block\BaseRail;
 use pocketmine\block\Block;
 use pocketmine\block\BlockTypeIds;
 use pocketmine\block\Button;
 use pocketmine\block\Door;
+use pocketmine\block\Hopper;
 use pocketmine\block\Lever;
+use pocketmine\block\Rail;
 use pocketmine\block\RuntimeBlockStateRegistry;
 use pocketmine\block\SimplePillar;
+use pocketmine\data\bedrock\block\BlockLegacyMetadata;
 use pocketmine\data\bedrock\block\BlockStateData;
 use pocketmine\data\bedrock\block\BlockStateSerializeException;
 use pocketmine\math\Facing;
@@ -99,6 +103,18 @@ final class BlockStateParser
 
         // east is the upper door part
         if ($block instanceof Door) return Facing::EAST;
+
+        // rails are annoying and use "up" for powered or rotated and "down" for the normal texture
+        if ($block instanceof BaseRail) {
+            if ($block instanceof Rail && $block->getShape() >= BlockLegacyMetadata::RAIL_CURVE_SOUTHEAST) {
+                return Facing::UP;
+            } else if (BlockUtils::isPoweredByRedstone($block)) {
+                /** @var Hopper $block */
+                if ($block->isPowered()) return Facing::UP;
+            }
+
+            return Facing::DOWN;
+        }
 
         // the block does not have an axis, default is +Y
         return match ($block->getTypeId()) {

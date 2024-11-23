@@ -44,9 +44,18 @@ abstract class BlockModel
         foreach ($geo as $parts) {
             $srcStart = $parts[0];                  // [x,y] of the part on the texture
             $srcSize = $parts[1];                   // [width, height] of the part on the texture
-            $dstStart = $parts[2] ?? $srcStart;     // [x,y] of the part in the model
-            $dstSize = $parts[3] ?? $srcSize;    // [width, height] of the part in the model
-            $rotation = $parts[4] ?? 0;             // rotation angle in degrees
+
+            if (isset($parts[2]) && is_int($parts[2])) {
+                // rotation is the third argument
+                $dstStart = $srcStart;     // [x,y] of the part in the model
+                $dstSize = $srcSize;    // [width, height] of the part in the model
+                $rotation = $parts[2];             // rotation angle in degrees
+            } else {
+                // default order
+                $dstStart = $parts[2] ?? $srcStart;     // [x,y] of the part in the model
+                $dstSize = $parts[3] ?? $srcSize;    // [width, height] of the part in the model
+                $rotation = $parts[4] ?? 0;             // rotation angle in degrees
+            }
 
             if ($rotation != 0) {
                 // time to rotate

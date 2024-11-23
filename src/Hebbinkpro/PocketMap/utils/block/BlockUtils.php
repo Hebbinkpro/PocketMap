@@ -26,6 +26,7 @@ use pocketmine\block\Chest;
 use pocketmine\block\Fence;
 use pocketmine\block\FenceGate;
 use pocketmine\block\Thin;
+use pocketmine\block\Torch;
 use pocketmine\block\utils\AnyFacingTrait;
 use pocketmine\block\utils\ColoredTrait;
 use pocketmine\block\utils\HorizontalFacingTrait;
@@ -115,7 +116,7 @@ class BlockUtils
 
     public static function hasHorizontalFacing(Block $block): bool
     {
-        if ($block->getTypeId() == BlockTypeIds::TORCH) return true;
+        if ($block instanceof Torch) return true;
         return in_array(HorizontalFacingTrait::class, self::getTraits($block), true);
     }
 
@@ -252,7 +253,7 @@ class BlockUtils
      * @param Block $block
      * @return bool
      */
-    public static function isRedstoneActivated(Block $block): bool
+    public static function isPoweredByRedstone(Block $block): bool
     {
         return self::hasTrait($block, PoweredByRedstoneTrait::class);
     }

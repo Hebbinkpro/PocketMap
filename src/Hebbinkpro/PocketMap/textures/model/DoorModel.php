@@ -31,13 +31,13 @@ class DoorModel extends HorizontalFacingModel
     {
         if (!($block instanceof Door)) return parent::getRotation($block);
 
-        $open = $block->isOpen() ? ($block->isHingeRight() ? 90 : -90) : 0;
+        $open = $block->isOpen() ? ($block->isHingeRight() ? -90 : 90) : 0;
 
         return match ($block->getFacing()) {
-            Facing::NORTH => 270 + $open,
-            Facing::EAST => 180 + $open,
-            Facing::SOUTH => 90 + $open,
-            default => $open, // Facing::WEST
+            Facing::NORTH => 90 + $open,
+            Facing::WEST => 180 + $open,
+            Facing::SOUTH => 270 + $open,
+            default => $open, // Facing::EAST
         };
     }
 
@@ -46,7 +46,8 @@ class DoorModel extends HorizontalFacingModel
         return [
             [
                 [0, 0],
-                [16, 3]
+                [16, 3],
+                $this->getRotation($block)
             ]
         ];
     }

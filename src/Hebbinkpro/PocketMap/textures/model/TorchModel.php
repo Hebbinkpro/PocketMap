@@ -29,6 +29,7 @@ class TorchModel extends HorizontalFacingModel
 
     public function getGeometry(Block $block, Chunk $chunk): array
     {
+        $rotation = $this->getRotation($block);
         if ($block instanceof Torch) {
             $facing = $block->getFacing();
 
@@ -38,14 +39,17 @@ class TorchModel extends HorizontalFacingModel
                     [
                         [7, 6], // start
                         [2, 2], // size
-                        [7, 11]  // dest
+                        [7, 11],  // dest
+                        [2, 2], // size
+                        $rotation
                     ],
                     // stick
                     [
                         [7, 8],
                         [2, 8],
                         [7, 13],
-                        [2, 3]
+                        [2, 3],
+                        $rotation
                     ]
                 ];
             }
@@ -56,7 +60,7 @@ class TorchModel extends HorizontalFacingModel
             [
                 [7, 6], // start
                 [2, 2], // size
-                [7, 7]  // dest
+                [7, 7],  // dest
             ]
         ];
     }
