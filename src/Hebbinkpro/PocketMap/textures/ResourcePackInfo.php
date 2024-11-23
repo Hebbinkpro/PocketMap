@@ -38,7 +38,7 @@ class ResourcePackInfo implements JsonSerializable
 
     public static function fromArray(array $data): self
     {
-        return new self($data["uuid"], $data["file"], $data["version"], $data["hash"]);
+        return new self($data["uuid"], $data["file"], $data["version"], $data["sha256"]);
     }
 
     /**

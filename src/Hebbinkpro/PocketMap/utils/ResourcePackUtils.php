@@ -49,7 +49,6 @@ class ResourcePackUtils
 
         $prefix = ResourcePackUtils::getPrefix($archive);
         if ($prefix === null) return false;
-        var_dump($prefix);
 
         // extract all json files
         $toExtract = [
@@ -71,11 +70,8 @@ class ResourcePackUtils
             }
         }
 
-        var_dump($toExtract);
-
         // extract all files
-        $res = $archive->extractTo($rpPath, $toExtract);
-        var_dump($res);
+        $archive->extractTo($rpPath, $toExtract);
 
         $archive->close();
         return true;

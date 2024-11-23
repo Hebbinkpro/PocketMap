@@ -80,7 +80,7 @@ window.addEventListener("load", async () => {
     }
 
     map.addEventListener("mousemove", (e) => {
-        let x = Math.ceil(e.latlng.lng * 16);
+        let x = Math.floor(e.latlng.lng * 16);
         let z = -Math.ceil(e.latlng.lat * 16);
 
         mousePosElements.x.innerText = `${x}`;
@@ -88,7 +88,7 @@ window.addEventListener("load", async () => {
     });
 
     map.addEventListener("click", (e) => {
-        let x = Math.ceil(e.latlng.lng * 16);
+        let x = Math.floor(e.latlng.lng * 16);
         let z = -Math.ceil(e.latlng.lat * 16);
 
         urlQuery.set("world", world);
