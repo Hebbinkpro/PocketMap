@@ -196,9 +196,9 @@ class RenderSchedulerTask extends Task
         $this->plugin->getServer()->getAsyncPool()->submitTask($task);
 
         // only log it for the region with the max zoom, otherwise the console is spammed
-        if ($region->getZoom() == WorldRenderer::MAX_ZOOM) {
+//        if ($region->getZoom() == WorldRenderer::MAX_ZOOM) {
             self::$logger->debug("[Scheduler] Started render of region: " . $region->getName());
-        }
+//        }
     }
 
     /**
@@ -230,14 +230,13 @@ class RenderSchedulerTask extends Task
             // if all chunks should be rendered, prepare for the ChunkRenderTask
             if ($region->renderAllChunks()) {
                 $worldName = $region->getWorldName();
-                // the world does not exist (is not loaded and cannot be loaded)
-                if ($this->plugin->getLoadedWorld($worldName)) continue;
+                if (!$wm->isWorldLoaded($worldName) && !$wm->loadWorld($worldName)) continue;
 
                 $world = $wm->getWorldByName($worldName);
                 if ($world === null) continue;
 
                 $loader = new RegionChunksLoader($region, $world->getProvider());
-                $this->scheduledChunkLoaders[] = new ChunkLoaderInfo($path, $loader, 0);
+                $this->scheduledChunkLoaders[] = new ChunkLoaderInfo($path, $loader);
 
                 continue;
             }

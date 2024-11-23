@@ -49,8 +49,9 @@ class ResourcePackTextures
     }
 
     /**
-     * Get a list of all textures inside the /textures/blocks path of the resource pack
-     * @return void a list of all the available blocks. [<name> => /textures/blocks/<name>, ...]
+     * Generate a list of all textures inside the /textures/blocks path of the resource pack
+     * a list of all the available blocks. [<name> => /textures/blocks/<name>, ...]
+     * @return void
      */
     private function loadTextures(string $path, string $prefix): void
     {

@@ -37,15 +37,14 @@ class TerrainTextures extends ResourcePackTextures
     private string $path;
     private TerrainTexturesOptions $options;
 
-    /** @var array{vanilla?: string, resource_packs?: array<string, array{uuid: string, file: string, version: string, sha256: string}>} */
-    private array $packs;
+    private ResourcePacksInfo $packs;
 
     private function __construct(string $path, TerrainTexturesOptions $options)
     {
         parent::__construct();
         $this->path = $path;
         $this->options = $options;
-        $this->packs = [];
+        $this->packs = new ResourcePacksInfo();
     }
 
     /**
@@ -64,7 +63,7 @@ class TerrainTextures extends ResourcePackTextures
         if ($packs === null) return null;
 
         // pack list does not exist
-        if ($lastTerrainTextures === null || $lastTerrainTextures->getPacks() !== $packs) {
+        if ($lastTerrainTextures === null || $lastTerrainTextures->getPacks()->equals($packs)) {
             $textures->indexBlocks($packs);
         }
 
@@ -106,7 +105,7 @@ class TerrainTextures extends ResourcePackTextures
             return false;
         }
 
-        $this->packs = $contents["packs"];
+        $this->packs = ResourcePacksInfo::fromArray($contents["packs"]);
         $this->textures = $contents["textures"];
         $this->terrainTextures = $contents["terrain_textures"];
         $this->blocks = $contents["blocks"];
@@ -118,14 +117,14 @@ class TerrainTextures extends ResourcePackTextures
      * Extract all resource packs inside the server's resource_packs folder
      * @param ResourcePackManager $manager
      * @param TerrainTextures|null $lastTerrainTextures
-     * @return null|array{vanilla: string, resource_packs: array<string, array{uuid: string, file: string, version: string, sha256: string}>}
+     * @return null|ResourcePacksInfo
      */
-    private function getAllResourcePacks(ResourcePackManager $manager, ?TerrainTextures $lastTerrainTextures = null): ?array
+    private function getAllResourcePacks(ResourcePackManager $manager, ?TerrainTextures $lastTerrainTextures = null): ?ResourcePacksInfo
     {
         if (!is_dir($this->path)) mkdir($this->path);
 
         $lastLoaded = [];
-        if ($lastTerrainTextures !== null) $lastLoaded = $lastTerrainTextures->getPacks()["resource_packs"] ?? [];
+        if ($lastTerrainTextures !== null) $lastLoaded = $lastTerrainTextures->getPacks()->getResourcePacks() ?? [];
 
         $loaded = [];
 
@@ -135,18 +134,12 @@ class TerrainTextures extends ResourcePackTextures
             $uuid = $pack->getPackId();
             if (!$pack instanceof ZippedResourcePack) continue;
 
-            $key = $manager->getPackEncryptionKey($uuid);
-
             $filePath = explode("/", $pack->getPath());
+            $file = $filePath[array_key_last($filePath)];
+            $hash = mb_convert_encoding($pack->getSha256(), "UTF-8", "ISO-8859-1");
 
-            $sha256 = $pack->getSha256();
+            $info = new ResourcePackInfo($uuid, $file, $pack->getPackVersion(), $hash);
 
-            $info = [
-                "uuid" => $pack->getPackId(),
-                "file" => $filePath[array_key_last($filePath)],
-                "version" => $pack->getPackVersion(),
-                "sha256" => mb_convert_encoding($sha256, "UTF-8", "ISO-8859-1")
-            ];
 
             // this pack is already loaded in a previous startup
             if (in_array($info, $lastLoaded, true)) {
@@ -154,6 +147,7 @@ class TerrainTextures extends ResourcePackTextures
                 continue;
             }
 
+            $key = $manager->getPackEncryptionKey($uuid);
             if (ResourcePackUtils::extractResourcePack($this->path, $pack, $key)) {
                 $loaded[$uuid] = $info;
             }
@@ -171,16 +165,13 @@ class TerrainTextures extends ResourcePackTextures
             if (!array_key_exists($file, $loaded)) Filesystem::recursiveUnlink($path);
         }
 
-        return [
-            "vanilla" => PocketMap::RESOURCE_PACK_NAME,
-            "resource_packs" => $loaded
-        ];
+        return new ResourcePacksInfo(PocketMap::RESOURCE_PACK_NAME, $loaded);
     }
 
     /**
-     * @return array{vanilla?: string, resource_packs?: array<string, array{uuid: string, file: string, version: string, sha256: string}>}
+     * @return ResourcePacksInfo
      */
-    public function getPacks(): array
+    public function getPacks(): ResourcePacksInfo
     {
         return $this->packs;
     }
@@ -195,16 +186,16 @@ class TerrainTextures extends ResourcePackTextures
 
 
     /**
-     * @param array{vanilla: string, resource_packs: array<string, array{uuid: string, file: string, version: string, sha256: string}>} $packs
+     * @param ResourcePacksInfo $packs
      * @return void
      */
-    private function indexBlocks(array $packs): void
+    private function indexBlocks(ResourcePacksInfo $packs): void
     {
         // load the vanilla textures
         $textures = ResourcePackTextures::getFromPath($this->path . PocketMap::RESOURCE_PACK_NAME . "/");
 
-        foreach ($packs["resource_packs"] as $packInfo) {
-            $uuid = $packInfo["uuid"];
+        foreach ($packs->getResourcePacks() as $packInfo) {
+            $uuid = $packInfo->getUuid();
 
             // get the textures inside the pack
             $packTextures = ResourcePackTextures::getFromPath($this->path . $uuid . "/", $uuid);
@@ -215,7 +206,7 @@ class TerrainTextures extends ResourcePackTextures
 
         // generate the block index structure
         $terrainTextures = [
-            "packs" => $packs,
+            "packs" => $packs->jsonSerialize(),
             "textures" => $textures->getTextures(),
             "terrain_textures" => $textures->getTerrainTextures(),
             "blocks" => $textures->getBlocks()
