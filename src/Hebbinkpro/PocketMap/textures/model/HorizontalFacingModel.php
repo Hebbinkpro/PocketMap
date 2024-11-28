@@ -24,29 +24,8 @@ use pocketmine\block\Block;
 use pocketmine\block\FenceGate;
 use pocketmine\math\Facing;
 
-abstract class HorizontalFacingModel extends BlockModel
+class HorizontalFacingModel extends RotatedBlockModel
 {
-
-//    public function getModelTexture(Block $block, Chunk $chunk, GdImage $texture): ?GdImage
-//    {
-//        $model = parent::getModelTexture($block, $chunk, $texture);
-//        if ($model === null) return null;
-//
-//        $rotation = $this->getRotation($block);
-//        if ($rotation != 0) {
-//            $color = imagecolorallocatealpha($model, 0, 0, 0, 127);
-//            if ($color === false) return $model;
-//            // rotate the model
-//            $rotated = imagerotate($model, $rotation, $color);
-//            imagedestroy($model);
-//
-//            if ($rotated === false) return $model;
-//            $model = $rotated;
-//        }
-//
-//        return $model;
-//    }
-
     public function getRotation(Block $block): int
     {
         if (!BlockUtils::hasHorizontalFacing($block)) return 0;

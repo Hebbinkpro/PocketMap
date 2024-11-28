@@ -26,11 +26,14 @@ use pocketmine\block\Candle;
 use pocketmine\block\ChemistryTable;
 use pocketmine\block\CoralBlock;
 use pocketmine\block\Crops;
+use pocketmine\block\DaylightSensor;
 use pocketmine\block\Door;
 use pocketmine\block\DoublePitcherCrop;
 use pocketmine\block\DoublePlant;
 use pocketmine\block\DyedCandle;
+use pocketmine\block\Farmland;
 use pocketmine\block\FloorBanner;
+use pocketmine\block\Hopper;
 use pocketmine\block\Leaves;
 use pocketmine\block\PitcherCrop;
 use pocketmine\block\RedMushroomBlock;
@@ -75,6 +78,11 @@ final class BlockDataValues
 
             // return the id of the color
             return self::getColorDataValue($color);
+        }
+
+        if (BlockUtils::isPoweredByRedstone($block)) {
+            /** @var Hopper $block */
+            return intval($block->isPowered());
         }
 
         // go through the switch to get the correct data values
@@ -124,6 +132,13 @@ final class BlockDataValues
 
             case CoralBlock::class:
                 return self::getCoralDataValue($block->getCoralType());
+
+            case Farmland::class:
+                if ($block->getWetness() > 0) return 0;
+                return 1;
+
+            case DaylightSensor::class:
+                return intval($block->isInverted());
 
             default:
                 return 0;

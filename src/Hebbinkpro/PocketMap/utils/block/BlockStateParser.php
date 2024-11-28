@@ -81,14 +81,14 @@ final class BlockStateParser
      */
     public static function getBlockFace(Block $block): int
     {
+        // lever returns LeverFacing instead of int
+        if ($block instanceof Lever) {
+            return $block->getFacing()->getFacing();
+        }
 
         // the block uses the AnyFacingTrait
         if (BlockUtils::hasAnyFacing($block)) {
-            // lever returns LeverFacing instead of int
-            if ($block instanceof Lever) {
-                return $block->getFacing()->getFacing();
-            }
-
+            // TODO warning, IF a block has multiple textures for different faces this code can break the texture
             /** @var Button $block */
             return $block->getFacing();
         }

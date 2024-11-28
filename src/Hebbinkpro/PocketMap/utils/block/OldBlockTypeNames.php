@@ -33,6 +33,10 @@ final class OldBlockTypeNames
     public const DOUBLE_WOODEN_SLAB = "minecraft:double_wooden_slab";
     public const GRASS = "minecraft:grass";
 
+    // this is not an old type name, but used instead to easily get the anvil top textures
+    public const ANVIL = "minecraft:anvil_top_damaged_x";
+
+
     /**
      * Get the type name of a block.
      * If the type name has an old type name, the old type name will be returned,

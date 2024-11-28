@@ -19,11 +19,42 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
+use GdImage;
 use pocketmine\block\Block;
 use pocketmine\world\format\Chunk;
 
-class FullBlockModel extends BlockModel
+abstract class RotatedBlockModel extends BlockModel
 {
+
+    public function getModelTexture(Block $block, Chunk $chunk, GdImage $texture): ?GdImage
+    {
+        // construct the original texture
+        $texture = parent::getModelTexture($block, $chunk, $texture);
+        if ($texture === null) return null;
+
+        // rotate the resulting texture
+        $rotation = $this->getRotation($block);
+        if ($rotation != 0) {
+            // convert clockwise to anti-clockwise rotation and make sure it is between 0 and 360
+            $rotation = (360 - $rotation) % 360;
+
+            // rotate the texture
+            $texture = imagerotate($texture, $rotation, 0);
+        }
+
+        return $texture;
+    }
+
+    /**
+     * Get the rotation of the block model
+     * @param Block $block
+     * @return int
+     */
+    public abstract function getRotation(Block $block): int;
+
+    /**
+     * @inheritDoc
+     */
     public function getGeometry(Block $block, Chunk $chunk): array
     {
         return [

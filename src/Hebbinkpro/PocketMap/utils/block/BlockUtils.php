@@ -32,6 +32,7 @@ use pocketmine\block\utils\ColoredTrait;
 use pocketmine\block\utils\HorizontalFacingTrait;
 use pocketmine\block\utils\PillarRotationTrait;
 use pocketmine\block\utils\PoweredByRedstoneTrait;
+use pocketmine\block\utils\RailPoweredByRedstoneTrait;
 use pocketmine\block\utils\SignLikeRotationTrait;
 use pocketmine\block\utils\SupportType;
 use pocketmine\block\Wall;
@@ -255,6 +256,6 @@ class BlockUtils
      */
     public static function isPoweredByRedstone(Block $block): bool
     {
-        return self::hasTrait($block, PoweredByRedstoneTrait::class);
+        return self::hasTrait($block, PoweredByRedstoneTrait::class) || self::hasTrait($block, RailPoweredByRedstoneTrait::class);
     }
 }

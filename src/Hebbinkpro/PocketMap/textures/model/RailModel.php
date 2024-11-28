@@ -23,33 +23,13 @@ use pocketmine\block\Block;
 use pocketmine\block\Rail;
 use pocketmine\block\StraightOnlyRail;
 use pocketmine\data\bedrock\block\BlockLegacyMetadata;
-use pocketmine\world\format\Chunk;
 
-class RailModel extends BlockModel
+class RailModel extends RotatedBlockModel
 {
-
     /**
      * @inheritDoc
      */
-    public function getGeometry(Block $block, Chunk $chunk): array
-    {
-
-        $rotation = $this->getShapeRotation($block);
-        return [
-            [
-                [0, 0],
-                [16, 16],
-                $rotation
-            ]
-        ];
-    }
-
-    /**
-     * Get the image rotation from the rail shape
-     * @param Block $block
-     * @return int
-     */
-    public function getShapeRotation(Block $block): int
+    public function getRotation(Block $block): int
     {
         $shape = BlockLegacyMetadata::RAIL_STRAIGHT_NORTH_SOUTH;
         if ($block instanceof Rail || $block instanceof StraightOnlyRail) $shape = $block->getShape();
