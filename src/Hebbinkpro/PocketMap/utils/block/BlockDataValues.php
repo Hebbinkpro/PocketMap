@@ -34,13 +34,11 @@ use pocketmine\block\DyedCandle;
 use pocketmine\block\Farmland;
 use pocketmine\block\FloorBanner;
 use pocketmine\block\Hopper;
-use pocketmine\block\Leaves;
 use pocketmine\block\PitcherCrop;
 use pocketmine\block\RedMushroomBlock;
 use pocketmine\block\TorchflowerCrop;
 use pocketmine\block\utils\CoralType;
 use pocketmine\block\utils\DyeColor;
-use pocketmine\block\utils\LeavesType;
 use pocketmine\block\utils\WoodType;
 use pocketmine\block\WallBanner;
 use pocketmine\block\WoodenDoor;
@@ -118,9 +116,6 @@ final class BlockDataValues
 
                 return self::getDoublePlantDataValue($block->getTypeId());
 
-            case Leaves::class:
-                return self::getLeavesDataValue($block->getLeavesType());
-
             case RedMushroomBlock::class:
                 /** @var int|null $state */
                 $state = BlockStateParser::getStateValue($bsd, BSN::HUGE_MUSHROOM_BITS);
@@ -195,24 +190,6 @@ final class BlockDataValues
             BlockTypeIds::FERN => 3,
             BlockTypeIds::ROSE_BUSH => 4, // ROSE
             BlockTypeIds::PEONY => 5, // PAEONIA
-            default => 0
-        };
-    }
-
-    /**
-     * Get the leave's type data value
-     * @param LeavesType $wood
-     * @return int
-     */
-    public static function getLeavesDataValue(LeavesType $wood): int
-    {
-        return match ($wood) {
-            LeavesType::OAK => 0,
-            LeavesType::SPRUCE => 1,
-            LeavesType::BIRCH => 2,
-            LeavesType::JUNGLE => 3,
-            LeavesType::ACACIA => 0,
-            LeavesType::DARK_OAK => 1,
             default => 0
         };
     }

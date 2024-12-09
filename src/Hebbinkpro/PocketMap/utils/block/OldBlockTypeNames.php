@@ -26,16 +26,7 @@ use pocketmine\data\bedrock\block\BlockTypeNames as BTN;
  */
 final class OldBlockTypeNames
 {
-    public const LEAVES = "minecraft:leaves";
-    public const LEAVES2 = "minecraft:leaves2";
-    public const WOOD = "minecraft:wood";
-    public const WOODEN_SLAB = "minecraft:wooden_slab";
-    public const DOUBLE_WOODEN_SLAB = "minecraft:double_wooden_slab";
     public const GRASS = "minecraft:grass";
-
-    // this is not an old type name, but used instead to easily get the anvil top textures
-    public const ANVIL = "minecraft:anvil_top_damaged_x";
-
 
     /**
      * Get the type name of a block.
@@ -50,10 +41,6 @@ final class OldBlockTypeNames
         // other type names that should be converted, or return the type name by default
         return match ($typeName) {
             // leaves are still split between leaves and leaves2
-            BTN::OAK_LEAVES, BTN::BIRCH_LEAVES, BTN::SPRUCE_LEAVES, BTN::JUNGLE_LEAVES
-            => self::LEAVES,
-            BTN::ACACIA_LEAVES, BTN::DARK_OAK_LEAVES
-            => self::LEAVES2,
 
             // grass_block is named grass
             BTN::GRASS_BLOCK => self::GRASS,
