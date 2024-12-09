@@ -59,7 +59,7 @@ class EventListener implements Listener
         $this->plugin->getLogger()->debug("Created renderer for world: " . $e->getWorld()->getFolderName());
 
         if (!is_dir($renderer->getRenderPath())) {
-            $this->plugin->getLogger()->warning("Could not create renderer for world: " . $e->getWorld()->getFolderName() . ". No directory found.");
+            $this->plugin->getLogger()->warning("Could not create renderer for world '" . $e->getWorld()->getFolderName() . "'. No directory found.");
             $this->plugin->removeWorldRenderer($e->getWorld());
             return;
         }
@@ -91,7 +91,7 @@ class EventListener implements Listener
         // get the world renderer
         $renderer = PocketMap::getWorldRenderer($world->getFolderName());
         if ($renderer === null) {
-            $this->plugin->getLogger()->debug("Renderer of world: {$world->getFolderName()} not found!");
+            $this->plugin->getLogger()->debug("Renderer of world '{$world->getFolderName()}' not found!");
             return;
         }
 

@@ -32,7 +32,6 @@ use pocketmine\world\World;
 
 class DebugWorldExtension extends BaseExtension implements Listener
 {
-
     private DebugWorld $debugWorld;
 
 
@@ -62,14 +61,31 @@ class DebugWorldExtension extends BaseExtension implements Listener
         // no debug world, or world already has debug markers
         if (!$this->debugWorld->isDebugWorld($world) || $this->hasDebugWorldMarkers($world)) return;
 
+        // load all chunks of the debug world grid
+        // this will make PocketMap render the complete grid without having to join the server
+        $this->loadGridChunks($world);
+
         // register the debug world markers
         $this->addDebugWorldMarkers($world);
+
     }
 
     private function hasDebugWorldMarkers(World $world): bool
     {
         $markers = PocketMap::getMarkers();
         return $markers->isMarker($world, "debug_0");
+    }
+
+    /**
+     * Get the size of the debug world grid
+     * @return int
+     */
+    public static function getDebugWorldGridSize(): int
+    {
+        $states = sizeof(RuntimeBlockStateRegistry::getInstance()->getAllKnownStates());
+
+        // get the grid size
+        return (int)ceil(sqrt($states));
     }
 
     private function addDebugWorldMarkers(World $world): void
@@ -81,10 +97,7 @@ class DebugWorldExtension extends BaseExtension implements Listener
         $markerOptions = new LeafletPathOptions(opacity: 0, fill: true, fillOpacity: 0);
 
         $blocks = array_values(RuntimeBlockStateRegistry::getInstance()->getAllKnownStates());
-
-        // get the grid size
-        $states = sizeof($blocks);
-        $size = (int)ceil(sqrt($states));
+        $size = self::getDebugWorldGridSize();
 
         foreach ($blocks as $i => $block) {
             $state = $block->getStateId();
@@ -107,6 +120,33 @@ class DebugWorldExtension extends BaseExtension implements Listener
 
         // store the makers when we are finished
         $markers->storeMarkers();
+    }
+
+    /**
+     * Load all chunks of the debug world grid
+     * @param World $world
+     * @return void
+     */
+    private function loadGridChunks(World $world): void
+    {
+        $size = self::getDebugWorldGridSize();
+
+        $plugin = $this->getPlugin();
+        // divide by 8 since there are 8x8 blocks inside a debug grid chunk
+        for ($x = 0; $x <= ceil($size / 8); $x++) {
+            for ($z = 0; $z <= ceil($size / 8); $z++) {
+                if ($world->loadChunk($x, $z) !== null) continue;
+
+                // generate the chunk
+                $world->orderChunkPopulation($x, $z, null)->onCompletion(
+                    static function () use ($plugin, $x, $z, $world): void {
+                        $plugin->getLogger()->debug("Generated chunk $x,$z of world '{$world->getFolderName()}'");
+                    },
+                    static function (): void {
+                        //NOOP: we don't care if the world was unloaded
+                    });
+            }
+        }
     }
 
     /**
