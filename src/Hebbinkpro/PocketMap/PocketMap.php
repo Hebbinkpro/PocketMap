@@ -53,7 +53,7 @@ class PocketMap extends PluginBase implements Listener
     public const CONFIG_VERSION = 1.8;
     public const WEB_VERSION = 1.3;
 
-    public const RESOURCE_PACK_NAME = "v1.21.40";
+    public const RESOURCE_PACK_NAME = "v1.21.50";
     public const TEXTURE_SIZE = 16;
 
     public const IGNORED_TEXTURES = [
@@ -128,6 +128,8 @@ class PocketMap extends PluginBase implements Listener
     public function createWorldRenderer(World $world): WorldRenderer
     {
         $path = $this->getDataFolder() . "renders/" . $world->getFolderName() . "/";
+        if (!is_dir($path)) mkdir($path);
+
         $renderer = new WorldRenderer($world, $this->getTerrainTextures(), $path, $this->getRenderScheduler(), $this->chunkScheduler);
         self::$worldRenderers[$world->getFolderName()] = $renderer;
         return $renderer;
