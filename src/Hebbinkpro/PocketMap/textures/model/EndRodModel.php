@@ -19,59 +19,52 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
+use pocketmine\block\Block;
+use pocketmine\block\EndRod;
 use pocketmine\math\Facing;
+use pocketmine\world\format\Chunk;
 
 class EndRodModel extends AnyFacingModel
 {
-    public function getSideFacing(): array
-    {
-        return [
-            Facing::NORTH,
-            Facing::EAST,
-            Facing::SOUTH,
-            Facing::WEST
-        ];
-    }
 
-    public function getTopGeometry(int $facing): array
+    public function getGeometry(Block $block, Chunk $chunk): array
     {
-        $geo = [
-            // 4x4 bottom
-            [
-                [2, 3],
-                [4, 4],
-                [6, 6]
-            ],
+        if (!$block instanceof EndRod) return parent::getGeometry($block, $chunk);
+
+        // 4x4 bottom
+        $bottom = [
+            [2, 3],
+            [4, 4],
+            [6, 6]
         ];
 
-        if ($facing == Facing::UP) {
-            // 2x2 top
-            $geo[] = [
-                [2, 0],
-                [2, 2],
-                [7, 7]
-            ];
-        }
-
-        return $geo;
-    }
-
-    public function getSideGeometry(int $facing): array
-    {
-        return [
-            // 4x1 bottom
-            [
-                [2, 2],
-                [4, 1],
-                [6, 15]
+        return match ($block->getFacing()) {
+            Facing::DOWN => [
+                $bottom
             ],
-            // 2x15 rod
-            [
-                [0, 0],
-                [2, 15],
-                [7, 0]
+            Facing::UP => [
+                $bottom,
+                // 2x2 top
+                [
+                    [2, 0],
+                    [2, 2],
+                    [7, 7]
+                ]
+            ],
+            default => [
+                // 4x1 bottom
+                [
+                    [2, 2],
+                    [4, 1],
+                    [6, 15]
+                ],
+                // 2x15 rod
+                [
+                    [0, 0],
+                    [2, 15],
+                    [7, 0]
+                ]
             ]
-        ];
+        };
     }
-
 }

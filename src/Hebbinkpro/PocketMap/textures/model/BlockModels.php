@@ -35,7 +35,11 @@ use pocketmine\block\Sapling;
 use pocketmine\block\Stair;
 use pocketmine\block\Thin;
 use pocketmine\block\Torch;
+use pocketmine\block\utils\AnyFacingTrait;
+use pocketmine\block\utils\FacesOppositePlacingPlayerTrait;
 use pocketmine\block\utils\HorizontalFacingTrait;
+use pocketmine\block\utils\MultiAnyFacingTrait;
+use pocketmine\block\utils\MultiAnySupportTrait;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\block\Wall;
 use pocketmine\utils\SingletonTrait;
@@ -102,7 +106,6 @@ final class BlockModels
         $this->register(VanillaBlocks::CHEST(), new DefaultBlockModel()); // TODO double chests
         $this->register(VanillaBlocks::TRAPPED_CHEST(), new DefaultBlockModel());
         $this->register(VanillaBlocks::ENDER_CHEST(), new DefaultBlockModel());
-        $this->register(VanillaBlocks::BARREL(), new DefaultBlockModel());
         $this->register(VanillaBlocks::CAKE(), new DefaultBlockModel());
         $this->register(VanillaBlocks::CAKE_WITH_CANDLE(), new DefaultBlockModel());
         $this->register(VanillaBlocks::CAKE_WITH_DYED_CANDLE(), new DefaultBlockModel());
@@ -112,6 +115,7 @@ final class BlockModels
         $this->register(VanillaBlocks::SEA_PICKLE(), new SeaPickleModel());
         $this->register(VanillaBlocks::CHORUS_PLANT(), new WallModel()); // it almost looks like the wall model
         $this->register(VanillaBlocks::CHORUS_FLOWER(), new DefaultBlockModel());
+        $this->register(VanillaBlocks::LIGHTNING_ROD(), new LightningRodModel());
 
         // register block types
         $this->registerClass(Fence::class, new FenceModel());
@@ -131,6 +135,10 @@ final class BlockModels
 
         // register traits
         $this->registerTrait(HorizontalFacingTrait::class, new HorizontalFacingModel());
+        $this->registerTrait(FacesOppositePlacingPlayerTrait::class, new HorizontalFacingModel());
+        $this->registerTrait(AnyFacingTrait::class, new AnyFacingModel());
+        $this->registerTrait(MultiAnyFacingTrait::class, new MultiAnyFacingModel());
+        $this->registerTrait(MultiAnySupportTrait::class, new MultiAnyFacingModel());
     }
 
     /**
@@ -198,7 +206,6 @@ final class BlockModels
     public function getByTrait(Block $block): ?BlockModel
     {
         $traits = BlockUtils::getTraits($block);
-//        var_dump($block->getName() . ": ", $traits);
 
         foreach ($traits as $trait) {
             // Return the first matching trait. If this is not desired, register the block.

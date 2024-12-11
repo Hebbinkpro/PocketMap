@@ -41,7 +41,7 @@ class CrossModel extends BlockModel
         $modelTexture = TextureUtils::getEmptyTexture();
         if ($modelTexture === false) return null;
 
-        $colors = $this->getTopColors($texture);
+        $colors = TextureUtils::getTopColors($texture);
         $size = PocketMap::TEXTURE_SIZE - 1;
 
         // skip the corners, otherwise these textures are dominant in larger zoom levels
@@ -60,30 +60,5 @@ class CrossModel extends BlockModel
         return $modelTexture;
     }
 
-    /**
-     * @param GdImage $texture
-     * @return array<int>
-     */
-    public function getTopColors(GdImage $texture): array
-    {
-        $colors = [];
-        for ($x = 0; $x < PocketMap::TEXTURE_SIZE; $x++) {
-            $color = imagecolorallocatealpha($texture, 0, 0, 0, 127);
-            if ($color === false) continue;
 
-            for ($y = 0; $y < PocketMap::TEXTURE_SIZE; $y++) {
-                $c = imagecolorat($texture, $x, $y);
-                if ($c === false) continue;
-
-                $index = imagecolorsforindex($texture, $c);
-                if ($index["alpha"] < 127) {
-                    $color = $c;
-                    break;
-                }
-            }
-            $colors[] = $color;
-        }
-
-        return $colors;
-    }
 }

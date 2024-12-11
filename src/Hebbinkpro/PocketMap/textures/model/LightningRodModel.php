@@ -19,30 +19,48 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
-
 use pocketmine\block\Block;
-use pocketmine\block\Button;
+use pocketmine\block\LightningRod;
 use pocketmine\math\Facing;
 use pocketmine\world\format\Chunk;
 
-class ButtonModel extends AnyFacingModel
+class LightningRodModel extends AnyFacingModel
 {
     public function getGeometry(Block $block, Chunk $chunk): array
     {
-        if (!$block instanceof Button) return parent::getGeometry($block, $chunk);
+        if (!$block instanceof LightningRod) return parent::getGeometry($block, $chunk);
 
-        $facing = $block->getFacing();
-        return match ($facing) {
-            Facing::UP, Facing::DOWN => [
+        // 4x4 top
+        $top = [
+            [0, 0],
+            [4, 4],
+            [6, 6]
+        ];
+        return match ($block->getFacing()) {
+            Facing::DOWN => [
+                $top,
+                // 2x2 bottom
                 [
-                    [5, 0],
-                    [6, 2]
+                    [0, 0],
+                    [2, 2],
+                    [7, 7]
                 ]
             ],
+            Facing::UP => [
+                $top
+            ],
             default => [
+                // 4x4 top
                 [
-                    [5, 6],
-                    [6, 4]
+                    [0, 0],
+                    [4, 4],
+                    [6, 0]
+                ],
+                // 2x15 rod
+                [
+                    [0, 4],
+                    [2, 12],
+                    [7, 4]
                 ]
             ]
         };

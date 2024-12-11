@@ -23,47 +23,23 @@ use Hebbinkpro\PocketMap\utils\block\BlockUtils;
 use pocketmine\block\Block;
 use pocketmine\block\Button;
 use pocketmine\math\Facing;
-use pocketmine\world\format\Chunk;
 
-abstract class AnyFacingModel extends BlockModel
+class AnyFacingModel extends RotatedBlockModel
 {
 
-    public function getGeometry(Block $block, Chunk $chunk): array
+    /**
+     * @inheritDoc
+     */
+    public function getRotation(Block $block): int
     {
+        if (!BlockUtils::hasAnyFacing($block)) return 0;
+
         /** @var Button $block */
-        if (BlockUtils::hasAnyFacing($block)) {
-            $facing = $block->getFacing();
-            if (in_array($block->getFacing(), $this->getSideFacing(), true)) {
-                return $this->getSideGeometry($facing);
-            }
-
-            return $this->getTopGeometry($facing);
-        }
-
-        return $this->getTopGeometry(Facing::UP);
+        return match ($block->getFacing()) {
+            Facing::DOWN, Facing::UP, Facing::NORTH => 0,
+            Facing::EAST => 270,
+            Facing::SOUTH => 180,
+            Facing::WEST => 90,
+        };
     }
-
-    /**
-     * @return array{int, int}
-     */
-    public function getSideFacing(): array
-    {
-        return [
-            Facing::UP,
-            Facing::DOWN
-        ];
-    }
-
-    /**
-     * @param int $facing
-     * @return int[][][]
-     */
-    public abstract function getSideGeometry(int $facing): array;
-
-    /**
-     * @param int $facing
-     * @return int[][][]
-     */
-    public abstract function getTopGeometry(int $facing): array;
-
 }

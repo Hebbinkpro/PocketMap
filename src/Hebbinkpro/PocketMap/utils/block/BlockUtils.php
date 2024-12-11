@@ -29,7 +29,10 @@ use pocketmine\block\Thin;
 use pocketmine\block\Torch;
 use pocketmine\block\utils\AnyFacingTrait;
 use pocketmine\block\utils\ColoredTrait;
+use pocketmine\block\utils\FacesOppositePlacingPlayerTrait;
 use pocketmine\block\utils\HorizontalFacingTrait;
+use pocketmine\block\utils\MultiAnyFacingTrait;
+use pocketmine\block\utils\MultiAnySupportTrait;
 use pocketmine\block\utils\PillarRotationTrait;
 use pocketmine\block\utils\PoweredByRedstoneTrait;
 use pocketmine\block\utils\RailPoweredByRedstoneTrait;
@@ -118,7 +121,7 @@ class BlockUtils
     public static function hasHorizontalFacing(Block $block): bool
     {
         if ($block instanceof Torch) return true;
-        return in_array(HorizontalFacingTrait::class, self::getTraits($block), true);
+        return self::hasTrait($block, HorizontalFacingTrait::class, FacesOppositePlacingPlayerTrait::class);
     }
 
     /**
@@ -181,10 +184,10 @@ class BlockUtils
     /**
      * Get if the block has the given trait
      * @param Block $block
-     * @param trait-string $trait
+     * @param trait-string[] $trait
      * @return bool
      */
-    public static function hasTrait(Block $block, string $trait): bool
+    public static function hasTrait(Block $block, string ...$trait): bool
     {
         $reflection = new ReflectionClass($block::class);
 
@@ -192,14 +195,8 @@ class BlockUtils
         $traits = array_keys($reflection->getTraits());
         if (in_array($trait, $traits, true)) return true;
 
-        // check parents
-        /** @var ReflectionClass<Block> $parent */
-        foreach (self::getParents($block) as $parent) {
-            $traits = array_keys($parent->getTraits());
-            if (in_array($trait, $traits, true)) return true;
-        }
-
-        return false;
+        // check if the lists have traits in common
+        return sizeof(array_intersect($trait, $traits)) > 0;
     }
 
     /**
@@ -209,7 +206,6 @@ class BlockUtils
      */
     public static function hasAnyFacing(Block $block): bool
     {
-        if ($block->getTypeId() == BlockTypeIds::LEVER) return true;
         return self::hasTrait($block, AnyFacingTrait::class);
     }
 
@@ -256,6 +252,16 @@ class BlockUtils
      */
     public static function isPoweredByRedstone(Block $block): bool
     {
-        return self::hasTrait($block, PoweredByRedstoneTrait::class) || self::hasTrait($block, RailPoweredByRedstoneTrait::class);
+        return self::hasTrait($block, PoweredByRedstoneTrait::class, RailPoweredByRedstoneTrait::class);
+    }
+
+    /**
+     * Check if the block has the MultiAnyFacing trait
+     * @param Block $block
+     * @return bool
+     */
+    public static function hasMultiAnyFacing(Block $block): bool
+    {
+        return self::hasTrait($block, MultiAnyFacingTrait::class, MultiAnySupportTrait::class);
     }
 }

@@ -25,7 +25,6 @@ use pocketmine\block\BlockTypeIds;
 use pocketmine\block\Button;
 use pocketmine\block\Door;
 use pocketmine\block\Hopper;
-use pocketmine\block\Lever;
 use pocketmine\block\Rail;
 use pocketmine\block\RuntimeBlockStateRegistry;
 use pocketmine\block\SimplePillar;
@@ -75,20 +74,14 @@ final class BlockStateParser
     }
 
     /**
-     * Get the face of a block
+     * Get the face texture index of a block
      * @param Block $block
      * @return int
      */
     public static function getBlockFace(Block $block): int
     {
-        // lever returns LeverFacing instead of int
-        if ($block instanceof Lever) {
-            return $block->getFacing()->getFacing();
-        }
-
         // the block uses the AnyFacingTrait
         if (BlockUtils::hasAnyFacing($block)) {
-            // TODO warning, IF a block has multiple textures for different faces this code can break the texture
             /** @var Button $block */
             return $block->getFacing();
         }

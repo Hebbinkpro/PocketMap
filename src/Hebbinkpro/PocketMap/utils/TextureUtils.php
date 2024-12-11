@@ -159,22 +159,22 @@ class TextureUtils
         imagesavealpha($modelImg, true);
 
         // set the rotation
-        $rotatedImg = TextureUtils::rotateToFacing($modelImg, BlockStateParser::getBlockFace($block));
-        if ($rotatedImg === null) return null;
-        imagedestroy($modelImg);
+//        $rotatedImg = TextureUtils::rotateToFacing($modelImg, BlockStateParser::getBlockFace($block));
+//        if ($rotatedImg === null) return null;
+//        imagedestroy($modelImg);
 
         // create a cache image
         $cacheImg = self::getEmptyTexture();
         if ($cacheImg === false) return null;
 
         imagealphablending($cacheImg, false);
-        imagecopy($cacheImg, $rotatedImg, 0, 0, 0, 0, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
+        imagecopy($cacheImg, $modelImg, 0, 0, 0, 0, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
         imagesavealpha($cacheImg, true);
 
         // store the cache image
         self::$blockTextureMap[$biome->getId()][$block->getStateId()] = $cacheImg;
 
-        return $rotatedImg;
+        return $modelImg;
     }
 
     public static function getEmptyTexture(int $size = PocketMap::TEXTURE_SIZE): GdImage|false
@@ -376,5 +376,31 @@ class TextureUtils
         return $validFaces[array_key_first($validFaces)];
     }
 
+    /**
+     * @param GdImage $texture
+     * @return array<int>
+     */
+    public static function getTopColors(GdImage $texture): array
+    {
+        $colors = [];
+        for ($x = 0; $x < PocketMap::TEXTURE_SIZE; $x++) {
+            $color = imagecolorallocatealpha($texture, 0, 0, 0, 127);
+            if ($color === false) continue;
+
+            for ($y = 0; $y < PocketMap::TEXTURE_SIZE; $y++) {
+                $c = imagecolorat($texture, $x, $y);
+                if ($c === false) continue;
+
+                $index = imagecolorsforindex($texture, $c);
+                if ($index["alpha"] < 127) {
+                    $color = $c;
+                    break;
+                }
+            }
+            $colors[] = $color;
+        }
+
+        return $colors;
+    }
 
 }
