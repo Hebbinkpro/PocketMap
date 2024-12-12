@@ -19,36 +19,22 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
-
+use Hebbinkpro\PocketMap\utils\block\BlockUtils;
 use pocketmine\block\Block;
-use pocketmine\block\Button;
-use pocketmine\math\Facing;
-use pocketmine\world\format\Chunk;
+use pocketmine\block\SimplePillar;
+use pocketmine\math\Axis;
 
-class ButtonModel extends AnyFacingModel
+class PillarRotationModel extends RotatedBlockModel
 {
-    public function getGeometry(Block $block, Chunk $chunk): array
+    public function getRotation(Block $block): int
     {
-        if (!$block instanceof Button) return parent::getGeometry($block, $chunk);
+        if (!BlockUtils::hasPillarRotation($block)) return 0;
 
-        $facing = $block->getFacing();
-
-        if (in_array($facing, [Facing::UP, Facing::DOWN])) {
-            return [
-                [
-                    [5, 6],
-                    [6, 4]
-                ]
-            ];
-        }
-
-        $height = $block->isPressed() ? 1 : 2;
-
-        return [
-            [
-                [5, 0],
-                [6, $height]
-            ]
-        ];
+        /** @var SimplePillar $block */
+        return match ($block->getAxis()) {
+            Axis::Y => 0,
+            Axis::X => 90,
+            Axis::Z => 180
+        };
     }
 }

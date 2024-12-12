@@ -158,11 +158,6 @@ class TextureUtils
         self::applyColorMap($modelImg, $block, $biome, $terrainTextures);
         imagesavealpha($modelImg, true);
 
-        // set the rotation
-//        $rotatedImg = TextureUtils::rotateToFacing($modelImg, BlockStateParser::getBlockFace($block));
-//        if ($rotatedImg === null) return null;
-//        imagedestroy($modelImg);
-
         // create a cache image
         $cacheImg = self::getEmptyTexture();
         if ($cacheImg === false) return null;
@@ -240,30 +235,6 @@ class TextureUtils
                 imagesetpixel($image, $x, $y, imagecolorexactalpha($image, $cr["red"], $cr["green"], $cr["blue"], $cr["alpha"]));
             }
         }
-    }
-
-    /**
-     * Rotate an image on the given axis
-     * @param GdImage $image
-     * @param int $facing
-     * @return GdImage|null
-     */
-    public static function rotateToFacing(GdImage $image, int $facing): ?GdImage
-    {
-        $angle = match ($facing) {
-            Facing::DOWN, Facing::SOUTH => 180,     // -y, +z
-            Facing::EAST => 270,                    // +x
-            Facing::WEST => 90,                     // -x
-            default => 0                            // +y, -z
-        };
-
-        // angle of 0 does not have to be rotated
-        if ($angle == 0) return $image;
-
-        // rotate the image
-        $img = imagerotate($image, $angle, 0);
-        if ($img === false) return null;
-        return $img;
     }
 
     /**

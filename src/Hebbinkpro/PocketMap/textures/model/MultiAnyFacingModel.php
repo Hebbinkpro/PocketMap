@@ -33,11 +33,10 @@ class MultiAnyFacingModel extends BlockModel
 
     public function getModelTexture(Block $block, Chunk $chunk, GdImage $texture): ?GdImage
     {
-        // return full block texture
-        if (!BlockUtils::hasMultiAnyFacing($block)) return parent::getModelTexture($block, $chunk, $texture);
+        $faces = $this->getFaces($block);
 
-        /** @var GlowLichen $block */
-        $faces = $block->getFaces();
+        // return full block texture
+        if (sizeof($faces) == 0) return parent::getModelTexture($block, $chunk, $texture);
 
         // top and/or down face is in use, only return the full block geometry
         if (sizeof(array_intersect([Facing::DOWN, Facing::UP], $faces)) > 0) {
@@ -75,11 +74,18 @@ class MultiAnyFacingModel extends BlockModel
 
     public function getGeometry(Block $block, Chunk $chunk): array
     {
-        return [
-            [
-                [0, 0],
-                [16, 16]
-            ]
-        ];
+        return self::getDefaultGeometry();
+    }
+
+    /**
+     * Get the faces of the given block
+     * @param Block $block
+     * @return array
+     */
+    public function getFaces(Block $block): array
+    {
+        if (!BlockUtils::hasMultiAnyFacing($block)) return [];
+        /** @var GlowLichen $block */
+        return $block->getFaces();
     }
 }

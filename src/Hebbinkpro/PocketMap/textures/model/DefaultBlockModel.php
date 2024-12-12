@@ -49,11 +49,6 @@ final class DefaultBlockModel extends BlockModel
 
     public function getGeometry(Block $block, Chunk $chunk): array
     {
-        return [
-            [
-                [0, 0],
-                [PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE]
-            ]
-        ];
+        return self::getDefaultGeometry();
     }
 }

@@ -19,36 +19,30 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
-
 use pocketmine\block\Block;
-use pocketmine\block\Button;
+use pocketmine\block\ItemFrame;
 use pocketmine\math\Facing;
-use pocketmine\world\format\Chunk;
 
-class ButtonModel extends AnyFacingModel
+/**
+ * TODO the item frame uses the oak_planks texture for its edges
+ */
+class ItemFrameModel extends MultiAnyFacingModel
 {
-    public function getGeometry(Block $block, Chunk $chunk): array
+    public function getFaces(Block $block): array
     {
-        if (!$block instanceof Button) return parent::getGeometry($block, $chunk);
+        if (!$block instanceof ItemFrame) return [];
 
         $facing = $block->getFacing();
 
-        if (in_array($facing, [Facing::UP, Facing::DOWN])) {
-            return [
-                [
-                    [5, 6],
-                    [6, 4]
-                ]
-            ];
-        }
+        $newFacing = match ($facing) {
+            Facing::UP => Facing::DOWN,
+            Facing::DOWN => Facing::UP,
+            Facing::NORTH => Facing::SOUTH,
+            Facing::EAST => Facing::WEST,
+            Facing::WEST => Facing::NORTH,
+            Facing::SOUTH => Facing::EAST,
+        };
 
-        $height = $block->isPressed() ? 1 : 2;
-
-        return [
-            [
-                [5, 0],
-                [6, $height]
-            ]
-        ];
+        return [$newFacing];
     }
 }

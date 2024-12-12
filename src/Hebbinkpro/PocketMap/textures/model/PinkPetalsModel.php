@@ -19,36 +19,43 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
-
 use pocketmine\block\Block;
-use pocketmine\block\Button;
-use pocketmine\math\Facing;
+use pocketmine\block\PinkPetals;
 use pocketmine\world\format\Chunk;
 
-class ButtonModel extends AnyFacingModel
+class PinkPetalsModel extends HorizontalFacingModel
 {
+
     public function getGeometry(Block $block, Chunk $chunk): array
     {
-        if (!$block instanceof Button) return parent::getGeometry($block, $chunk);
+        if (!$block instanceof PinkPetals) return parent::getGeometry($block, $chunk);
 
-        $facing = $block->getFacing();
+        $count = $block->getCount();
 
-        if (in_array($facing, [Facing::UP, Facing::DOWN])) {
-            return [
+        return match ($count) {
+            1 => [
                 [
-                    [5, 6],
-                    [6, 4]
+                    [0, 0],
+                    [8, 8]
                 ]
-            ];
-        }
-
-        $height = $block->isPressed() ? 1 : 2;
-
-        return [
-            [
-                [5, 0],
-                [6, $height]
-            ]
-        ];
+            ],
+            2 => [
+                [
+                    [0, 0],
+                    [16, 8]
+                ]
+            ],
+            3 => [
+                [
+                    [0, 0],
+                    [16, 8]
+                ],
+                [
+                    [8, 8],
+                    [8, 8]
+                ]
+            ],
+            default => self::getDefaultGeometry()
+        };
     }
 }

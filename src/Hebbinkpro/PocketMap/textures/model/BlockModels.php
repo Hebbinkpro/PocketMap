@@ -29,17 +29,21 @@ use pocketmine\block\Door;
 use pocketmine\block\DoublePlant;
 use pocketmine\block\Fence;
 use pocketmine\block\FenceGate;
+use pocketmine\block\Flowable;
 use pocketmine\block\Flower;
+use pocketmine\block\ItemFrame;
 use pocketmine\block\PressurePlate;
 use pocketmine\block\Sapling;
 use pocketmine\block\Stair;
 use pocketmine\block\Thin;
 use pocketmine\block\Torch;
+use pocketmine\block\Trapdoor;
 use pocketmine\block\utils\AnyFacingTrait;
 use pocketmine\block\utils\FacesOppositePlacingPlayerTrait;
 use pocketmine\block\utils\HorizontalFacingTrait;
 use pocketmine\block\utils\MultiAnyFacingTrait;
 use pocketmine\block\utils\MultiAnySupportTrait;
+use pocketmine\block\utils\PillarRotationTrait;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\block\Wall;
 use pocketmine\utils\SingletonTrait;
@@ -77,31 +81,10 @@ final class BlockModels
         // register blocks
         $this->register(VanillaBlocks::WATER(), new DefaultBlockModel());
         $this->register(VanillaBlocks::LAVA(), new DefaultBlockModel());
-        $this->register(VanillaBlocks::TALL_GRASS(), new CrossModel());
-        $this->register(VanillaBlocks::FERN(), new CrossModel());
-        $this->register(VanillaBlocks::DOUBLE_TALLGRASS(), new CrossModel());
-        $this->register(VanillaBlocks::LARGE_FERN(), new CrossModel());
-        $this->register(VanillaBlocks::CORAL(), new CrossModel());
-        $this->register(VanillaBlocks::RED_MUSHROOM(), new CrossModel());
-        $this->register(VanillaBlocks::BROWN_MUSHROOM(), new CrossModel());
-        $this->register(VanillaBlocks::TWISTING_VINES(), new CrossModel());
-        $this->register(VanillaBlocks::WEEPING_VINES(), new CrossModel());
-        $this->register(VanillaBlocks::CRIMSON_ROOTS(), new CrossModel());
-        $this->register(VanillaBlocks::WARPED_ROOTS(), new CrossModel());
-        $this->register(VanillaBlocks::CAVE_VINES(), new CrossModel());
-        $this->register(VanillaBlocks::FIRE(), new CrossModel());
-        $this->register(VanillaBlocks::SOUL_FIRE(), new CrossModel());
-        $this->register(VanillaBlocks::CHAIN(), new CrossModel());
         $this->register(VanillaBlocks::BIG_DRIPLEAF_STEM(), new CrossModel());
         $this->register(VanillaBlocks::BREWING_STAND(), new CrossModel());
-        $this->register(VanillaBlocks::COBWEB(), new CrossModel());
-        $this->register(VanillaBlocks::SWEET_BERRY_BUSH(), new CrossModel());
-        $this->register(VanillaBlocks::DEAD_BUSH(), new CrossModel());
-        $this->register(VanillaBlocks::HANGING_ROOTS(), new CrossModel());
         $this->register(VanillaBlocks::AMETHYST_CLUSTER(), new CrossModel());
         $this->register(VanillaBlocks::PITCHER_CROP(), new DefaultBlockModel());
-        $this->register(VanillaBlocks::DOUBLE_PITCHER_CROP(), new CrossModel());
-        $this->register(VanillaBlocks::TORCHFLOWER_CROP(), new CrossModel());
         $this->register(VanillaBlocks::END_ROD(), new EndRodModel());
         $this->register(VanillaBlocks::CHEST(), new DefaultBlockModel()); // TODO double chests
         $this->register(VanillaBlocks::TRAPPED_CHEST(), new DefaultBlockModel());
@@ -113,9 +96,18 @@ final class BlockModels
         $this->register(VanillaBlocks::CANDLE(), new CandleModel());
         $this->register(VanillaBlocks::DYED_CANDLE(), new CandleModel());
         $this->register(VanillaBlocks::SEA_PICKLE(), new SeaPickleModel());
-        $this->register(VanillaBlocks::CHORUS_PLANT(), new WallModel()); // it almost looks like the wall model
+        $this->register(VanillaBlocks::CHORUS_PLANT(), new WallModel());
         $this->register(VanillaBlocks::CHORUS_FLOWER(), new DefaultBlockModel());
         $this->register(VanillaBlocks::LIGHTNING_ROD(), new LightningRodModel());
+        $this->register(VanillaBlocks::LEVER(), new LeverModel());
+        $this->register(VanillaBlocks::VINES(), new VinesModel());
+        $this->register(VanillaBlocks::PINK_PETALS(), new PinkPetalsModel());
+        $this->register(VanillaBlocks::CARPET(), new DefaultBlockModel());
+        $this->register(VanillaBlocks::LILY_PAD(), new DefaultBlockModel());
+        $this->register(VanillaBlocks::REDSTONE_WIRE(), new DefaultBlockModel());
+        $this->register(VanillaBlocks::REDSTONE(), new DefaultBlockModel());
+        $this->register(VanillaBlocks::TRIPWIRE(), new DefaultBlockModel());
+        $this->register(VanillaBlocks::MOB_HEAD(), new DefaultBlockModel());
 
         // register block types
         $this->registerClass(Fence::class, new FenceModel());
@@ -130,12 +122,15 @@ final class BlockModels
         $this->registerClass(PressurePlate::class, new PressurePlateModel());
         $this->registerClass(Button::class, new ButtonModel());
         $this->registerClass(Torch::class, new TorchModel());
-        $this->registerClass(Stair::class, new DefaultBlockModel()); // TODO height difference
+        $this->registerClass(Stair::class, new DefaultBlockModel());
         $this->registerClass(BaseRail::class, new RailModel());
+        $this->registerClass(ItemFrame::class, new ItemFrameModel());
+        $this->registerClass(Trapdoor::class, new TrapdoorModel());
 
         // register traits
         $this->registerTrait(HorizontalFacingTrait::class, new HorizontalFacingModel());
         $this->registerTrait(FacesOppositePlacingPlayerTrait::class, new HorizontalFacingModel());
+        $this->registerTrait(PillarRotationTrait::class, new PillarRotationModel());
         $this->registerTrait(AnyFacingTrait::class, new AnyFacingModel());
         $this->registerTrait(MultiAnyFacingTrait::class, new MultiAnyFacingModel());
         $this->registerTrait(MultiAnySupportTrait::class, new MultiAnyFacingModel());
@@ -182,9 +177,9 @@ final class BlockModels
         $model = $this->blockModels[$block->getTypeId()] ?? $this->getByClass($block) ?? $this->getByTrait($block);
         if ($model !== null) return $model;
 
-        if ($block->isFullCube() || BlockUtils::hasFullTop($block)) return $this->default;
+        if ($block instanceof Flowable) return new CrossModel();
 
-        return null;
+        return new DefaultBlockModel();
     }
 
     public function getByClass(Block $block): ?BlockModel

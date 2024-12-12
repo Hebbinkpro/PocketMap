@@ -34,6 +34,7 @@ abstract class RotatedBlockModel extends BlockModel
 
         // rotate the resulting texture
         $rotation = $this->getRotation($block);
+
         if ($rotation != 0) {
             // convert clockwise to anti-clockwise rotation and make sure it is between 0 and 360
             $rotation = (360 - $rotation) % 360;
@@ -57,11 +58,6 @@ abstract class RotatedBlockModel extends BlockModel
      */
     public function getGeometry(Block $block, Chunk $chunk): array
     {
-        return [
-            [
-                [0, 0],
-                [16, 16]
-            ]
-        ];
+        return self::getDefaultGeometry();
     }
 }

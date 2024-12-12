@@ -20,6 +20,7 @@
 namespace Hebbinkpro\PocketMap\textures\model;
 
 use GdImage;
+use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\utils\TextureUtils;
 use pocketmine\block\Block;
 use pocketmine\world\format\Chunk;
@@ -90,4 +91,18 @@ abstract class BlockModel
      * @return int[][][]
      */
     public abstract function getGeometry(Block $block, Chunk $chunk): array;
+
+    /**
+     * Default texture model of the full 16x16 texture
+     * @return array[]
+     */
+    public static function getDefaultGeometry(): array
+    {
+        return [
+            [
+                [0, 0],
+                [PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE]
+            ]
+        ];
+    }
 }

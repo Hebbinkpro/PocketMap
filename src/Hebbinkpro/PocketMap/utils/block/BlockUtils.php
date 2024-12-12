@@ -26,7 +26,6 @@ use pocketmine\block\Chest;
 use pocketmine\block\Fence;
 use pocketmine\block\FenceGate;
 use pocketmine\block\Thin;
-use pocketmine\block\Torch;
 use pocketmine\block\utils\AnyFacingTrait;
 use pocketmine\block\utils\ColoredTrait;
 use pocketmine\block\utils\FacesOppositePlacingPlayerTrait;
@@ -120,7 +119,6 @@ class BlockUtils
 
     public static function hasHorizontalFacing(Block $block): bool
     {
-        if ($block instanceof Torch) return true;
         return self::hasTrait($block, HorizontalFacingTrait::class, FacesOppositePlacingPlayerTrait::class);
     }
 
@@ -189,11 +187,8 @@ class BlockUtils
      */
     public static function hasTrait(Block $block, string ...$trait): bool
     {
-        $reflection = new ReflectionClass($block::class);
-
-        // check self
-        $traits = array_keys($reflection->getTraits());
-        if (in_array($trait, $traits, true)) return true;
+        // get all the traits
+        $traits = self::getTraits($block);
 
         // check if the lists have traits in common
         return sizeof(array_intersect($trait, $traits)) > 0;

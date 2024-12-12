@@ -19,56 +19,42 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
+use Hebbinkpro\PocketMap\utils\block\BlockUtils;
 use pocketmine\block\Block;
-use pocketmine\block\Torch;
+use pocketmine\block\FenceGate;
+use pocketmine\block\Trapdoor;
 use pocketmine\math\Facing;
 use pocketmine\world\format\Chunk;
 
-class TorchModel extends HorizontalFacingModel
+class TrapdoorModel extends HorizontalFacingModel
 {
-
     public function getGeometry(Block $block, Chunk $chunk): array
     {
-        if (!$block instanceof Torch) return parent::getGeometry($block, $chunk);
+        if (!$block instanceof Trapdoor) return self::getDefaultGeometry();
 
-        $facing = $block->getFacing();
-        if (in_array($facing, Facing::HORIZONTAL, true)) {
+        if ($block->isOpen()) {
             return [
-                // top
                 [
-                    [7, 6], // start
-                    [2, 2], // size
-                    [7, 11]  // dest
-                ],
-                // stick
-                [
-                    [7, 8],
-                    [2, 8],
-                    [7, 13],
-                    [2, 3]
+                    [0, 0],
+                    [16, 3]
                 ]
             ];
         }
 
-        // top in a block center
-        return [
-            [
-                [7, 6], // start
-                [2, 2], // size
-                [7, 7]  // dest
-            ]
-        ];
+        return self::getDefaultGeometry();
     }
 
     public function getRotation(Block $block): int
     {
-        if (!$block instanceof Torch) return 0;
+        if (!BlockUtils::hasHorizontalFacing($block)) return 0;
+        /** @var FenceGate $block */
 
+        // trapdoor facings have a different north/south rotation, because why not...
         return match ($block->getFacing()) {
             Facing::EAST => 270,
-            Facing::SOUTH => 180,
+            Facing::NORTH => 180,
             Facing::WEST => 90,
-            default => 0 // Facing::NORTH
+            default => 0 // Facing::SOUTH
         };
     }
 }
