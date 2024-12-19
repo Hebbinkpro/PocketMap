@@ -27,6 +27,7 @@ use Hebbinkpro\PocketMap\textures\TerrainTextures;
 use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
 use Hebbinkpro\PocketMap\utils\block\BlockUtils;
 use Hebbinkpro\PocketMap\utils\block\OldBlockTypeNames;
+use pocketmine\block\Bed;
 use pocketmine\block\Block;
 use pocketmine\math\Facing;
 use pocketmine\world\biome\Biome;
@@ -80,16 +81,12 @@ class TextureUtils
             $modelTexture = $model->getModelTexture($block, $chunk, $texture);
 
             if ($modelTexture !== null) {
-                imagedestroy($texture);
                 $texture = $modelTexture;
             }
         }
 
         // resize the img
-        $resized = self::getCompressedImage($texture, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE, $size, $size);
-        imagedestroy($texture);
-
-        return $resized;
+        return self::getCompressedImage($texture, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
     }
 
     /**
@@ -240,18 +237,19 @@ class TextureUtils
     /**
      * Get a compressed image
      * @param GdImage $src the image to compress
-     * @param int $srcWidth the width of the image
-     * @param int $srcHeight teh height of the image
      * @param int $newWidth the new width of the image
      * @param int $newHeight the new height of the image
      * @return GdImage|null the compressed image with the new weight and height
      */
-    public static function getCompressedImage(GdImage $src, int $srcWidth, int $srcHeight, int $newWidth, int $newHeight): ?GdImage
+    public static function getCompressedImage(GdImage $src, int $newWidth, int $newHeight): ?GdImage
     {
+        $srcWidth = imagesx($src);
+        $srcHeight = imagesy($src);
+
         $compressedImg = imagecreatetruecolor($newWidth, $newHeight);
         if ($compressedImg === false) return null;
         imagealphablending($compressedImg, false);
-        imagecopyresized($compressedImg, $src, 0, 0, 0, 0, $newWidth, $newHeight, $srcHeight, $srcWidth);
+        imagecopyresized($compressedImg, $src, 0, 0, 0, 0, $newWidth, $newHeight, $srcWidth, $srcHeight);
         imagesavealpha($compressedImg, true);
 
         return $compressedImg;
@@ -293,6 +291,12 @@ class TextureUtils
         if ($stateData === null) return null;
 
         $name = OldBlockTypeNames::getTypeName($stateData->getName());
+
+        // replace some textures based upon the block
+        if ($block instanceof Bed) {
+            if ($block->isHeadPart()) return "bed_head_top";
+            else return "bed_feet_top";
+        }
 
         // replace _block_ with _
         return str_replace("_block_", "_", self::removeBlockTypeNamePrefix($name));

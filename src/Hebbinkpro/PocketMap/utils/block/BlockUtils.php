@@ -259,4 +259,5 @@ class BlockUtils
     {
         return self::hasTrait($block, MultiAnyFacingTrait::class, MultiAnySupportTrait::class);
     }
+
 }

@@ -24,11 +24,14 @@ use pocketmine\block\BaseRail;
 use pocketmine\block\Block;
 use pocketmine\block\BlockTypeIds;
 use pocketmine\block\Button;
+use pocketmine\block\Coral;
 use pocketmine\block\Crops;
 use pocketmine\block\Door;
 use pocketmine\block\DoublePlant;
 use pocketmine\block\Fence;
 use pocketmine\block\FenceGate;
+use pocketmine\block\FloorBanner;
+use pocketmine\block\FloorSign;
 use pocketmine\block\Flowable;
 use pocketmine\block\Flower;
 use pocketmine\block\ItemFrame;
@@ -44,8 +47,11 @@ use pocketmine\block\utils\HorizontalFacingTrait;
 use pocketmine\block\utils\MultiAnyFacingTrait;
 use pocketmine\block\utils\MultiAnySupportTrait;
 use pocketmine\block\utils\PillarRotationTrait;
+use pocketmine\block\utils\SignLikeRotationTrait;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\block\Wall;
+use pocketmine\block\WallBanner;
+use pocketmine\block\WallSign;
 use pocketmine\utils\SingletonTrait;
 
 final class BlockModels
@@ -108,6 +114,33 @@ final class BlockModels
         $this->register(VanillaBlocks::REDSTONE(), new DefaultBlockModel());
         $this->register(VanillaBlocks::TRIPWIRE(), new DefaultBlockModel());
         $this->register(VanillaBlocks::MOB_HEAD(), new DefaultBlockModel());
+        $this->register(VanillaBlocks::LADDER(), new FlatHorizontalFacingModel());
+        $this->register(VanillaBlocks::SNOW_LAYER(), new DefaultBlockModel());
+        // TODO Bamboo
+        // TODO Bell
+        // TODO Brewing stand
+        // TODO Cake
+        // TODO (Soul) Campfire
+        // TODO Crops - Growing stages
+        // TODO Cocoa block
+        // TODO Dragon Egg
+        // TODO (Soul) Fire
+        // TODO (Soul) Lantern
+        // TODO Lava/Water
+        // TODO Lectern
+        // TODO Nether portal
+        // TODO Redstone
+        // TODO Sea Lantern
+        // TODO Mob Head
+        // TODO Tripwire
+        // TODO Tripwire Hook
+        // TODO Floor Coral Fan
+        // TODO Sculk
+        // TODO Chain
+        // TODO Small Dripleaf
+        // TODO Big Dripleaf
+        // TODO Spore Blossom
+        // TODO Chorus Flower
 
         // register block types
         $this->registerClass(Fence::class, new FenceModel());
@@ -126,6 +159,11 @@ final class BlockModels
         $this->registerClass(BaseRail::class, new RailModel());
         $this->registerClass(ItemFrame::class, new ItemFrameModel());
         $this->registerClass(Trapdoor::class, new TrapdoorModel());
+        $this->registerClass(WallSign::class, new WallSignModel());
+        $this->registerClass(FloorSign::class, new FloorSignModel());
+        $this->registerClass(WallBanner::class, new WallSignModel());   // TODO discover the real banner textures...
+        $this->registerClass(FloorBanner::class, new FloorSignModel());
+        $this->registerClass(Coral::class, new CrossModel());
 
         // register traits
         $this->registerTrait(HorizontalFacingTrait::class, new HorizontalFacingModel());
@@ -134,6 +172,7 @@ final class BlockModels
         $this->registerTrait(AnyFacingTrait::class, new AnyFacingModel());
         $this->registerTrait(MultiAnyFacingTrait::class, new MultiAnyFacingModel());
         $this->registerTrait(MultiAnySupportTrait::class, new MultiAnyFacingModel());
+        $this->registerTrait(SignLikeRotationTrait::class, new SignLikeRotationModel());
     }
 
     /**

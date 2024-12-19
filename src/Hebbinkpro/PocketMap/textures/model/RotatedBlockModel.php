@@ -47,7 +47,7 @@ abstract class RotatedBlockModel extends BlockModel
     }
 
     /**
-     * Get the rotation of the block model
+     * Get the clockwise rotation of the block model
      * @param Block $block
      * @return int
      */
