@@ -64,19 +64,28 @@ abstract class BlockModel
                 // convert clockwise to anti-clockwise rotation and make sure it is between 0 and 360
                 $rotation = (360 - $rotation) % 360;
 
-                // crop to image to get the desired texture
-                $tmpTexture = imagecrop($texture, ["x" => $srcStart[0], "y" => $srcStart[1], "width" => $srcSize[0], "height" => $srcSize[1]]);
-                // rotate the texture and assign it to $texture
-                $texture = imagerotate($tmpTexture, $rotation, 0);
+                // create an empty texture on which the resized part is copied
+                $tmpTexture = TextureUtils::getEmptyTexture();
+                imagealphablending($tmpTexture, true);
+                imagecopyresized($tmpTexture, $texture, $dstStart[0], $dstStart[1], $srcStart[0], $srcStart[1], $dstSize[0], $dstSize[1], $srcSize[0], $srcSize[1]);
+                imagesavealpha($tmpTexture, true);
+
+                // rotate teh texture
+                $tmpTexture = imagerotate($tmpTexture, $rotation, 0);
+
+                # copy the rotated texture onto the model
+                imagealphablending($tmpTexture, true);
+                imagecopy($modelTexture, $tmpTexture, 0, 0, 0, 0, 16, 16);
+                imagesavealpha($tmpTexture, true);
+            } else {
+                // copy the resized texture onto the model
+                imagealphablending($texture, true);
+                imagecopyresized($modelTexture, $texture, $dstStart[0], $dstStart[1], $srcStart[0], $srcStart[1], $dstSize[0], $dstSize[1], $srcSize[0], $srcSize[1]);
+                imagesavealpha($texture, true);
             }
 
-            # copy the texture onto the model
-            imagealphablending($texture, true);
-            imagecopyresized($modelTexture, $texture, $dstStart[0], $dstStart[1], $srcStart[0], $srcStart[1], $dstSize[0], $dstSize[1], $srcSize[0], $srcSize[1]);
-            imagesavealpha($texture, true);
         }
 
-        imagedestroy($texture);
         return $modelTexture;
     }
 
