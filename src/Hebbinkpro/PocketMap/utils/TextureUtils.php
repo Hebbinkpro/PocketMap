@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ namespace Hebbinkpro\PocketMap\utils;
 
 use GdImage;
 use Hebbinkpro\PocketMap\PocketMap;
-use Hebbinkpro\PocketMap\textures\model\BlockModel;
+use Hebbinkpro\PocketMap\textures\model\BlockModelInterface;
 use Hebbinkpro\PocketMap\textures\model\BlockModels;
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
 use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
@@ -29,11 +29,16 @@ use Hebbinkpro\PocketMap\utils\block\BlockUtils;
 use Hebbinkpro\PocketMap\utils\block\OldBlockTypeNames;
 use pocketmine\block\Bed;
 use pocketmine\block\Block;
+use pocketmine\block\Campfire;
+use pocketmine\block\SoulCampfire;
 use pocketmine\math\Facing;
 use pocketmine\world\biome\Biome;
 use pocketmine\world\biome\BiomeRegistry;
 use pocketmine\world\format\Chunk;
 
+/**
+ * TODO use entity textures for tile blocks, e.g. chests, signs and beds
+ */
 class TextureUtils
 {
     /** @var array<int, array<int, GdImage>> */
@@ -92,12 +97,12 @@ class TextureUtils
     /**
      * Get a block texture as an GdImage
      * @param Block $block
-     * @param BlockModel|null $model
+     * @param BlockModelInterface|null $model
      * @param Chunk $chunk
      * @param TerrainTextures $terrainTextures
      * @return GdImage|null the texture of the block
      */
-    private static function createBlockTexture(Block $block, ?BlockModel $model, Chunk $chunk, TerrainTextures $terrainTextures): ?GdImage
+    private static function createBlockTexture(Block $block, ?BlockModelInterface $model, Chunk $chunk, TerrainTextures $terrainTextures): ?GdImage
     {
         if (BlockUtils::isInvisible($block)) return null;
         $pos = $block->getPosition()->floor();
@@ -294,8 +299,17 @@ class TextureUtils
 
         // replace some textures based upon the block
         if ($block instanceof Bed) {
+            // this defaults to planks
             if ($block->isHeadPart()) return "bed_head_top";
             else return "bed_feet_top";
+        } elseif ($block instanceof Campfire) {
+            // this defaults to the campfire flame
+            if ($block->isLit()) {
+                // the soul and normal campfire have different textures
+                if ($block instanceof SoulCampfire) return "soul_campfire_log_lit";
+                return "campfire_log_lit";
+            }
+            return "campfire_log";
         }
 
         // replace _block_ with _
@@ -353,16 +367,18 @@ class TextureUtils
 
     /**
      * @param GdImage $texture
+     * @param int $rows number of rows to iterate over to determine the top colors
      * @return array<int>
      */
-    public static function getTopColors(GdImage $texture): array
+    public static function getTopColors(GdImage $texture, int $rows = PocketMap::TEXTURE_SIZE): array
     {
         $colors = [];
         for ($x = 0; $x < PocketMap::TEXTURE_SIZE; $x++) {
+            // allocate transparent pixel
             $color = imagecolorallocatealpha($texture, 0, 0, 0, 127);
             if ($color === false) continue;
 
-            for ($y = 0; $y < PocketMap::TEXTURE_SIZE; $y++) {
+            for ($y = 0; $y < $rows; $y++) {
                 $c = imagecolorat($texture, $x, $y);
                 if ($c === false) continue;
 

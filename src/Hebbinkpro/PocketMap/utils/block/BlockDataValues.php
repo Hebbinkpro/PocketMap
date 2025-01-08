@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,13 +19,14 @@
 
 namespace Hebbinkpro\PocketMap\utils\block;
 
+use pocketmine\block\Beetroot;
 use pocketmine\block\Block;
 use pocketmine\block\BlockTypeIds;
 use pocketmine\block\CakeWithDyedCandle;
 use pocketmine\block\Candle;
+use pocketmine\block\Carrot;
 use pocketmine\block\ChemistryTable;
 use pocketmine\block\CoralBlock;
-use pocketmine\block\Crops;
 use pocketmine\block\DaylightSensor;
 use pocketmine\block\Door;
 use pocketmine\block\DoublePitcherCrop;
@@ -34,7 +35,10 @@ use pocketmine\block\DyedCandle;
 use pocketmine\block\Farmland;
 use pocketmine\block\FloorBanner;
 use pocketmine\block\Hopper;
+use pocketmine\block\MelonStem;
 use pocketmine\block\PitcherCrop;
+use pocketmine\block\Potato;
+use pocketmine\block\PumpkinStem;
 use pocketmine\block\RedMushroomBlock;
 use pocketmine\block\TorchflowerCrop;
 use pocketmine\block\utils\CoralType;
@@ -47,6 +51,7 @@ use pocketmine\block\Wool;
 use pocketmine\data\bedrock\block\BlockStateNames as BSN;
 use pocketmine\data\bedrock\block\BlockTypeNames as BTN;
 use pocketmine\data\bedrock\DyeColorIdMap;
+use pocketmine\math\Facing;
 
 /**
  * Class that maps all blocks to their data values in the bedrock code.
@@ -91,7 +96,23 @@ final class BlockDataValues
             case ChemistryTable::class:
                 return self::getChemistryDataValue($block->getTypeId());
 
-            case Crops::class:
+            case Beetroot::class:
+            case Carrot::class:
+            case Potato::class:
+                return match ($block->getAge()) {
+                    0, 1 => 0,
+                    2, 3 => 1,
+                    4, 5, 6 => 2,
+                    default => 3
+                };
+
+            case MelonStem::class:
+            case PumpkinStem::class:
+                return match ($block->getFacing()) {
+                    Facing::UP => 0,
+                    default => 1
+                };
+
             case PitcherCrop::class:
                 return $block->getAge();
 

@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ use Hebbinkpro\PocketMap\utils\TextureUtils;
 use pocketmine\block\Block;
 use pocketmine\world\format\Chunk;
 
-abstract class BlockModel
+abstract class BlockModel implements BlockModelInterface
 {
 
     /**
@@ -91,12 +91,13 @@ abstract class BlockModel
 
     /**
      * Get the block geometry.
-     * A geometry is an array of parts, and a part is one of the following:
-     *  - [start,size]
-     *  - [start,size,destStart]
-     *  - [start,size,destStart,destSize]
-     *  - [start,size,destStart,destSize,rotation]
-     * If dest values are not given, the source values will be used
+     *
+     *  A geometry is an array of parts, and a part is one of the following:
+     *   - [start,size]
+     *   - [start,size,destStart]
+     *   - [start,size,destStart,destSize]
+     *   - [start,size,destStart,destSize,rotation]
+     *  If dest values are not given, the source values will be used
      * @return int[][][]
      */
     public abstract function getGeometry(Block $block, Chunk $chunk): array;

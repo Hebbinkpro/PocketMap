@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,9 +20,13 @@
 namespace Hebbinkpro\PocketMap\utils;
 
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
-use Hebbinkpro\PocketMap\utils\biome\NewBiomeIds;
 use pocketmine\block\Block;
 use pocketmine\block\BlockTypeIds as Ids;
+use pocketmine\block\MelonStem;
+use pocketmine\block\PumpkinStem;
+use pocketmine\block\RedstoneWire;
+use pocketmine\block\Stem;
+use pocketmine\block\WaterLily;
 use pocketmine\data\bedrock\BiomeIds;
 use pocketmine\world\biome\Biome;
 use ReflectionClass;
@@ -41,6 +45,37 @@ final class ColorMapParser
     public const COLOR_MAP_FOLIAGE_SWAMP = "textures/colormap/swamp_foliage.png";
     public const COLOR_MAP_GRASS_SWAMP = "textures/colormap/swamp_grass.png";
 
+    public const LILY_PAD_COLOR = 0x208030;
+    public const REDSTONE_STRENGTH_COLOR = [
+        0x4B0000,
+        0x6F0000,
+        0x790000,
+        0x820000,
+        0x8C0000,
+        0x970000,
+        0xA10000,
+        0xAB0000,
+        0xB50000,
+        0xBF0000,
+        0xCA0000,
+        0xD30000,
+        0xDD0000,
+        0xE70600,
+        0xF11B00,
+        0xFC3100
+    ];
+
+    public const STEM_AGE_COLOR = [
+        0x00FF00,
+        0x20F704,
+        0x40EF08,
+        0x60E70C,
+        0x80DF10,
+        0xA0D714,
+        0xC0CF18,
+        0xE0C71C
+    ];
+
     /**
      * @var array<string, array<int, array<int, int>>>
      */
@@ -55,6 +90,18 @@ final class ColorMapParser
      */
     public static function getColorFromBlock(Block $block, Biome $biome, TerrainTextures $terrainTextures): int
     {
+        // check for some constant block colors
+        switch ($block::class) {
+            case RedstoneWire::class:
+                return self::REDSTONE_STRENGTH_COLOR[$block->getOutputSignalStrength()];
+            case Stem::class:
+            case MelonStem::class:
+            case PumpkinStem::class:
+                return self::STEM_AGE_COLOR[$block->getAge()];
+            case WaterLily::class:
+                return self::LILY_PAD_COLOR;
+        }
+
         if (!array_key_exists($terrainTextures->getPath(), self::$colorMap)) {
             self::$colorMap[$terrainTextures->getPath()] = [];
         }
@@ -71,6 +118,7 @@ final class ColorMapParser
             Ids::OAK_LEAVES, Ids::JUNGLE_LEAVES, Ids::ACACIA_LEAVES, Ids::DARK_OAK_LEAVES, Ids::VINES => self::getFoliageColor($biome, $terrainTextures),
             default => -1,
         };
+
 
         // if the biome color does not exist, add it to the cache
         if (!array_key_exists($biome->getId(), self::$colorMap[$terrainTextures->getPath()][$block->getTypeId()])) {

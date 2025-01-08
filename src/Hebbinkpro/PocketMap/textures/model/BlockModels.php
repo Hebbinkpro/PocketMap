@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,11 +19,15 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
+use Hebbinkpro\PocketMap\textures\model\flat\CropsModel;
+use Hebbinkpro\PocketMap\textures\model\flat\FlatCrossModel;
+use Hebbinkpro\PocketMap\textures\model\flat\StemModel;
 use Hebbinkpro\PocketMap\utils\block\BlockUtils;
 use pocketmine\block\BaseRail;
 use pocketmine\block\Block;
 use pocketmine\block\BlockTypeIds;
 use pocketmine\block\Button;
+use pocketmine\block\Campfire;
 use pocketmine\block\Coral;
 use pocketmine\block\Crops;
 use pocketmine\block\Door;
@@ -38,6 +42,7 @@ use pocketmine\block\ItemFrame;
 use pocketmine\block\PressurePlate;
 use pocketmine\block\Sapling;
 use pocketmine\block\Stair;
+use pocketmine\block\Stem;
 use pocketmine\block\Thin;
 use pocketmine\block\Torch;
 use pocketmine\block\Trapdoor;
@@ -59,13 +64,13 @@ final class BlockModels
     use SingletonTrait;
 
     private BlockModel $default;
-    /** @var array<int, BlockModel> */
+    /** @var array<int, BlockModelInterface> */
     private array $blockModels;
 
-    /** @var array<class-string<Block>, BlockModel> */
+    /** @var array<class-string<Block>, BlockModelInterface> */
     private array $blockClassModels;
 
-    /** @var array<trait-string, BlockModel> */
+    /** @var array<trait-string, BlockModelInterface> */
     private array $blockTraitModels;
 
     public function __construct()
@@ -87,9 +92,9 @@ final class BlockModels
         // register blocks
         $this->register(VanillaBlocks::WATER(), new DefaultBlockModel());
         $this->register(VanillaBlocks::LAVA(), new DefaultBlockModel());
-        $this->register(VanillaBlocks::BIG_DRIPLEAF_STEM(), new CrossModel());
-        $this->register(VanillaBlocks::BREWING_STAND(), new CrossModel());
-        $this->register(VanillaBlocks::AMETHYST_CLUSTER(), new CrossModel());
+        $this->register(VanillaBlocks::BIG_DRIPLEAF_STEM(), new FlatCrossModel());
+        $this->register(VanillaBlocks::BREWING_STAND(), new FlatCrossModel());
+        $this->register(VanillaBlocks::AMETHYST_CLUSTER(), new FlatCrossModel());
         $this->register(VanillaBlocks::PITCHER_CROP(), new DefaultBlockModel());
         $this->register(VanillaBlocks::END_ROD(), new EndRodModel());
         $this->register(VanillaBlocks::CHEST(), new DefaultBlockModel()); // TODO double chests
@@ -116,17 +121,14 @@ final class BlockModels
         $this->register(VanillaBlocks::MOB_HEAD(), new DefaultBlockModel());
         $this->register(VanillaBlocks::LADDER(), new FlatHorizontalFacingModel());
         $this->register(VanillaBlocks::SNOW_LAYER(), new DefaultBlockModel());
-        // TODO Bamboo
-        // TODO Bell
-        // TODO Brewing stand
-        // TODO Cake
-        // TODO (Soul) Campfire
-        // TODO Crops - Growing stages
-        // TODO Cocoa block
+        $this->register(VanillaBlocks::BAMBOO(), new BambooModel());
+        $this->register(VanillaBlocks::BELL(), new BellModel());
+        $this->register(VanillaBlocks::BREWING_STAND(), new BrewingStandModel());
+        $this->register(VanillaBlocks::CAKE(), new CakeModel());
+        $this->register(VanillaBlocks::COCOA_POD(), new CocoaModel());
         // TODO Dragon Egg
         // TODO (Soul) Fire
         // TODO (Soul) Lantern
-        // TODO Lava/Water
         // TODO Lectern
         // TODO Nether portal
         // TODO Redstone
@@ -148,10 +150,9 @@ final class BlockModels
         $this->registerClass(Thin::class, new ThinConnectionModel());
         $this->registerClass(FenceGate::class, new FenceGateModel());
         $this->registerClass(Door::class, new DoorModel());
-        $this->registerClass(DoublePlant::class, new CrossModel());
-        $this->registerClass(Sapling::class, new CrossModel());
-        $this->registerClass(Crops::class, new CrossModel());
-        $this->registerClass(Flower::class, new CrossModel());
+        $this->registerClass(DoublePlant::class, new FlatCrossModel());
+        $this->registerClass(Sapling::class, new FlatCrossModel());
+        $this->registerClass(Flower::class, new FlatCrossModel());
         $this->registerClass(PressurePlate::class, new PressurePlateModel());
         $this->registerClass(Button::class, new ButtonModel());
         $this->registerClass(Torch::class, new TorchModel());
@@ -163,7 +164,10 @@ final class BlockModels
         $this->registerClass(FloorSign::class, new FloorSignModel());
         $this->registerClass(WallBanner::class, new WallSignModel());   // TODO discover the real banner textures...
         $this->registerClass(FloorBanner::class, new FloorSignModel());
-        $this->registerClass(Coral::class, new CrossModel());
+        $this->registerClass(Coral::class, new FlatCrossModel());
+        $this->registerClass(Campfire::class, new CampfireModel());
+        $this->registerClass(Stem::class, new StemModel()); // should be defined before Crops
+        $this->registerClass(Crops::class, new CropsModel());
 
         // register traits
         $this->registerTrait(HorizontalFacingTrait::class, new HorizontalFacingModel());
@@ -178,10 +182,10 @@ final class BlockModels
     /**
      * Register a block model
      * @param Block $block
-     * @param BlockModel $model
+     * @param BlockModelInterface $model
      * @return void
      */
-    public function register(Block $block, BlockModel $model): void
+    public function register(Block $block, BlockModelInterface $model): void
     {
         $this->blockModels[$block->getTypeId()] = $model;
     }
@@ -189,10 +193,10 @@ final class BlockModels
     /**
      * Register a model for all blocks of the same (parent) class
      * @param class-string<Block> $class class name
-     * @param BlockModel $model
+     * @param BlockModelInterface $model
      * @return void
      */
-    public function registerClass(string $class, BlockModel $model): void
+    public function registerClass(string $class, BlockModelInterface $model): void
     {
         $this->blockClassModels[$class] = $model;
     }
@@ -200,15 +204,15 @@ final class BlockModels
     /**
      * Register a model for all blocks with the given trait
      * @param trait-string $trait
-     * @param BlockModel $model
+     * @param BlockModelInterface $model
      * @return void
      */
-    public function registerTrait(string $trait, BlockModel $model): void
+    public function registerTrait(string $trait, BlockModelInterface $model): void
     {
         $this->blockTraitModels[$trait] = $model;
     }
 
-    public function get(Block $block): ?BlockModel
+    public function get(Block $block): ?BlockModelInterface
     {
         // ignore some invisible blocks
         if (in_array($block->getTypeId(), [BlockTypeIds::AIR, BlockTypeIds::BARRIER])) return null;
@@ -216,12 +220,12 @@ final class BlockModels
         $model = $this->blockModels[$block->getTypeId()] ?? $this->getByClass($block) ?? $this->getByTrait($block);
         if ($model !== null) return $model;
 
-        if ($block instanceof Flowable) return new CrossModel();
+        if ($block instanceof Flowable) return new FlatCrossModel();
 
         return new DefaultBlockModel();
     }
 
-    public function getByClass(Block $block): ?BlockModel
+    public function getByClass(Block $block): ?BlockModelInterface
     {
         $model = $this->blockClassModels[$block::class] ?? null;
         if ($model !== null) return $model;
@@ -237,7 +241,7 @@ final class BlockModels
         return null;
     }
 
-    public function getByTrait(Block $block): ?BlockModel
+    public function getByTrait(Block $block): ?BlockModelInterface
     {
         $traits = BlockUtils::getTraits($block);
 

@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ use pocketmine\block\Chest;
 use pocketmine\block\Fence;
 use pocketmine\block\FenceGate;
 use pocketmine\block\Thin;
+use pocketmine\block\utils\AgeableTrait;
 use pocketmine\block\utils\AnyFacingTrait;
 use pocketmine\block\utils\ColoredTrait;
 use pocketmine\block\utils\FacesOppositePlacingPlayerTrait;
@@ -260,4 +261,13 @@ class BlockUtils
         return self::hasTrait($block, MultiAnyFacingTrait::class, MultiAnySupportTrait::class);
     }
 
+    /**
+     * Check if the block has the Ageable trait
+     * @param Block $block
+     * @return bool
+     */
+    public static function hasAgeable(Block $block): bool
+    {
+        return self::hasTrait($block, AgeableTrait::class);
+    }
 }
