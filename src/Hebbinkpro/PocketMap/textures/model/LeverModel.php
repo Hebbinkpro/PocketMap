@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
+use Hebbinkpro\PocketMap\textures\model\geometry\ModelGeometry;
+use Hebbinkpro\PocketMap\textures\model\geometry\TexturePosition;
 use pocketmine\block\Block;
 use pocketmine\block\Lever;
 use pocketmine\math\Facing;
@@ -29,7 +31,7 @@ use pocketmine\world\format\Chunk;
  */
 class LeverModel extends RotatedBlockModel
 {
-    public function getGeometry(Block $block, Chunk $chunk): array
+    public function getGeometry(Block $block, Chunk $chunk): ?array
     {
         if (!$block instanceof Lever) return parent::getGeometry($block, $chunk);
 
@@ -39,24 +41,24 @@ class LeverModel extends RotatedBlockModel
         if (in_array($facing, [Facing::UP, Facing::DOWN])) {
             $rotation = $activated ? 180 : 0;
             return [
-                [
-                    [7, 6],
-                    [2, 9],       // ignore the last row of pixels, they are hidden in the base
-                    [7, 0],
-                    [2, 7],
-                    $rotation    // rotate by 180 degrees when activated
-                ]
+                new ModelGeometry(
+                    new TexturePosition(7, 6),
+                    new TexturePosition(2, 9),  // ignore the last row of pixels, they are hidden in the base
+                    new TexturePosition(7, 0),
+                    new TexturePosition(2, 7),
+                    $rotation   // rotate by 180 degrees when activated
+                )
             ];
         }
 
-        $size = $activated ? [2, 9] : [2, 7];
+        $size = $activated ? 9 : 7;
+
         return [
-            [
-                [7, 6],
-                $size,
-                [7, 6],
-                [2, 7],
-            ]
+            new ModelGeometry(
+                srcStart: new TexturePosition(7, 6),
+                srcSize: new TexturePosition(2, $size),
+                dstSize: new TexturePosition(2, 7)
+            )
         ];
     }
 

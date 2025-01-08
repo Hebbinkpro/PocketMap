@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
+use Hebbinkpro\PocketMap\textures\model\geometry\ModelGeometry;
+use Hebbinkpro\PocketMap\textures\model\geometry\TexturePosition;
 use Hebbinkpro\PocketMap\utils\block\BlockUtils;
 use pocketmine\block\Block;
 use pocketmine\block\Wall;
@@ -30,20 +32,10 @@ class WallModel extends ConnectionModel
     public function getCenterGeometry(Block $block): array
     {
         if (!$block instanceof Wall || $block->isPost()) {
-            return [
-                [
-                    [4, 4],
-                    [8, 8]
-                ]
-            ];
+            return [ModelGeometry::fromCenter(8)];
         }
 
-        return [
-            [
-                [5, 5],
-                [6, 6]
-            ]
-        ];
+        return [ModelGeometry::fromCenter(6)];
     }
 
     public function getConnectionsGeometry(Block $block, Chunk $chunk): array
@@ -54,22 +46,22 @@ class WallModel extends ConnectionModel
         $connections = BlockUtils::getConnections($block, $chunk);
         foreach ($connections as $face) {
             $faceGeo = match ($face) {
-                Facing::NORTH => [
-                    [5, 0],
-                    [6, $length]
-                ],
-                Facing::EAST => [
-                    [11, 5],
-                    [$length, 6]
-                ],
-                Facing::SOUTH => [
-                    [5, 11],
-                    [6, $length]
-                ],
-                Facing::WEST => [
-                    [0, 5],
-                    [$length, 6]
-                ],
+                Facing::NORTH => new ModelGeometry(
+                    new TexturePosition(5, 0),
+                    new TexturePosition(6, $length)
+                ),
+                Facing::EAST => new ModelGeometry(
+                    new TexturePosition(11, 5),
+                    new TexturePosition($length, 6)
+                ),
+                Facing::SOUTH => new ModelGeometry(
+                    new TexturePosition(5, 11),
+                    new TexturePosition(6, $length)
+                ),
+                Facing::WEST => new ModelGeometry(
+                    new TexturePosition(0, 5),
+                    new TexturePosition($length, 6)
+                ),
                 default => null
             };
 

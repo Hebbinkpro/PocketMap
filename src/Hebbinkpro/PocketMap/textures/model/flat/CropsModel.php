@@ -19,8 +19,6 @@
 
 namespace Hebbinkpro\PocketMap\textures\model\flat;
 
-use Hebbinkpro\PocketMap\textures\model\geometry\FlatModelGeometry;
-use Hebbinkpro\PocketMap\textures\model\geometry\TexturePosition;
 use pocketmine\block\Block;
 use pocketmine\world\format\Chunk;
 
@@ -30,28 +28,9 @@ class CropsModel extends FlatBlockModel
     /**
      * @inheritDoc
      */
-    public function getGeometry(Block $block, Chunk $chunk): array
+    public function getGeometry(Block $block, Chunk $chunk): ?array
     {
-        return [
-            new FlatModelGeometry(
-                dstStart: new TexturePosition(0, 4),
-                dstEnd: new TexturePosition(16, 4),
-            ),
-            new FlatModelGeometry(
-                dstStart: new TexturePosition(0, 4),
-                dstEnd: new TexturePosition(16, 4),
-                rotation: 90
-            ),
-            new FlatModelGeometry(
-                dstStart: new TexturePosition(0, 4),
-                dstEnd: new TexturePosition(16, 4),
-                rotation: 180
-            ),
-            new FlatModelGeometry(
-                dstStart: new TexturePosition(0, 4),
-                dstEnd: new TexturePosition(16, 4),
-                rotation: 270
-            )
-        ];
+        // offset the square by 4 pixels
+        return self::square(4);
     }
 }

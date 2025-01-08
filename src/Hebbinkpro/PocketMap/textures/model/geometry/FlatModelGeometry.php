@@ -31,6 +31,7 @@ class FlatModelGeometry implements ModelGeometryInterface
     private TexturePosition $dstEnd;
     private int $rotation;
     private bool $clockwiseRotation;
+    private bool $reverseColors;
 
     /**
      * @param int $src
@@ -39,8 +40,9 @@ class FlatModelGeometry implements ModelGeometryInterface
      * @param TexturePosition|null $dstEnd
      * @param int $rotation
      * @param bool $clockwiseRotation
+     * @param bool $reverseColors
      */
-    public function __construct(int $src = 0, int $srcSize = PocketMap::TEXTURE_SIZE, TexturePosition $dstStart = null, TexturePosition $dstEnd = null, int $rotation = 0, bool $clockwiseRotation = true)
+    public function __construct(int $src = 0, int $srcSize = PocketMap::TEXTURE_SIZE, TexturePosition $dstStart = null, TexturePosition $dstEnd = null, int $rotation = 0, bool $clockwiseRotation = true, bool $reverseColors = false)
     {
         $this->src = $src;
         $this->srcSize = $srcSize;
@@ -48,9 +50,15 @@ class FlatModelGeometry implements ModelGeometryInterface
         $this->dstEnd = $dstEnd ?? TexturePosition::maxX();
         $this->rotation = $rotation;
         $this->clockwiseRotation = $clockwiseRotation;
+        $this->reverseColors = $reverseColors;
     }
 
-
+    /**
+     * Create a texture using the provided src image
+     * @param GdImage $srcImage
+     * @param int $size
+     * @return GdImage
+     */
     public function createTexture(GdImage $srcImage, int $size = PocketMap::TEXTURE_SIZE): GdImage
     {
         // flat model, so get the highest pixels on the src image
@@ -59,10 +67,19 @@ class FlatModelGeometry implements ModelGeometryInterface
         return $this->createTextureFromColors($colors, $size);
     }
 
+    /**
+     * Create a texture using the provided color array
+     * @param array $colors
+     * @param int $size
+     * @return GdImage
+     */
     public function createTextureFromColors(array $colors, int $size = PocketMap::TEXTURE_SIZE): GdImage
     {
         // get the colors used for this texture
         $colors = array_slice($colors, $this->src, $this->srcSize);
+
+        // reverse the colors in the array
+        if ($this->reverseColors) $colors = array_reverse($colors);
 
         $dstImage = $this->drawLineWithColors($colors, $size);
 
@@ -78,6 +95,12 @@ class FlatModelGeometry implements ModelGeometryInterface
         return imagerotate($dstImage, $rotation, 0);
     }
 
+    /**
+     * Draw a line of colors on an image
+     * @param array $colors
+     * @param int $size
+     * @return GdImage
+     */
     private function drawLineWithColors(array $colors, int $size): GdImage
     {
         $x0 = $this->dstStart->getX();
@@ -143,4 +166,56 @@ class FlatModelGeometry implements ModelGeometryInterface
         return $image;
     }
 
+    /**
+     * @return int
+     */
+    public function getSrc(): int
+    {
+        return $this->src;
+    }
+
+    /**
+     * @return int
+     */
+    public function getSrcSize(): int
+    {
+        return $this->srcSize;
+    }
+
+    /**
+     * @return TexturePosition
+     */
+    public function getDstStart(): TexturePosition
+    {
+        return $this->dstStart;
+    }
+
+    /**
+     * @return TexturePosition
+     */
+    public function getDstEnd(): TexturePosition
+    {
+        return $this->dstEnd;
+    }
+
+    /**
+     * @return int
+     */
+    public function getRotation(): int
+    {
+        return $this->rotation;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasClockwiseRotation(): bool
+    {
+        return $this->clockwiseRotation;
+    }
+
+    public function hasReversedColors(): bool
+    {
+        return $this->reverseColors;
+    }
 }

@@ -75,6 +75,26 @@ class TexturePosition
     }
 
     /**
+     * Get a texture position with the same x and y value
+     * @param int $value
+     * @return self
+     */
+    public static function xy(int $value): self
+    {
+        return new self($value, $value);
+    }
+
+    /**
+     * Returns a position with 7,7 as the center.
+     * There is no real center on a 16x16 pixel image, but this can be used for a generalized center.
+     * @return self
+     */
+    public static function center(): self
+    {
+        return new self(7, 7);
+    }
+
+    /**
      * @return int
      */
     public function getX(): int

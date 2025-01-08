@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
+use Hebbinkpro\PocketMap\textures\model\geometry\ModelGeometry;
+use Hebbinkpro\PocketMap\textures\model\geometry\TexturePosition;
 use pocketmine\block\Block;
 use pocketmine\block\EndRod;
 use pocketmine\math\Facing;
@@ -27,16 +29,16 @@ use pocketmine\world\format\Chunk;
 class EndRodModel extends AnyFacingModel
 {
 
-    public function getGeometry(Block $block, Chunk $chunk): array
+    public function getGeometry(Block $block, Chunk $chunk): ?array
     {
-        if (!$block instanceof EndRod) return parent::getGeometry($block, $chunk);
+        if (!$block instanceof EndRod) return null;
 
         // 4x4 bottom
-        $bottom = [
-            [2, 3],
-            [4, 4],
-            [6, 6]
-        ];
+        $bottom = new ModelGeometry(
+            srcStart: new TexturePosition(2, 3),
+            srcSize: TexturePosition::xy(4),
+            dstStart: TexturePosition::xy(6)
+        );
 
         return match ($block->getFacing()) {
             Facing::DOWN => [
@@ -45,25 +47,25 @@ class EndRodModel extends AnyFacingModel
             Facing::UP => [
                 $bottom,
                 // 2x2 top
-                [
-                    [2, 0],
-                    [2, 2],
-                    [7, 7]
-                ]
+                new ModelGeometry(
+                    new TexturePosition(2, 0),
+                    TexturePosition::xy(2),
+                    TexturePosition::center()
+                )
             ],
             default => [
                 // 4x1 bottom
-                [
-                    [2, 2],
-                    [4, 1],
-                    [6, 15]
-                ],
+                new ModelGeometry(
+                    TexturePosition::xy(2),
+                    new TexturePosition(4, 1),
+                    new TexturePosition(6, 15)
+                ),
                 // 2x15 rod
-                [
-                    [0, 0],
-                    [2, 15],
-                    [7, 0]
-                ]
+                new ModelGeometry(
+                    TexturePosition::zero(),
+                    new TexturePosition(2, 15),
+                    new TexturePosition(7, 0)
+                )
             ]
         };
     }

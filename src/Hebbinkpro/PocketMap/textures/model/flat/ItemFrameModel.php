@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,16 +17,30 @@
  * (at your option) any later version.
  */
 
-namespace Hebbinkpro\PocketMap\textures\model;
+namespace Hebbinkpro\PocketMap\textures\model\flat;
 
 use pocketmine\block\Block;
-use pocketmine\block\Vine;
+use pocketmine\block\ItemFrame;
+use pocketmine\world\format\Chunk;
 
-class VinesModel extends MultiAnyFacingModel
+/**
+ * TODO the item frame uses the oak_planks texture for its edges
+ */
+class ItemFrameModel extends MultiAnyFacingModel
 {
     public function getFaces(Block $block): array
     {
-        if (!$block instanceof Vine) return [];
-        return $block->getFaces();
+        if (!$block instanceof ItemFrame) return [];
+
+        return [$block->getFacing()];
+
+    }
+
+    public function getGeometry(Block $block, Chunk $chunk): ?array
+    {
+        if (!$block instanceof ItemFrame) return null;
+
+        // item frames do not have an inverted facing
+        return self::square(0, $this->getFaces($block));
     }
 }

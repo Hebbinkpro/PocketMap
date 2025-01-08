@@ -20,6 +20,7 @@
 namespace Hebbinkpro\PocketMap\textures\model;
 
 use GdImage;
+use Hebbinkpro\PocketMap\textures\model\geometry\ModelGeometryInterface;
 use pocketmine\block\Block;
 use pocketmine\world\format\Chunk;
 
@@ -36,6 +37,9 @@ interface BlockModelInterface
 
     /**
      * Get the block geometry.
+     * @param Block $block
+     * @param Chunk $chunk
+     * @return ModelGeometryInterface[]|null
      */
-    public function getGeometry(Block $block, Chunk $chunk): array;
+    public function getGeometry(Block $block, Chunk $chunk): ?array;
 }

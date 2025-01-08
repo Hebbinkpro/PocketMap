@@ -19,9 +19,14 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
+use Hebbinkpro\PocketMap\textures\model\flat\BrewingStandModel;
 use Hebbinkpro\PocketMap\textures\model\flat\CropsModel;
 use Hebbinkpro\PocketMap\textures\model\flat\FlatCrossModel;
+use Hebbinkpro\PocketMap\textures\model\flat\FlatHorizontalFacingModel;
+use Hebbinkpro\PocketMap\textures\model\flat\ItemFrameModel;
+use Hebbinkpro\PocketMap\textures\model\flat\MultiAnyFacingModel;
 use Hebbinkpro\PocketMap\textures\model\flat\StemModel;
+use Hebbinkpro\PocketMap\textures\model\flat\VinesModel;
 use Hebbinkpro\PocketMap\utils\block\BlockUtils;
 use pocketmine\block\BaseRail;
 use pocketmine\block\Block;
@@ -78,7 +83,7 @@ final class BlockModels
         $this->blockModels = [];
         $this->blockClassModels = [];
         $this->blockTraitModels = [];
-        $this->default = new DefaultBlockModel();
+        $this->default = new FullBlockModel();
 
         $this->registerAll();
     }
@@ -90,43 +95,43 @@ final class BlockModels
     private function registerAll(): void
     {
         // register blocks
-        $this->register(VanillaBlocks::WATER(), new DefaultBlockModel());
-        $this->register(VanillaBlocks::LAVA(), new DefaultBlockModel());
+        $this->register(VanillaBlocks::WATER(), new FullBlockModel());
+        $this->register(VanillaBlocks::LAVA(), new FullBlockModel());
         $this->register(VanillaBlocks::BIG_DRIPLEAF_STEM(), new FlatCrossModel());
         $this->register(VanillaBlocks::BREWING_STAND(), new FlatCrossModel());
         $this->register(VanillaBlocks::AMETHYST_CLUSTER(), new FlatCrossModel());
-        $this->register(VanillaBlocks::PITCHER_CROP(), new DefaultBlockModel());
+        $this->register(VanillaBlocks::PITCHER_CROP(), new FullBlockModel());
         $this->register(VanillaBlocks::END_ROD(), new EndRodModel());
-        $this->register(VanillaBlocks::CHEST(), new DefaultBlockModel()); // TODO double chests
-        $this->register(VanillaBlocks::TRAPPED_CHEST(), new DefaultBlockModel());
-        $this->register(VanillaBlocks::ENDER_CHEST(), new DefaultBlockModel());
-        $this->register(VanillaBlocks::CAKE(), new DefaultBlockModel());
-        $this->register(VanillaBlocks::CAKE_WITH_CANDLE(), new DefaultBlockModel());
-        $this->register(VanillaBlocks::CAKE_WITH_DYED_CANDLE(), new DefaultBlockModel());
-        $this->register(VanillaBlocks::PINK_PETALS(), new DefaultBlockModel());
+        $this->register(VanillaBlocks::CHEST(), new FullBlockModel()); // TODO double chests
+        $this->register(VanillaBlocks::TRAPPED_CHEST(), new FullBlockModel());
+        $this->register(VanillaBlocks::ENDER_CHEST(), new FullBlockModel());
+        $this->register(VanillaBlocks::CAKE(), new FullBlockModel());
+        $this->register(VanillaBlocks::CAKE_WITH_CANDLE(), new FullBlockModel());
+        $this->register(VanillaBlocks::CAKE_WITH_DYED_CANDLE(), new FullBlockModel());
+        $this->register(VanillaBlocks::PINK_PETALS(), new FullBlockModel());
         $this->register(VanillaBlocks::CANDLE(), new CandleModel());
         $this->register(VanillaBlocks::DYED_CANDLE(), new CandleModel());
         $this->register(VanillaBlocks::SEA_PICKLE(), new SeaPickleModel());
         $this->register(VanillaBlocks::CHORUS_PLANT(), new WallModel());
-        $this->register(VanillaBlocks::CHORUS_FLOWER(), new DefaultBlockModel());
+        $this->register(VanillaBlocks::CHORUS_FLOWER(), new FullBlockModel());
         $this->register(VanillaBlocks::LIGHTNING_ROD(), new LightningRodModel());
         $this->register(VanillaBlocks::LEVER(), new LeverModel());
         $this->register(VanillaBlocks::VINES(), new VinesModel());
         $this->register(VanillaBlocks::PINK_PETALS(), new PinkPetalsModel());
-        $this->register(VanillaBlocks::CARPET(), new DefaultBlockModel());
-        $this->register(VanillaBlocks::LILY_PAD(), new DefaultBlockModel());
-        $this->register(VanillaBlocks::REDSTONE_WIRE(), new DefaultBlockModel());
-        $this->register(VanillaBlocks::REDSTONE(), new DefaultBlockModel());
-        $this->register(VanillaBlocks::TRIPWIRE(), new DefaultBlockModel());
-        $this->register(VanillaBlocks::MOB_HEAD(), new DefaultBlockModel());
+        $this->register(VanillaBlocks::CARPET(), new FullBlockModel());
+        $this->register(VanillaBlocks::LILY_PAD(), new FullBlockModel());
+        $this->register(VanillaBlocks::REDSTONE_WIRE(), new FullBlockModel());
+        $this->register(VanillaBlocks::REDSTONE(), new FullBlockModel());
+        $this->register(VanillaBlocks::TRIPWIRE(), new FullBlockModel());
+        $this->register(VanillaBlocks::MOB_HEAD(), new FullBlockModel());
         $this->register(VanillaBlocks::LADDER(), new FlatHorizontalFacingModel());
-        $this->register(VanillaBlocks::SNOW_LAYER(), new DefaultBlockModel());
+        $this->register(VanillaBlocks::SNOW_LAYER(), new FullBlockModel());
         $this->register(VanillaBlocks::BAMBOO(), new BambooModel());
         $this->register(VanillaBlocks::BELL(), new BellModel());
         $this->register(VanillaBlocks::BREWING_STAND(), new BrewingStandModel());
         $this->register(VanillaBlocks::CAKE(), new CakeModel());
         $this->register(VanillaBlocks::COCOA_POD(), new CocoaModel());
-        // TODO Dragon Egg
+        $this->register(VanillaBlocks::DRAGON_EGG(), new CenteredBlockModel(14));
         // TODO (Soul) Fire
         // TODO (Soul) Lantern
         // TODO Lectern
@@ -153,10 +158,10 @@ final class BlockModels
         $this->registerClass(DoublePlant::class, new FlatCrossModel());
         $this->registerClass(Sapling::class, new FlatCrossModel());
         $this->registerClass(Flower::class, new FlatCrossModel());
-        $this->registerClass(PressurePlate::class, new PressurePlateModel());
+        $this->registerClass(PressurePlate::class, new CenteredBlockModel(14));
         $this->registerClass(Button::class, new ButtonModel());
         $this->registerClass(Torch::class, new TorchModel());
-        $this->registerClass(Stair::class, new DefaultBlockModel());
+        $this->registerClass(Stair::class, new FullBlockModel());
         $this->registerClass(BaseRail::class, new RailModel());
         $this->registerClass(ItemFrame::class, new ItemFrameModel());
         $this->registerClass(Trapdoor::class, new TrapdoorModel());
@@ -222,7 +227,7 @@ final class BlockModels
 
         if ($block instanceof Flowable) return new FlatCrossModel();
 
-        return new DefaultBlockModel();
+        return new FullBlockModel();
     }
 
     public function getByClass(Block $block): ?BlockModelInterface

@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
+use Hebbinkpro\PocketMap\textures\model\geometry\ModelGeometry;
+use Hebbinkpro\PocketMap\textures\model\geometry\TexturePosition;
 use Hebbinkpro\PocketMap\utils\block\BlockUtils;
 use pocketmine\block\Block;
 use pocketmine\math\Facing;
@@ -32,10 +34,7 @@ class FenceModel extends ConnectionModel
     public function getCenterGeometry(Block $block): array
     {
         return [
-            [
-                [6, 6],
-                [4, 4]
-            ]
+            ModelGeometry::fromCenter(4)
         ];
     }
 
@@ -50,22 +49,22 @@ class FenceModel extends ConnectionModel
 
         foreach ($connections as $face) {
             $faceGeo = match ($face) {
-                Facing::NORTH => [
-                    [7, 0],
-                    [2, 6]
-                ],
-                Facing::EAST => [
-                    [10, 7],
-                    [6, 2]
-                ],
-                Facing::SOUTH => [
-                    [7, 10],
-                    [2, 6]
-                ],
-                Facing::WEST => [
-                    [0, 7],
-                    [6, 2]
-                ],
+                Facing::NORTH => new ModelGeometry(
+                    new TexturePosition(7, 0),
+                    new TexturePosition(2, 6)
+                ),
+                Facing::EAST => new ModelGeometry(
+                    new TexturePosition(10, 7),
+                    new TexturePosition(6, 2)
+                ),
+                Facing::SOUTH => new ModelGeometry(
+                    new TexturePosition(7, 10),
+                    new TexturePosition(2, 6)
+                ),
+                Facing::WEST => new ModelGeometry(
+                    new TexturePosition(0, 7),
+                    new TexturePosition(6, 2)
+                ),
                 default => null
             };
 

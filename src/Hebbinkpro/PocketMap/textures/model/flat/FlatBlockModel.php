@@ -23,8 +23,10 @@ use GdImage;
 use Hebbinkpro\PocketMap\PocketMap;
 use Hebbinkpro\PocketMap\textures\model\BlockModelInterface;
 use Hebbinkpro\PocketMap\textures\model\geometry\FlatModelGeometry;
+use Hebbinkpro\PocketMap\textures\model\geometry\TexturePosition;
 use Hebbinkpro\PocketMap\utils\TextureUtils;
 use pocketmine\block\Block;
+use pocketmine\math\Facing;
 use pocketmine\world\format\Chunk;
 
 /**
@@ -60,6 +62,54 @@ abstract class FlatBlockModel implements BlockModelInterface
     }
 
     /**
+     * Get a square model geometry, this uses all top pixels
+     * @param int $offset offset used to indent the edges
+     * @param int[] $sides Which sides (\pocketmine\math\Facing) should be included in the square
+     * @param bool $invertedFaces if the faces are inverted, so that a North facing block is attached on the South side
+     * @return FlatModelGeometry[]
+     */
+    public static function square(int $offset = 0, array $sides = Facing::HORIZONTAL, bool $invertedFaces = false): array
+    {
+        $start = new TexturePosition(0, $offset);
+        $end = new TexturePosition(PocketMap::TEXTURE_SIZE, $offset);
+
+        // offset to append for inverted faces
+        $rotationOffset = $invertedFaces ? 180 : 0;
+
+        $geo = [];
+        foreach ($sides as $side) {
+            $side = match ($side) {
+                Facing::NORTH => new FlatModelGeometry(
+                    dstStart: $start,
+                    dstEnd: $end,
+                    rotation: $rotationOffset
+                ),
+                Facing::EAST => new FlatModelGeometry(
+                    dstStart: $start,
+                    dstEnd: $end,
+                    rotation: $rotationOffset + 90
+                ),
+                Facing::SOUTH => new FlatModelGeometry(
+                    dstStart: $start,
+                    dstEnd: $end,
+                    rotation: $rotationOffset + 180
+                ),
+                Facing::WEST => new FlatModelGeometry(
+                    dstStart: $start,
+                    dstEnd: $end,
+                    rotation: $rotationOffset + 270
+                ),
+                default => null
+            };
+
+            // append if side is non-null
+            if ($side !== null) $geo[] = $side;
+        }
+
+        return $geo;
+    }
+
+    /**
      * The height of the block texture
      * @param Block $block
      * @param Chunk $chunk
@@ -73,7 +123,7 @@ abstract class FlatBlockModel implements BlockModelInterface
     /**
      * @param Block $block
      * @param Chunk $chunk
-     * @return array<FlatModelGeometry>
+     * @return array|null
      */
-    public abstract function getGeometry(Block $block, Chunk $chunk): array;
+    public abstract function getGeometry(Block $block, Chunk $chunk): ?array;
 }

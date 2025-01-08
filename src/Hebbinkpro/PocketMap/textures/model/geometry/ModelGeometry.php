@@ -44,6 +44,31 @@ class ModelGeometry implements ModelGeometryInterface
     }
 
     /**
+     * Set the specified values and get a new instance with the set values.
+     *
+     * When a value is null, the current value will be used.
+     * @param TexturePosition|null $srcStart
+     * @param TexturePosition|null $srcSize
+     * @param TexturePosition|null $dstStart
+     * @param TexturePosition|null $dstSize
+     * @param int|null $rotation
+     * @param bool|null $clockwiseRotation
+     * @return ModelGeometry a new instance with the set values
+     */
+    public function set(TexturePosition $srcStart = null, TexturePosition $srcSize = null, TexturePosition $dstStart = null, TexturePosition $dstSize = null, int $rotation = null, bool $clockwiseRotation = null): ModelGeometry
+    {
+        return new self(
+            $srcStart ?? $this->src,
+            $srcSize ?? $this->srcSize,
+            $dstStart ?? $this->dst,
+            $dstSize ?? $this->dstSize,
+            $rotation ?? $this->rotation,
+            $clockwiseRotation ?? $this->clockwiseRotation
+        );
+    }
+
+
+    /**
      * Convert a legacy array geometry to a model geometry
      * @param array $geometry
      * @return ModelGeometry|null
@@ -77,6 +102,27 @@ class ModelGeometry implements ModelGeometryInterface
             isset($geometry[4]) ? intval($geometry[4]) : 0
         );
 
+    }
+
+    /**
+     * Create a model of size x size centered at the center of the texture.
+     * A size <= 1 and > 16 will result in the default model
+     * @param int $size
+     * @return self
+     */
+    public static function fromCenter(int $size): self
+    {
+
+        if ($size < 1 || $size > PocketMap::TEXTURE_SIZE) {
+            // invalid size
+            return new self();
+        }
+
+        $start = 8 - floor($size / 2);
+        return new self(
+            new TexturePosition($start, $start),
+            new TexturePosition($size, $size),
+        );
     }
 
     /**
@@ -137,6 +183,11 @@ class ModelGeometry implements ModelGeometryInterface
     {
         $dstImage = TextureUtils::getEmptyTexture($size);
 
+        // convert clockwise to anti-clockwise rotation and make sure it is between 0 and 360
+        if ($this->clockwiseRotation) $rotation = 360 - $this->rotation;
+        else $rotation = $this->rotation;
+        $rotation %= 360;
+
         // no rotation
         if ($this->rotation == 0) {
             imagealphablending($srcImage, true);
@@ -152,12 +203,6 @@ class ModelGeometry implements ModelGeometryInterface
             return $dstImage;
         }
 
-
-        // convert clockwise to anti-clockwise rotation and make sure it is between 0 and 360
-        if ($this->clockwiseRotation) $rotation = 360 - $this->rotation;
-        else $rotation = $this->rotation;
-
-        $rotation %= 360;
 
         // create an empty texture on which the resized part is copied
         $tmpImage = TextureUtils::getEmptyTexture();

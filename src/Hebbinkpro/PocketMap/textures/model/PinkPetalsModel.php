@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
+use Hebbinkpro\PocketMap\textures\model\geometry\ModelGeometry;
+use Hebbinkpro\PocketMap\textures\model\geometry\TexturePosition;
 use pocketmine\block\Block;
 use pocketmine\block\PinkPetals;
 use pocketmine\world\format\Chunk;
@@ -26,34 +28,34 @@ use pocketmine\world\format\Chunk;
 class PinkPetalsModel extends HorizontalFacingModel
 {
 
-    public function getGeometry(Block $block, Chunk $chunk): array
+    public function getGeometry(Block $block, Chunk $chunk): ?array
     {
-        if (!$block instanceof PinkPetals) return parent::getGeometry($block, $chunk);
+        if (!$block instanceof PinkPetals) return null;
 
         $count = $block->getCount();
 
         return match ($count) {
             1 => [
-                [
-                    [0, 0],
-                    [8, 8]
-                ]
+                new ModelGeometry(
+                    TexturePosition::zero(),
+                    TexturePosition::xy(8)
+                )
             ],
             2 => [
-                [
-                    [0, 0],
-                    [16, 8]
-                ]
+                new ModelGeometry(
+                    TexturePosition::zero(),
+                    new TexturePosition(16, 8)
+                )
             ],
             3 => [
-                [
-                    [0, 0],
-                    [16, 8]
-                ],
-                [
-                    [8, 8],
-                    [8, 8]
-                ]
+                new ModelGeometry(
+                    TexturePosition::zero(),
+                    new TexturePosition(16, 8)
+                ),
+                new ModelGeometry(
+                    TexturePosition::xy(8),
+                    TexturePosition::xy(8)
+                )
             ],
             default => self::getDefaultGeometry()
         };

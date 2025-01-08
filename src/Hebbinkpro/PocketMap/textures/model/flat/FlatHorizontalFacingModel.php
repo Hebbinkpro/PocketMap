@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,24 +17,18 @@
  * (at your option) any later version.
  */
 
-namespace Hebbinkpro\PocketMap\textures\model;
+namespace Hebbinkpro\PocketMap\textures\model\flat;
 
+use Hebbinkpro\PocketMap\utils\block\BlockUtils;
 use pocketmine\block\Block;
-use pocketmine\world\format\Chunk;
+use pocketmine\block\Ladder;
 
-class PressurePlateModel extends BlockModel
+class FlatHorizontalFacingModel extends MultiAnyFacingModel
 {
-
-    /**
-     * @inheritDoc
-     */
-    public function getGeometry(Block $block, Chunk $chunk): array
+    public function getFaces(Block $block): array
     {
-        return [
-            [
-                [1, 1],
-                [14, 14]
-            ]
-        ];
+        if (!BlockUtils::hasHorizontalFacing($block)) return [];
+        /** @var Ladder $block */
+        return [$block->getFacing()];
     }
 }

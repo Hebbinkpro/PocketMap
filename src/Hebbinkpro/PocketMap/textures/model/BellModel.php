@@ -19,6 +19,8 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
+use Hebbinkpro\PocketMap\textures\model\geometry\ModelGeometry;
+use Hebbinkpro\PocketMap\textures\model\geometry\TexturePosition;
 use pocketmine\block\Block;
 use pocketmine\world\format\Chunk;
 
@@ -27,14 +29,14 @@ use pocketmine\world\format\Chunk;
  */
 class BellModel extends HorizontalFacingModel
 {
-    public function getGeometry(Block $block, Chunk $chunk): array
+    public function getGeometry(Block $block, Chunk $chunk): ?array
     {
         return [
-            [
-                [0, 0],
-                [8, 8],
-                [4, 4]
-            ]
+            new ModelGeometry(
+                TexturePosition::zero(),
+                TexturePosition::xy(8),
+                TexturePosition::xy(4)
+            )
         ];
     }
 }

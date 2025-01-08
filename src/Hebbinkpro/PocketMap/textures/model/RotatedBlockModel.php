@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,13 +32,10 @@ abstract class RotatedBlockModel extends BlockModel
         $texture = parent::getModelTexture($block, $chunk, $texture);
         if ($texture === null) return null;
 
-        // rotate the resulting texture
-        $rotation = $this->getRotation($block);
+        // convert clockwise to anti-clockwise rotation and make sure it is between 0 and 360
+        $rotation = (360 - $this->getRotation($block)) % 360;
 
         if ($rotation != 0) {
-            // convert clockwise to anti-clockwise rotation and make sure it is between 0 and 360
-            $rotation = (360 - $rotation) % 360;
-
             // rotate the texture
             $texture = imagerotate($texture, $rotation, 0);
         }
@@ -56,7 +53,7 @@ abstract class RotatedBlockModel extends BlockModel
     /**
      * @inheritDoc
      */
-    public function getGeometry(Block $block, Chunk $chunk): array
+    public function getGeometry(Block $block, Chunk $chunk): ?array
     {
         return self::getDefaultGeometry();
     }

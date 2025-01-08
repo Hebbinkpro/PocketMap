@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
+use Hebbinkpro\PocketMap\textures\model\geometry\ModelGeometry;
+use Hebbinkpro\PocketMap\textures\model\geometry\TexturePosition;
 use pocketmine\block\Block;
 use pocketmine\block\Door;
 use pocketmine\math\Facing;
@@ -41,13 +43,13 @@ class DoorModel extends HorizontalFacingModel
         };
     }
 
-    public function getGeometry(Block $block, Chunk $chunk): array
+    public function getGeometry(Block $block, Chunk $chunk): ?array
     {
         return [
-            [
-                [0, 0],
-                [16, 3]
-            ]
+            new ModelGeometry(
+                TexturePosition::zero(),
+                new TexturePosition(16, 3)
+            )
         ];
     }
 }

@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,12 +19,13 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
+use Hebbinkpro\PocketMap\textures\model\geometry\ModelGeometry;
 use pocketmine\block\Block;
 use pocketmine\world\format\Chunk;
 
 abstract class ConnectionModel extends BlockModel
 {
-    public function getGeometry(Block $block, Chunk $chunk): array
+    public function getGeometry(Block $block, Chunk $chunk): ?array
     {
         $center = $this->getCenterGeometry($block);
         $connections = $this->getConnectionsGeometry($block, $chunk);
@@ -33,14 +34,14 @@ abstract class ConnectionModel extends BlockModel
 
     /**
      * @param Block $block
-     * @return array<array<array{int, int}>>
+     * @return ModelGeometry[]
      */
     public abstract function getCenterGeometry(Block $block): array;
 
     /**
      * @param Block $block
      * @param Chunk $chunk
-     * @return array<array<array{int, int}>>
+     * @return ModelGeometry[]
      */
     public abstract function getConnectionsGeometry(Block $block, Chunk $chunk): array;
 }

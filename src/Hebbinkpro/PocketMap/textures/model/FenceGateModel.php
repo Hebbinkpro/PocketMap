@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
+use Hebbinkpro\PocketMap\textures\model\geometry\ModelGeometry;
+use Hebbinkpro\PocketMap\textures\model\geometry\TexturePosition;
 use pocketmine\block\Block;
 use pocketmine\block\FenceGate;
 use pocketmine\world\format\Chunk;
@@ -29,26 +31,27 @@ class FenceGateModel extends HorizontalFacingModel
     /**
      * @inheritDoc
      */
-    public function getGeometry(Block $block, Chunk $chunk): array
+    public function getGeometry(Block $block, Chunk $chunk): ?array
     {
         if ($block instanceof FenceGate && $block->isOpen()) {
+            $size = new TexturePosition(2, 9);
             return [
-                [
-                    [0, 0],
-                    [2, 9]
-                ],
-                [
-                    [14, 0],
-                    [2, 9]
-                ]
+                new ModelGeometry(
+                    TexturePosition::zero(),
+                    $size
+                ),
+                new ModelGeometry(
+                    new TexturePosition(14, 0),
+                    $size
+                )
             ];
         }
 
         return [
-            [
-                [0, 7],
-                [16, 2]
-            ]
+            new ModelGeometry(
+                new TexturePosition(0, 7),
+                new TexturePosition(16, 2)
+            )
         ];
     }
 }

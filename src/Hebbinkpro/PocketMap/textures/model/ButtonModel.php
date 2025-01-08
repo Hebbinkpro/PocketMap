@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,8 @@
 namespace Hebbinkpro\PocketMap\textures\model;
 
 
+use Hebbinkpro\PocketMap\textures\model\geometry\ModelGeometry;
+use Hebbinkpro\PocketMap\textures\model\geometry\TexturePosition;
 use pocketmine\block\Block;
 use pocketmine\block\Button;
 use pocketmine\math\Facing;
@@ -27,7 +29,7 @@ use pocketmine\world\format\Chunk;
 
 class ButtonModel extends AnyFacingModel
 {
-    public function getGeometry(Block $block, Chunk $chunk): array
+    public function getGeometry(Block $block, Chunk $chunk): ?array
     {
         if (!$block instanceof Button) return parent::getGeometry($block, $chunk);
 
@@ -35,20 +37,20 @@ class ButtonModel extends AnyFacingModel
 
         if (in_array($facing, [Facing::UP, Facing::DOWN])) {
             return [
-                [
-                    [5, 6],
-                    [6, 4]
-                ]
+                new ModelGeometry(
+                    new TexturePosition(5, 6),
+                    new TexturePosition(6, 4)
+                )
             ];
         }
 
         $height = $block->isPressed() ? 1 : 2;
 
         return [
-            [
-                [5, 0],
-                [6, $height]
-            ]
+            new ModelGeometry(
+                new TexturePosition(5, 0),
+                new TexturePosition(6, $height)
+            )
         ];
     }
 }

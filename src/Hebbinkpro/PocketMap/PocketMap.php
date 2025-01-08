@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ use Hebbinkpro\PocketMap\render\WorldRenderer;
 use Hebbinkpro\PocketMap\scheduler\ChunkSchedulerTask;
 use Hebbinkpro\PocketMap\scheduler\RenderSchedulerTask;
 use Hebbinkpro\PocketMap\settings\SettingsManager;
+use Hebbinkpro\PocketMap\textures\model\geometry\ModelGeometry;
 use Hebbinkpro\PocketMap\textures\TerrainTextures;
 use Hebbinkpro\PocketMap\textures\TerrainTexturesOptions;
 use Hebbinkpro\PocketMap\utils\ResourcePackUtils;
@@ -214,6 +215,14 @@ class PocketMap extends PluginBase implements Listener
 
         // enable the extensions
         ExtensionManager::getInstance()->enableAll();
+
+        for ($i = 0; $i <= self::TEXTURE_SIZE; $i++) {
+            $m = ModelGeometry::fromCenter($i);
+
+            $src = $m->getSrc();
+            $size = $m->getSrcSize();
+            var_dump("I=$i, M=Model([{$src->getX()}, {$src->getY()}], [{$size->getX()}, {$size->getY()}])");
+        }
     }
 
     /**

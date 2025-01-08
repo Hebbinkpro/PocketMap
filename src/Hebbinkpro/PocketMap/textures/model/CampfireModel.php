@@ -19,40 +19,37 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
+use Hebbinkpro\PocketMap\textures\model\geometry\ModelGeometry;
+use Hebbinkpro\PocketMap\textures\model\geometry\TexturePosition;
 use pocketmine\block\Block;
 use pocketmine\world\format\Chunk;
 
 class CampfireModel extends HorizontalFacingModel
 {
-    public function getGeometry(Block $block, Chunk $chunk): array
+    public function getGeometry(Block $block, Chunk $chunk): ?array
     {
 
-        $base = [
-            [0, 8],
-            [16, 6],
-            [0, 5],
-            [16, 6],
-            90
-        ];
+        $base = new ModelGeometry(
+            srcStart: new TexturePosition(0, 8),
+            srcSize: new TexturePosition(16, 6),
+            dstStart: new TexturePosition(0, 5),
+            rotation: 90
+        );
 
-        $log = [
-            [0, 0],
-            [16, 4],
-            [0, 1],
-            [16, 4]
-        ];
-
-
-        //        var_dump($campfire);
+        $log = new ModelGeometry(
+            srcStart: TexturePosition::zero(),
+            srcSize: new TexturePosition(16, 4),
+            dstStart: new TexturePosition(0, 1),
+        );
 
         return [
             $base,
             // logs on bottom
-            [...$log, 90],      // east log
-            [...$log, 270],    // west log
+            $log->set(rotation: 90), // east log
+            $log->set(rotation: 270), // west log
             // logs on top
-            [...$log, 0],       // north log
-            [...$log, 180]      // south log
+            $log->set(rotation: 0), // north log
+            $log->set(rotation: 180) // south log
         ];
     }
 }

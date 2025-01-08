@@ -27,7 +27,7 @@ use pocketmine\world\format\Chunk;
 class FlatCrossModel extends FlatBlockModel
 {
 
-    public function getGeometry(Block $block, Chunk $chunk): array
+    public function getGeometry(Block $block, Chunk $chunk): ?array
     {
         return [
             new FlatModelGeometry(

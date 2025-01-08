@@ -19,6 +19,8 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
+use Hebbinkpro\PocketMap\textures\model\geometry\ModelGeometry;
+use Hebbinkpro\PocketMap\textures\model\geometry\TexturePosition;
 use pocketmine\block\Block;
 use pocketmine\block\Cake;
 use pocketmine\world\format\Chunk;
@@ -29,16 +31,16 @@ class CakeModel extends BlockModel
     /**
      * @inheritDoc
      */
-    public function getGeometry(Block $block, Chunk $chunk): array
+    public function getGeometry(Block $block, Chunk $chunk): ?array
     {
-        if (!$block instanceof Cake) return [];
+        if (!$block instanceof Cake) return null;
 
         $start = $block->getBites() * 2;
         return [
-            [
-                [$start, 0],
-                [16 - $start, 16]
-            ]
+            new ModelGeometry(
+                new TexturePosition($start, 0),
+                new TexturePosition(16 - $start, 16)
+            )
         ];
 
     }

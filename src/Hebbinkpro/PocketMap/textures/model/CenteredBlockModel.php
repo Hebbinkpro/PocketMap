@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,16 +19,24 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
-use Hebbinkpro\PocketMap\utils\block\BlockUtils;
+use Hebbinkpro\PocketMap\textures\model\geometry\ModelGeometry;
 use pocketmine\block\Block;
-use pocketmine\block\Ladder;
+use pocketmine\world\format\Chunk;
 
-class FlatHorizontalFacingModel extends MultiAnyFacingModel
+/**
+ * A model centered at the center of the texture with a given size
+ */
+class CenteredBlockModel extends BlockModel
 {
-    public function getFaces(Block $block): array
+    public function __construct(private int $size)
     {
-        if (!BlockUtils::hasHorizontalFacing($block)) return [];
-        /** @var Ladder $block */
-        return [$block->getFacing()];
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getGeometry(Block $block, Chunk $chunk): ?array
+    {
+        return [ModelGeometry::fromCenter($this->size)];
     }
 }

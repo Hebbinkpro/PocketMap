@@ -19,6 +19,8 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
+use Hebbinkpro\PocketMap\textures\model\geometry\ModelGeometry;
+use Hebbinkpro\PocketMap\textures\model\geometry\TexturePosition;
 use pocketmine\block\Bamboo;
 use pocketmine\block\Block;
 use pocketmine\world\format\Chunk;
@@ -32,21 +34,21 @@ class BambooModel extends BlockModel
     /**
      * @inheritDoc
      */
-    public function getGeometry(Block $block, Chunk $chunk): array
+    public function getGeometry(Block $block, Chunk $chunk): ?array
     {
-        if (!$block instanceof Bamboo) return [];
+        if (!$block instanceof Bamboo) return null;
 
         $size = $block->isThick() ? 3 : 2;
 
         $modelOffset = $block->getModelPositionOffset();
-        $offset = [floor($modelOffset->getX() * 16), floor($modelOffset->getZ() * 16)];
+        $offset = new TexturePosition(floor($modelOffset->getX() * 16), floor($modelOffset->getZ() * 16));
 
         return [
-            [
-                [13, 0],
-                [$size, $size],
+            new ModelGeometry(
+                new TexturePosition(13, 0),
+                new TexturePosition($size, $size),
                 $offset
-            ]
+            )
         ];
     }
 }

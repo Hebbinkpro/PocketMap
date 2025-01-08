@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
+use Hebbinkpro\PocketMap\textures\model\geometry\ModelGeometry;
+use Hebbinkpro\PocketMap\textures\model\geometry\TexturePosition;
 use pocketmine\block\Block;
 use pocketmine\block\Torch;
 use pocketmine\math\Facing;
@@ -27,7 +29,7 @@ use pocketmine\world\format\Chunk;
 class TorchModel extends HorizontalFacingModel
 {
 
-    public function getGeometry(Block $block, Chunk $chunk): array
+    public function getGeometry(Block $block, Chunk $chunk): ?array
     {
         if (!$block instanceof Torch) return parent::getGeometry($block, $chunk);
 
@@ -35,28 +37,28 @@ class TorchModel extends HorizontalFacingModel
         if (in_array($facing, Facing::HORIZONTAL, true)) {
             return [
                 // top
-                [
-                    [7, 6], // start
-                    [2, 2], // size
-                    [7, 11]  // dest
-                ],
+                new ModelGeometry(
+                    new TexturePosition(7, 6),
+                    TexturePosition::xy(2),
+                    new TexturePosition(7, 11)
+                ),
                 // stick
-                [
-                    [7, 8],
-                    [2, 8],
-                    [7, 13],
-                    [2, 3]
-                ]
+                new ModelGeometry(
+                    new TexturePosition(7, 8),
+                    new TexturePosition(2, 8),
+                    new TexturePosition(7, 13),
+                    new TexturePosition(2, 3)
+                )
             ];
         }
 
         // top in a block center
         return [
-            [
-                [7, 6], // start
-                [2, 2], // size
-                [7, 7]  // dest
-            ]
+            new ModelGeometry(
+                new TexturePosition(7, 6),
+                TexturePosition::xy(2),
+                TexturePosition::center()
+            )
         ];
     }
 

@@ -19,23 +19,12 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
-use Hebbinkpro\PocketMap\textures\model\geometry\ModelGeometry;
-use Hebbinkpro\PocketMap\textures\model\geometry\TexturePosition;
-use pocketmine\block\Block;
-use pocketmine\world\format\Chunk;
+use Hebbinkpro\PocketMap\PocketMap;
 
-class WallSignModel extends HorizontalFacingModel
+final class FullBlockModel extends CenteredBlockModel
 {
-    public function getGeometry(Block $block, Chunk $chunk): ?array
+    public function __construct()
     {
-        // signs have some weird texture magic going on for their top texture
-        // so for simplicity, copy the middle two rows of the texture
-        return [
-            new ModelGeometry(
-                new TexturePosition(0, 7),
-                new TexturePosition(16, 2),
-                TexturePosition::zero()
-            )
-        ];
+        parent::__construct(PocketMap::TEXTURE_SIZE);
     }
 }

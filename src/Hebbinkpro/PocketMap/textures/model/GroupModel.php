@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,15 +19,19 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
+use Hebbinkpro\PocketMap\textures\model\geometry\ModelGeometry;
 use Hebbinkpro\PocketMap\utils\block\BlockUtils;
 use pocketmine\block\Block;
 use pocketmine\block\Candle;
 use pocketmine\world\format\Chunk;
 
+/**
+ * Model containing a group of objects, such as candles
+ */
 abstract class GroupModel extends BlockModel
 {
 
-    public function getGeometry(Block $block, Chunk $chunk): array
+    public function getGeometry(Block $block, Chunk $chunk): ?array
     {
         $geo = [];
 
@@ -38,13 +42,14 @@ abstract class GroupModel extends BlockModel
                 $count = $block->getCount();
             }
 
+            // TODO replace by the new geometry system
             $dest = $this->getDestLocations()[$count - 1];
             foreach ($dest as $d) {
-                $geo[] = [
+                $geo[] = ModelGeometry::fromLegacy([
                     $top[0],
                     $top[1],
                     $d
-                ];
+                ]);
             }
         }
 

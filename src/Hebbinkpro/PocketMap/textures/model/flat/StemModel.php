@@ -30,9 +30,9 @@ use pocketmine\world\format\Chunk;
 class StemModel extends FlatCrossModel
 {
 
-    public function getGeometry(Block $block, Chunk $chunk): array
+    public function getGeometry(Block $block, Chunk $chunk): ?array
     {
-        if (!$block instanceof Stem) return [];
+        if (!$block instanceof Stem) return null;
 
         if ($block->getFacing() != Facing::UP) {
             // default facing is west

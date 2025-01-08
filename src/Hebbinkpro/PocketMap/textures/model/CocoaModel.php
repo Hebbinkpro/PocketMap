@@ -19,25 +19,26 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
+use Hebbinkpro\PocketMap\textures\model\geometry\ModelGeometry;
+use Hebbinkpro\PocketMap\textures\model\geometry\TexturePosition;
 use pocketmine\block\Block;
 use pocketmine\block\CocoaBlock;
 use pocketmine\world\format\Chunk;
 
 class CocoaModel extends HorizontalFacingModel
 {
-    public function getGeometry(Block $block, Chunk $chunk): array
+    public function getGeometry(Block $block, Chunk $chunk): ?array
     {
-        if (!$block instanceof CocoaBlock) return [];
+        if (!$block instanceof CocoaBlock) return null;
 
         $size = 4 + $block->getAge() * 2;
         $offset = 6 - $block->getAge();
         return [
-            [
-                [0, 0],
-                [$size, $size],
-                [$offset, 12 - $block->getAge()],
-                [$size, $size],
-            ]
+            new ModelGeometry(
+                srcStart: TexturePosition::zero(),
+                srcSize: TexturePosition::xy($size),
+                dstStart: new TexturePosition($offset, 12 - $block->getAge())
+            )
         ];
     }
 }
