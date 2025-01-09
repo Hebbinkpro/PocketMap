@@ -132,6 +132,8 @@ final class BlockModels
         $this->register(VanillaBlocks::CAKE(), new CakeModel());
         $this->register(VanillaBlocks::COCOA_POD(), new CocoaModel());
         $this->register(VanillaBlocks::DRAGON_EGG(), new CenteredBlockModel(14));
+        $this->register(VanillaBlocks::NETHER_WART(), new CropsModel());
+        $this->register(VanillaBlocks::SWEET_BERRY_BUSH(), new FlatCrossModel());
         // TODO (Soul) Fire
         // TODO (Soul) Lantern
         // TODO Lectern

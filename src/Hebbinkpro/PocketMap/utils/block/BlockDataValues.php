@@ -26,6 +26,7 @@ use pocketmine\block\CakeWithDyedCandle;
 use pocketmine\block\Candle;
 use pocketmine\block\Carrot;
 use pocketmine\block\ChemistryTable;
+use pocketmine\block\CocoaBlock;
 use pocketmine\block\CoralBlock;
 use pocketmine\block\DaylightSensor;
 use pocketmine\block\Door;
@@ -36,10 +37,12 @@ use pocketmine\block\Farmland;
 use pocketmine\block\FloorBanner;
 use pocketmine\block\Hopper;
 use pocketmine\block\MelonStem;
+use pocketmine\block\NetherWartPlant;
 use pocketmine\block\PitcherCrop;
 use pocketmine\block\Potato;
 use pocketmine\block\PumpkinStem;
 use pocketmine\block\RedMushroomBlock;
+use pocketmine\block\SweetBerryBush;
 use pocketmine\block\TorchflowerCrop;
 use pocketmine\block\utils\CoralType;
 use pocketmine\block\utils\DyeColor;
@@ -114,6 +117,9 @@ final class BlockDataValues
                 };
 
             case PitcherCrop::class:
+            case CocoaBlock::class:
+            case SweetBerryBush::class:
+            case NetherWartPlant::class:
                 return $block->getAge();
 
             case TorchflowerCrop::class:

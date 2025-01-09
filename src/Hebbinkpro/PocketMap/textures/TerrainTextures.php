@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -269,6 +269,23 @@ class TerrainTextures extends ResourcePackTextures
                 $dataValue = BlockDataValues::getDataValue($block);
                 $terrainTexture = $terrainTexture[$dataValue] ?? null;
                 if ($terrainTexture === null) return null;
+            } else {
+                // split the texture name and get the last index
+                $split = explode("_", $textureName);
+                $key = sizeof($split) - 1;
+                if (is_numeric($split[$key])) {
+                    // last value is an integer, so it is probably data driven
+                    // replace the last integer with the correct data value
+                    // this behavior is needed for sweet berry bushes...
+                    $dataValue = BlockDataValues::getDataValue($block);
+                    $split[$key] = $dataValue;
+                    $dataTextureName = implode("_", $split);
+
+                    $newTerrainTexture = $this->getTerrainTextureByName($dataTextureName);
+                    // only use the updated texture if it is a string
+                    if (is_string($newTerrainTexture)) $terrainTexture = $newTerrainTexture;
+
+                }
             }
 
             /** @var string $textureName */
