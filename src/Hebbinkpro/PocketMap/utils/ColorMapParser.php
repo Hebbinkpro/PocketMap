@@ -115,7 +115,7 @@ final class ColorMapParser
             Ids::SPRUCE_LEAVES => self::getColorFromMapFromBiome($biome, $terrainTextures->getRealTexturePath(self::COLOR_MAP_EVERGREEN)),
             Ids::BIRCH_LEAVES => self::getColorFromMapFromBiome($biome, $terrainTextures->getRealTexturePath(self::COLOR_MAP_BIRCH)),
             Ids::GRASS, Ids::TALL_GRASS, Ids::DOUBLE_TALLGRASS, Ids::FERN, Ids::LARGE_FERN, Ids::SUGARCANE => self::getGrassColor($biome, $terrainTextures),
-            Ids::OAK_LEAVES, Ids::JUNGLE_LEAVES, Ids::ACACIA_LEAVES, Ids::DARK_OAK_LEAVES, Ids::VINES => self::getFoliageColor($biome, $terrainTextures),
+            Ids::OAK_LEAVES, Ids::JUNGLE_LEAVES, Ids::ACACIA_LEAVES, Ids::DARK_OAK_LEAVES, Ids::VINES, Ids::MANGROVE_LEAVES => self::getFoliageColor($biome, $terrainTextures),
             default => -1,
         };
 
