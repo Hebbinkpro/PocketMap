@@ -19,12 +19,14 @@
 
 namespace Hebbinkpro\PocketMap\textures\model;
 
-use Hebbinkpro\PocketMap\PocketMap;
+use pocketmine\block\Block;
+use pocketmine\world\format\Chunk;
 
-final class FullBlockModel extends CenteredBlockModel
+final class FullBlockModel extends BlockModel
 {
-    public function __construct()
+
+    public function getGeometry(Block $block, Chunk $chunk): ?array
     {
-        parent::__construct(PocketMap::TEXTURE_SIZE);
+        return self::getDefaultGeometry();
     }
 }
