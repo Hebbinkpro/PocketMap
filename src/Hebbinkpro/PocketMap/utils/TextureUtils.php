@@ -77,18 +77,8 @@ class TextureUtils
         // get the block model
         if (($model = BlockModels::getInstance()->get($block)) === null) return null;
 
-        $differentModel = BlockUtils::hasDifferentModelForSameState($block);
-        $texture = self::createBlockTexture($block, $differentModel ? null : $model, $chunk, $terrainTextures);
+        $texture = self::createBlockTexture($block, $model, $chunk, $terrainTextures);
         if ($texture === null) return null;
-
-        // if block can have different models for the same state, apply the model here
-        if ($differentModel) {
-            $modelTexture = $model->getModelTexture($block, $chunk, $texture);
-
-            if ($modelTexture !== null) {
-                $texture = $modelTexture;
-            }
-        }
 
         // resize the img
         return self::getCompressedImage($texture, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
@@ -105,11 +95,79 @@ class TextureUtils
     private static function createBlockTexture(Block $block, ?BlockModelInterface $model, Chunk $chunk, TerrainTextures $terrainTextures): ?GdImage
     {
         if (BlockUtils::isInvisible($block)) return null;
-        $pos = $block->getPosition()->floor();
 
         // get the biome
+        $pos = $block->getPosition()->floor();
         $biomeId = $chunk->getBiomeId((int)$pos->getX(), (int)$pos->getY(), (int)$pos->getZ());
         $biome = BiomeRegistry::getInstance()->getBiome($biomeId);
+
+        $differentModel = BlockUtils::hasDifferentModelForSameState($block);
+        if (!$differentModel) {
+            // block has no different models for the same state
+            $img = self::getTextureFromCache($block, $biome);
+            if ($img !== null) return $img;
+        }
+
+        // get the texture path
+        if (($path = $terrainTextures->getBlockTexturePath($block)) === null) {
+            // set the path to the fallback texture
+            $fallbackBlock = $terrainTextures->getOptions()->getFallbackBlock();
+            if ($fallbackBlock === null) $path = null;
+            else $path = $terrainTextures->getBlockTexturePath($fallbackBlock);
+        }
+
+        if (is_file($path . ".png")) $img = imagecreatefrompng($path . ".png");
+        else if (is_file($path . ".tga")) $img = imagecreatefromtga($path . ".tga");
+        else {
+            // the path is null, return empty image
+            $img = self::getEmptyTexture();
+        }
+        if ($img === false) return null;
+
+        // get the size of the image
+        [$sx, $sy] = [imagesx($img), imagesy($img)];
+        if ($sx > PocketMap::TEXTURE_SIZE || $sy > PocketMap::TEXTURE_SIZE) {
+            $scaledImg = self::getEmptyTexture();
+            // use sx for both the width and height, since a higher y value can be the result of an animated texture
+            // like sea lanterns
+            imagecopyresized(
+                $scaledImg, $img,
+                0, 0, 0, 0,
+                PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE, $sx, $sx
+            );
+            // set the scaled image as the new image
+            $img = $scaledImg;
+        }
+
+        imagealphablending($img, false);
+
+        // set the model
+        $modelImg = $img;
+        if ($model !== null) {
+            $modelImg = $model->getModelTexture($block, $chunk, $img);
+            imagedestroy($img);
+        }
+        if ($modelImg === null) return null;
+
+        // set the color map
+        self::applyColorMap($modelImg, $block, $biome, $terrainTextures);
+        imagesavealpha($modelImg, true);
+
+        // store in the cache
+        if (!$differentModel) self::cacheTexture($block, $biome, $modelImg);
+
+        return $modelImg;
+    }
+
+    /**
+     * Get a texture already stored in the block cache
+     * @param Block $block
+     * @param Biome $biome
+     * @return GdImage|null
+     */
+    private static function getTextureFromCache(Block $block, Biome $biome): ?GdImage
+    {
+
 
         if (!array_key_exists($biome->getId(), self::$blockTextureMap)) {
             self::$blockTextureMap[$biome->getId()] = [];
@@ -131,38 +189,21 @@ class TextureUtils
             return $img;
         }
 
-        if (($path = $terrainTextures->getBlockTexturePath($block)) === null) {
-            // set the path to the fallback texture
-            $fallbackBlock = $terrainTextures->getOptions()->getFallbackBlock();
-            if ($fallbackBlock === null) $path = null;
-            else $path = $terrainTextures->getBlockTexturePath($fallbackBlock);
-        }
+        return null;
+    }
 
-        if (is_file($path . ".png")) $img = imagecreatefrompng($path . ".png");
-        else if (is_file($path . ".tga")) $img = imagecreatefromtga($path . ".tga");
-        else {
-            // the path is null, return empty image
-            $img = self::getEmptyTexture();
-        }
-        if ($img === false) return null;
-
-        imagealphablending($img, false);
-
-        // set the model
-        $modelImg = $img;
-        if ($model !== null) {
-            $modelImg = $model->getModelTexture($block, $chunk, $img);
-            imagedestroy($img);
-        }
-        if ($modelImg === null) return null;
-
-        // set the color map
-        self::applyColorMap($modelImg, $block, $biome, $terrainTextures);
-        imagesavealpha($modelImg, true);
-
+    /**
+     * Store a copy of the given block model in the cache
+     * @param Block $block
+     * @param Biome $biome
+     * @param GdImage $modelImg
+     * @return void
+     */
+    private static function cacheTexture(Block $block, Biome $biome, GdImage $modelImg): void
+    {
         // create a cache image
         $cacheImg = self::getEmptyTexture();
-        if ($cacheImg === false) return null;
+        if ($cacheImg === false) return;
 
         imagealphablending($cacheImg, false);
         imagecopy($cacheImg, $modelImg, 0, 0, 0, 0, PocketMap::TEXTURE_SIZE, PocketMap::TEXTURE_SIZE);
@@ -170,8 +211,6 @@ class TextureUtils
 
         // store the cache image
         self::$blockTextureMap[$biome->getId()][$block->getStateId()] = $cacheImg;
-
-        return $modelImg;
     }
 
     public static function getEmptyTexture(int $size = PocketMap::TEXTURE_SIZE): GdImage|false
