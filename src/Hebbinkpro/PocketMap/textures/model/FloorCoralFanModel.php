@@ -17,16 +17,31 @@
  * (at your option) any later version.
  */
 
-namespace Hebbinkpro\PocketMap\textures\model\flat;
+namespace Hebbinkpro\PocketMap\textures\model;
 
+use Hebbinkpro\PocketMap\textures\model\geometry\ModelGeometry;
+use Hebbinkpro\PocketMap\textures\model\geometry\TexturePosition;
 use pocketmine\block\Block;
 use pocketmine\world\format\Chunk;
 
-class FlatCrossModel extends FlatBlockModel
+class FloorCoralFanModel extends BlockModel
 {
 
+    /**
+     * @inheritDoc
+     */
     public function getGeometry(Block $block, Chunk $chunk): ?array
     {
-        return FlatBlockModel::cross();
+        $geo = new ModelGeometry(
+            dstStart: TexturePosition::zero(),
+            dstSize: new TexturePosition(16, 8)
+        );
+
+        return [
+            $geo,
+            $geo->set(rotation: 90),
+            $geo->set(rotation: 180),
+            $geo->set(rotation: 270),
+        ];
     }
 }

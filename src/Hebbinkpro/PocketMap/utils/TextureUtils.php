@@ -28,8 +28,11 @@ use Hebbinkpro\PocketMap\utils\block\BlockStateParser;
 use Hebbinkpro\PocketMap\utils\block\BlockUtils;
 use Hebbinkpro\PocketMap\utils\block\OldBlockTypeNames;
 use pocketmine\block\Bed;
+use pocketmine\block\BigDripleafHead;
+use pocketmine\block\BigDripleafStem;
 use pocketmine\block\Block;
 use pocketmine\block\Campfire;
+use pocketmine\block\SmallDripleaf;
 use pocketmine\block\SoulCampfire;
 use pocketmine\math\Facing;
 use pocketmine\world\biome\Biome;
@@ -85,7 +88,7 @@ class TextureUtils
     }
 
     /**
-     * Get a block texture as an GdImage
+     * Get a block texture as a GdImage
      * @param Block $block
      * @param BlockModelInterface|null $model
      * @param Chunk $chunk
@@ -349,6 +352,13 @@ class TextureUtils
                 return "campfire_log_lit";
             }
             return "campfire_log";
+        } elseif ($block instanceof BigDripleafHead) {
+            return "big_dripleaf_top";
+        } elseif ($block instanceof BigDripleafStem) {
+            return "big_dripleaf_stem";
+        } elseif ($block instanceof SmallDripleaf) {
+            if ($block->isTop()) return "small_dripleaf_top";
+            else return "small_dripleaf_stem_top";
         }
 
         // replace _block_ with _

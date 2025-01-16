@@ -17,16 +17,37 @@
  * (at your option) any later version.
  */
 
-namespace Hebbinkpro\PocketMap\textures\model\flat;
+namespace Hebbinkpro\PocketMap\textures\model;
 
+use Hebbinkpro\PocketMap\textures\model\geometry\ModelGeometry;
+use Hebbinkpro\PocketMap\textures\model\geometry\TexturePosition;
 use pocketmine\block\Block;
+use pocketmine\block\NetherPortal;
+use pocketmine\math\Axis;
 use pocketmine\world\format\Chunk;
 
-class FlatCrossModel extends FlatBlockModel
+class NetherPortalModel extends BlockModel
 {
 
+    /**
+     * @inheritDoc
+     */
     public function getGeometry(Block $block, Chunk $chunk): ?array
     {
-        return FlatBlockModel::cross();
+        if (!$block instanceof NetherPortal) return null;
+
+        $rotation = match ($block->getAxis()) {
+            Axis::Z => 90,
+            default => 0
+        };
+
+        return [
+            new ModelGeometry(
+                TexturePosition::zero(),
+                new TexturePosition(16, 4),
+                dstStart: new TexturePosition(0, 6),
+                rotation: $rotation
+            )
+        ];
     }
 }

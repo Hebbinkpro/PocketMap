@@ -32,6 +32,9 @@ use pocketmine\world\format\Chunk;
 /**
  * This is the model used for blocks with a flat texture which is only visible from the sides.
  * Since it is nice to have a representation for this of blocks, the top of the textures will be used to generate models
+ *
+ * @deprecated The render method is the same as the normal BlockModel, and is only optimized to calculate the colors immediately,
+ *              Since this does not improve performance that much, this class will be removed in the future
  */
 abstract class FlatBlockModel implements BlockModelInterface
 {
@@ -41,14 +44,19 @@ abstract class FlatBlockModel implements BlockModelInterface
      */
     public function getModelTexture(Block $block, Chunk $chunk, GdImage $texture): ?GdImage
     {
+        // create model texture
+        $modelTexture = TextureUtils::getEmptyTexture();
+        if ($modelTexture === false) return null;
+
         // get the colors
         $colors = TextureUtils::getTopColors($texture, $this->getMaxHeight($block, $chunk));
+        if (sizeof($colors) === 0) return null;
 
-
-        $modelTexture = TextureUtils::getEmptyTexture();
+        // get geometry with cross as default
+        $geo = $this->getGeometry($block, $chunk) ?? self::cross();
 
         // copy all parts onto the texture
-        foreach ($this->getGeometry($block, $chunk) as $part) {
+        foreach ($geo as $part) {
             $partModel = $part->createTextureFromColors($colors);
 
             # copy the rotated texture onto the model
@@ -107,6 +115,32 @@ abstract class FlatBlockModel implements BlockModelInterface
         }
 
         return $geo;
+    }
+
+    /**
+     * Get a cross-model with an offset
+     * @param int $offset
+     * @param FlatModelGeometry|null $geo the default geometry to use
+     * @return array
+     */
+    public static function cross(int $offset = 0, FlatModelGeometry $geo = null): array
+    {
+        $geo ??= new FlatModelGeometry();
+
+        if ($offset < 0 || $offset > PocketMap::TEXTURE_SIZE) {
+            $offset = 0;
+        }
+
+        return [
+            $geo->set(
+                dstStart: TexturePosition::xy($offset),
+                dstEnd: TexturePosition::xy(PocketMap::TEXTURE_SIZE - $offset),
+            ),
+            $geo->set(
+                dstStart: new TexturePosition($offset, PocketMap::TEXTURE_SIZE - $offset),
+                dstEnd: new TexturePosition(PocketMap::TEXTURE_SIZE - $offset, $offset),
+            )
+        ];
     }
 
     /**

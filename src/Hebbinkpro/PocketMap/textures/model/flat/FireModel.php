@@ -22,11 +22,22 @@ namespace Hebbinkpro\PocketMap\textures\model\flat;
 use pocketmine\block\Block;
 use pocketmine\world\format\Chunk;
 
-class FlatCrossModel extends FlatBlockModel
+class FireModel extends FlatBlockModel
 {
 
+    /**
+     * @inheritDoc
+     */
     public function getGeometry(Block $block, Chunk $chunk): ?array
     {
-        return FlatBlockModel::cross();
+        // TODO fire model is different for the surrounding blocks
+        //      but this is only a client side thing.
+        // TODO fire is more of a 3d model in-game, but this flat model will suffice
+        return [
+            // add a cross
+            ...FlatBlockModel::cross(),
+            // add a square
+            ...FlatBlockModel::square(),
+        ];
     }
 }

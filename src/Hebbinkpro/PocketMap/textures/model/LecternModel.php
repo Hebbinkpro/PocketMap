@@ -17,16 +17,28 @@
  * (at your option) any later version.
  */
 
-namespace Hebbinkpro\PocketMap\textures\model\flat;
+namespace Hebbinkpro\PocketMap\textures\model;
 
+use Hebbinkpro\PocketMap\textures\model\geometry\ModelGeometry;
+use Hebbinkpro\PocketMap\textures\model\geometry\TexturePosition;
 use pocketmine\block\Block;
 use pocketmine\world\format\Chunk;
 
-class FlatCrossModel extends FlatBlockModel
+class LecternModel extends BlockModel
 {
 
+    /**
+     * @inheritDoc
+     */
     public function getGeometry(Block $block, Chunk $chunk): ?array
     {
-        return FlatBlockModel::cross();
+        return [
+            new ModelGeometry(
+                new TexturePosition(0, 1),
+                new TexturePosition(16, 13),
+            // TODO dst positions for angled top
+            ),
+            // TODO add Lectern Base texture
+        ];
     }
 }

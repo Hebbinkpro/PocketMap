@@ -25,8 +25,10 @@ use pocketmine\block\BlockTypeIds;
 use pocketmine\block\Chest;
 use pocketmine\block\Fence;
 use pocketmine\block\FenceGate;
+use pocketmine\block\RedstoneWire;
 use pocketmine\block\Thin;
 use pocketmine\block\utils\AgeableTrait;
+use pocketmine\block\utils\AnalogRedstoneSignalEmitterTrait;
 use pocketmine\block\utils\AnyFacingTrait;
 use pocketmine\block\utils\ColoredTrait;
 use pocketmine\block\utils\FacesOppositePlacingPlayerTrait;
@@ -99,6 +101,9 @@ class BlockUtils
                 $connections[] = $facing;
             } else if ($block instanceof Thin
                 && ($side instanceof Thin || $side instanceof Wall || $block->getSupportType(Facing::opposite($facing)) === SupportType::FULL)) {
+                $connections[] = $facing;
+            } else if ($block instanceof RedstoneWire
+                && self::hasTrait($side, PoweredByRedstoneTrait::class, AnalogRedstoneSignalEmitterTrait::class)) {
                 $connections[] = $facing;
             }
         }

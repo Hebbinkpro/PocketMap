@@ -26,6 +26,7 @@ use pocketmine\block\CakeWithDyedCandle;
 use pocketmine\block\Candle;
 use pocketmine\block\Carrot;
 use pocketmine\block\ChemistryTable;
+use pocketmine\block\ChorusFlower;
 use pocketmine\block\CocoaBlock;
 use pocketmine\block\CoralBlock;
 use pocketmine\block\DaylightSensor;
@@ -48,6 +49,7 @@ use pocketmine\block\utils\CoralType;
 use pocketmine\block\utils\DyeColor;
 use pocketmine\block\utils\WoodType;
 use pocketmine\block\WallBanner;
+use pocketmine\block\Wheat;
 use pocketmine\block\WoodenDoor;
 use pocketmine\block\WoodenSlab;
 use pocketmine\block\Wool;
@@ -120,6 +122,7 @@ final class BlockDataValues
             case CocoaBlock::class:
             case SweetBerryBush::class:
             case NetherWartPlant::class:
+            case Wheat::class:
                 return $block->getAge();
 
             case TorchflowerCrop::class:
@@ -161,6 +164,10 @@ final class BlockDataValues
 
             case DaylightSensor::class:
                 return intval($block->isInverted());
+
+            case ChorusFlower::class:
+                if ($block->getAge() === ChorusFlower::MAX_AGE) return 1;
+                return 0;
 
             default:
                 return 0;

@@ -21,6 +21,7 @@ namespace Hebbinkpro\PocketMap\textures\model;
 
 use Hebbinkpro\PocketMap\textures\model\flat\BrewingStandModel;
 use Hebbinkpro\PocketMap\textures\model\flat\CropsModel;
+use Hebbinkpro\PocketMap\textures\model\flat\FireModel;
 use Hebbinkpro\PocketMap\textures\model\flat\FlatCrossModel;
 use Hebbinkpro\PocketMap\textures\model\flat\FlatHorizontalFacingModel;
 use Hebbinkpro\PocketMap\textures\model\flat\ItemFrameModel;
@@ -40,6 +41,7 @@ use pocketmine\block\DoublePlant;
 use pocketmine\block\Fence;
 use pocketmine\block\FenceGate;
 use pocketmine\block\FloorBanner;
+use pocketmine\block\FloorCoralFan;
 use pocketmine\block\FloorSign;
 use pocketmine\block\Flowable;
 use pocketmine\block\Flower;
@@ -99,12 +101,12 @@ final class BlockModels
         $this->register(VanillaBlocks::LAVA(), new FullBlockModel());
         $this->register(VanillaBlocks::BIG_DRIPLEAF_STEM(), new FlatCrossModel());
         $this->register(VanillaBlocks::BREWING_STAND(), new FlatCrossModel());
-        $this->register(VanillaBlocks::AMETHYST_CLUSTER(), new FlatCrossModel());
+        $this->register(VanillaBlocks::AMETHYST_CLUSTER(), new AmethystClusterModel());
         $this->register(VanillaBlocks::PITCHER_CROP(), new FullBlockModel());
         $this->register(VanillaBlocks::END_ROD(), new EndRodModel());
-        $this->register(VanillaBlocks::CHEST(), new FullBlockModel()); // TODO double chests
-        $this->register(VanillaBlocks::TRAPPED_CHEST(), new FullBlockModel());
-        $this->register(VanillaBlocks::ENDER_CHEST(), new FullBlockModel());
+        $this->register(VanillaBlocks::CHEST(), new FullBlockModel()); // TODO use the entity textures
+        $this->register(VanillaBlocks::TRAPPED_CHEST(), new FullBlockModel()); // TODO use the entity textures
+        $this->register(VanillaBlocks::ENDER_CHEST(), new FullBlockModel()); // TODO use the entity textures
         $this->register(VanillaBlocks::CAKE(), new FullBlockModel());
         $this->register(VanillaBlocks::CAKE_WITH_CANDLE(), new FullBlockModel());
         $this->register(VanillaBlocks::CAKE_WITH_DYED_CANDLE(), new FullBlockModel());
@@ -123,7 +125,6 @@ final class BlockModels
         $this->register(VanillaBlocks::REDSTONE_WIRE(), new FullBlockModel());
         $this->register(VanillaBlocks::REDSTONE(), new FullBlockModel());
         $this->register(VanillaBlocks::TRIPWIRE(), new FullBlockModel());
-        $this->register(VanillaBlocks::MOB_HEAD(), new FullBlockModel());
         $this->register(VanillaBlocks::LADDER(), new FlatHorizontalFacingModel());
         $this->register(VanillaBlocks::SNOW_LAYER(), new FullBlockModel());
         $this->register(VanillaBlocks::BAMBOO(), new BambooModel());
@@ -134,22 +135,20 @@ final class BlockModels
         $this->register(VanillaBlocks::DRAGON_EGG(), new CenteredBlockModel(14));
         $this->register(VanillaBlocks::NETHER_WART(), new CropsModel());
         $this->register(VanillaBlocks::SWEET_BERRY_BUSH(), new FlatCrossModel());
-        // TODO (Soul) Fire
-        // TODO (Soul) Lantern
-        // TODO Lectern
-        // TODO Nether portal
-        // TODO Redstone
-        // TODO Sea Lantern
-        // TODO Mob Head
-        // TODO Tripwire
+        $this->register(VanillaBlocks::FIRE(), new FireModel());
+        $this->register(VanillaBlocks::SOUL_FIRE(), new FireModel());
+        $this->register(VanillaBlocks::LANTERN(), new LanternModel());
+        $this->register(VanillaBlocks::SOUL_LANTERN(), new LanternModel());
+        $this->register(VanillaBlocks::LECTERN(), new LecternModel());
+        $this->register(VanillaBlocks::NETHER_PORTAL(), new NetherPortalModel());
+        $this->register(VanillaBlocks::REDSTONE_WIRE(), new RedstoneModel());
+        $this->register(VanillaBlocks::MOB_HEAD(), new CenteredBlockModel(8)); // TODO use the entity textures
+        $this->register(VanillaBlocks::TRIPWIRE(), new NoModel());
         // TODO Tripwire Hook
-        // TODO Floor Coral Fan
-        // TODO Sculk
-        // TODO Chain
-        // TODO Small Dripleaf
-        // TODO Big Dripleaf
-        // TODO Spore Blossom
-        // TODO Chorus Flower
+        $this->register(VanillaBlocks::CHAIN(), new ChainModel());
+        $this->register(VanillaBlocks::SMALL_DRIPLEAF(), new SmallDripleafModel());
+        $this->register(VanillaBlocks::SPORE_BLOSSOM(), new NoModel()); // should be place on the underside of a block
+        $this->register(VanillaBlocks::CHORUS_FLOWER(), new ChorusFlowerModel());
 
         // register block types
         $this->registerClass(Fence::class, new FenceModel());
@@ -175,6 +174,7 @@ final class BlockModels
         $this->registerClass(Campfire::class, new CampfireModel());
         $this->registerClass(Stem::class, new StemModel()); // should be defined before Crops
         $this->registerClass(Crops::class, new CropsModel());
+        $this->registerClass(FloorCoralFan::class, new FloorCoralFanModel());
 
         // register traits
         $this->registerTrait(HorizontalFacingTrait::class, new HorizontalFacingModel());

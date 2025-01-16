@@ -17,16 +17,28 @@
  * (at your option) any later version.
  */
 
-namespace Hebbinkpro\PocketMap\textures\model\flat;
+namespace Hebbinkpro\PocketMap\textures\model;
 
+use Hebbinkpro\PocketMap\textures\model\flat\FlatBlockModel;
+use pocketmine\block\AmethystCluster;
 use pocketmine\block\Block;
+use pocketmine\math\Facing;
 use pocketmine\world\format\Chunk;
 
-class FlatCrossModel extends FlatBlockModel
+class AmethystClusterModel extends AnyFacingModel
 {
 
+    /**
+     * @inheritDoc
+     */
     public function getGeometry(Block $block, Chunk $chunk): ?array
     {
-        return FlatBlockModel::cross();
+        if (!$block instanceof AmethystCluster) return null;
+
+
+        return match ($block->getFacing()) {
+            Facing::UP, Facing::DOWN => FlatBlockModel::cross(),
+            default => self::getDefaultGeometry()
+        };
     }
 }

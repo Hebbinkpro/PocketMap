@@ -54,6 +54,30 @@ class FlatModelGeometry implements ModelGeometryInterface
     }
 
     /**
+     * Set values and get a new instance with those values
+     * @param int|null $src
+     * @param int|null $srcSize
+     * @param TexturePosition|null $dstStart
+     * @param TexturePosition|null $dstEnd
+     * @param int|null $rotation
+     * @param bool|null $clockwiseRotation
+     * @param bool|null $reverseColors
+     * @return self a new instance
+     */
+    public function set(int $src = null, int $srcSize = null, TexturePosition $dstStart = null, TexturePosition $dstEnd = null, int $rotation = null, bool $clockwiseRotation = null, bool $reverseColors = null): self
+    {
+        return new self(
+            $src ?? $this->src,
+            $srcSize ?? $this->srcSize,
+            $dstStart ?? $this->dstStart,
+            $dstEnd ?? $this->dstEnd,
+            $rotation ?? $this->rotation,
+            $clockwiseRotation ?? $this->clockwiseRotation,
+            $reverseColors ?? $this->reverseColors
+        );
+    }
+
+    /**
      * Create a texture using the provided src image
      * @param GdImage $srcImage
      * @param int $size

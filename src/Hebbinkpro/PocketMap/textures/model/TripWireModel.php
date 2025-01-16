@@ -17,16 +17,19 @@
  * (at your option) any later version.
  */
 
-namespace Hebbinkpro\PocketMap\textures\model\flat;
+namespace Hebbinkpro\PocketMap\textures\model;
 
 use pocketmine\block\Block;
 use pocketmine\world\format\Chunk;
 
-class FlatCrossModel extends FlatBlockModel
+class TripWireModel extends BlockModel
 {
 
+    /**
+     * @inheritDoc
+     */
     public function getGeometry(Block $block, Chunk $chunk): ?array
     {
-        return FlatBlockModel::cross();
+        // TODO: Implement getGeometry() method.
     }
 }

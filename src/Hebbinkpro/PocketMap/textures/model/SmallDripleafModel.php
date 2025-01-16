@@ -17,16 +17,32 @@
  * (at your option) any later version.
  */
 
-namespace Hebbinkpro\PocketMap\textures\model\flat;
+namespace Hebbinkpro\PocketMap\textures\model;
 
+use Hebbinkpro\PocketMap\textures\model\flat\FlatBlockModel;
+use Hebbinkpro\PocketMap\textures\model\geometry\ModelGeometry;
+use Hebbinkpro\PocketMap\textures\model\geometry\TexturePosition;
 use pocketmine\block\Block;
+use pocketmine\block\SmallDripleaf;
 use pocketmine\world\format\Chunk;
 
-class FlatCrossModel extends FlatBlockModel
+class SmallDripleafModel extends HorizontalFacingModel
 {
-
     public function getGeometry(Block $block, Chunk $chunk): ?array
     {
-        return FlatBlockModel::cross();
+        if (!$block instanceof SmallDripleaf) return null;
+
+        if (!$block->isTop()) return FlatBlockModel::cross();
+
+        $top = new ModelGeometry(
+            TexturePosition::zero(),
+            TexturePosition::xy(8)
+        );
+
+        return [
+            $top,
+            $top->set(rotation: 90),
+            $top->set(rotation: 270)
+        ];
     }
 }
