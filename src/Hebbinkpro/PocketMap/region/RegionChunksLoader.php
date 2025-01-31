@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ namespace Hebbinkpro\PocketMap\region;
 
 use Generator;
 use Hebbinkpro\PocketMap\PocketMap;
-use Hebbinkpro\PocketMap\utils\ChunkUtils;
+use Hebbinkpro\PocketMap\utils\WorldUtils;
 use pocketmine\world\format\io\WritableWorldProvider;
 
 class RegionChunksLoader
@@ -65,7 +65,7 @@ class RegionChunksLoader
             $chunkData = $this->provider->loadChunk($x, $z);
             if ($chunkData !== null) {
                 if (!array_key_exists($x, $chunks)) $chunks[$x] = [];
-                $chunks[$x][$z] = ChunkUtils::getChunkFromData($chunkData->getData());
+                $chunks[$x][$z] = WorldUtils::getChunkFromData($chunkData->getData());
             } else if ($region instanceof PartialRegion) {
                 // the chunk data of this chunk didn't exist
                 // remove the chunk from the partial region

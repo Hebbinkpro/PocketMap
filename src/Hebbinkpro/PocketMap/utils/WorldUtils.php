@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,12 +20,16 @@
 namespace Hebbinkpro\PocketMap\utils;
 
 use pocketmine\block\tile\Tile;
+use pocketmine\data\bedrock\BiomeIds;
 use pocketmine\entity\Entity;
+use pocketmine\world\biome\Biome;
+use pocketmine\world\biome\BiomeRegistry;
 use pocketmine\world\format\Chunk;
 use pocketmine\world\format\io\ChunkData;
 use pocketmine\world\World;
+use ReflectionClass;
 
-class ChunkUtils
+class WorldUtils
 {
     /**
      * Construct a Chunk from ChunkData
@@ -53,5 +57,27 @@ class ChunkUtils
             array_map(fn(Entity $e) => $e->saveNBT(), array_filter($world->getChunkEntities($chunkX, $chunkZ), fn(Entity $e) => $e->canSaveWithChunk())),
             array_map(fn(Tile $t) => $t->saveNBT(), $chunk->getTiles()),
         );
+    }
+
+    /**
+     * Get a biome by its name
+     * @param string $name
+     * @return Biome|null the biome or null when it does not exist
+     */
+    public static function getBiomeByName(string $name): ?Biome
+    {
+        // get the reflector class of the biome ids
+        $reflector = new ReflectionClass(BiomeIds::class);
+
+        $id = $reflector->getConstants()[strtoupper($name)] ?? null;
+
+        // get the biome and make sure it's ID is set!
+        if ($id === null) return null;
+
+        // get the biome and set its ID
+        $biome = BiomeRegistry::getInstance()->getBiome($id);
+        $biome->setId($id);
+
+        return $biome;
     }
 }

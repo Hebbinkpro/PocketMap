@@ -27,6 +27,7 @@ use Hebbinkpro\PocketMap\extension\DebugWorldExtension;
 use Hebbinkpro\PocketMap\extension\ExtensionManager;
 use Hebbinkpro\PocketMap\marker\MarkerManager;
 use Hebbinkpro\PocketMap\render\WorldRenderer;
+use Hebbinkpro\PocketMap\resourcepack\ResourcePackData;
 use Hebbinkpro\PocketMap\scheduler\ChunkSchedulerTask;
 use Hebbinkpro\PocketMap\scheduler\RenderSchedulerTask;
 use Hebbinkpro\PocketMap\settings\SettingsManager;
@@ -629,6 +630,22 @@ class PocketMap extends PluginBase implements Listener
             if ($texture !== null) $this->getLogger()->info("Found Texture: $texture, for block: {$block->getName()}, using name: " . TextureUtils::getBlockTextureName($block));
             else $this->getLogger()->warning("No Texture found for block: {$block->getName()}, using name: " . TextureUtils::getBlockTextureName($block));
         }
+
+        // TODO remove these lines
+        $pluginData = $this->getDataFolder() . "resource_packs/";
+        $rps = $this->getServer()->getDataPath() . "resource_packs/";
+
+        // folder with manifest in root
+        $rp1 = ResourcePackData::load($pluginData . "v1.21.50/");
+        // folder with manifest in subfolder
+        $rp2 = ResourcePackData::load($rps . "CustomiesWikiPack/");
+        // zip with manifest in root
+        $rp3 = ResourcePackData::load($rps . "CustomiesWikiPack.zip");
+        // TODO ---
+
+        $merged = $rp1->merge($rp2)->merge($rp3);
+        var_dump($rp1->getUUID(), $rp2->getUUID(), $rp3->getUUID(), $merged->getUUID());
+
     }
 
     protected function onDisable(): void

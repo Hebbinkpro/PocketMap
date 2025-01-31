@@ -10,7 +10,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 
 namespace Hebbinkpro\PocketMap;
 
-use Hebbinkpro\PocketMap\utils\ChunkUtils;
+use Hebbinkpro\PocketMap\utils\WorldUtils;
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\block\BlockBurnEvent;
 use pocketmine\event\block\BlockFormEvent;
@@ -100,7 +100,7 @@ class EventListener implements Listener
             // it's a new chunk
             if ($e->isNewChunk()) {
                 $chunk = $e->getChunk();
-                $chunkData = ChunkUtils::getChunkData($world, $cx, $cz, $chunk);
+                $chunkData = WorldUtils::getChunkData($world, $cx, $cz, $chunk);
                 // save the chunk, otherwise the RegionChunksLoader cannot read the chunk data
                 // this will cause the renderer to generate a black chunk in your beautiful map :(
                 $world->getProvider()->saveChunk($cx, $cz, $chunkData, $chunk->getTerrainDirtyFlags());
