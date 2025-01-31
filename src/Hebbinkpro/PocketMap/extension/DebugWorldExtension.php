@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ use pocketmine\block\RuntimeBlockStateRegistry;
 use pocketmine\event\Listener;
 use pocketmine\event\world\WorldLoadEvent;
 use pocketmine\math\Vector3;
+use pocketmine\world\ChunkLoader;
 use pocketmine\world\World;
 
 class DebugWorldExtension extends BaseExtension implements Listener
@@ -73,7 +74,9 @@ class DebugWorldExtension extends BaseExtension implements Listener
     private function hasDebugWorldMarkers(World $world): bool
     {
         $markers = PocketMap::getMarkers();
-        return $markers->isMarker($world, "debug_0");
+
+        $states = RuntimeBlockStateRegistry::getInstance()->getAllKnownStates();
+        return $markers->isMarker($world, "debug_" . array_key_first($states));
     }
 
     /**
@@ -131,6 +134,11 @@ class DebugWorldExtension extends BaseExtension implements Listener
     {
         $size = self::getDebugWorldGridSize();
 
+
+        // create temporary chunk loader to suppress debug message spam in the console
+        $chunkLoader = new class implements ChunkLoader {
+        };
+
         $plugin = $this->getPlugin();
         // divide by 8 since there are 8x8 blocks inside a debug grid chunk
         for ($x = 0; $x <= ceil($size / 8); $x++) {
@@ -138,9 +146,11 @@ class DebugWorldExtension extends BaseExtension implements Listener
                 if ($world->loadChunk($x, $z) !== null) continue;
 
                 // generate the chunk
-                $world->orderChunkPopulation($x, $z, null)->onCompletion(
-                    static function () use ($plugin, $x, $z, $world): void {
+                $world->orderChunkPopulation($x, $z, $chunkLoader)->onCompletion(
+                    static function () use ($plugin, $x, $z, $world, $chunkLoader): void {
                         $plugin->getLogger()->debug("Generated chunk $x,$z of world '{$world->getFolderName()}'");
+                        // remove the chunk loader
+                        $world->unregisterChunkLoader($chunkLoader, $x, $z);
                     },
                     static function (): void {
                         //NOOP: we don't care if the world was unloaded
