@@ -36,7 +36,7 @@ class RedstoneModel extends BlockModel
         $n = sizeof($connections);
         if ($n <= 1 || $n >= 4) {
             // connected to all sides
-            return [self::getDefaultGeometry()];
+            return self::getDefaultGeometry();
         }
 
         // TODO in the current system it is impossible to get the line texture of redstone,
