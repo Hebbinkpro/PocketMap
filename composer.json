@@ -9,7 +9,7 @@
     }
   ],
   "require": {
-    "hebbinkpro/pmmp-webserver": "^0.4.1",
+    "hebbinkpro/pmmp-webserver": "^0.4.2",
     "muqsit/simple-packet-handler": "dev-pm5"
   },
   "require-dev": {
