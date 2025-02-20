@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,7 +49,6 @@ class ResourcePackUtils
 
         $prefix = ResourcePackUtils::getPrefix($archive);
         if ($prefix === null) return false;
-        var_dump($prefix);
 
         // extract all json files
         $toExtract = [
@@ -70,12 +69,8 @@ class ResourcePackUtils
                 $toExtract[] = $prefix . $name;
             }
         }
-
-        var_dump($toExtract);
-
         // extract all files
         $res = $archive->extractTo($rpPath, $toExtract);
-        var_dump($res);
 
         $archive->close();
         return true;
