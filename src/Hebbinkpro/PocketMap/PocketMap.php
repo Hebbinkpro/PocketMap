@@ -9,7 +9,7 @@
  *                                            | |
  *                                            |_|
  *
- * Copyright (c) 2024 Hebbinkpro
+ * Copyright (c) 2024-2025 Hebbinkpro
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@ class PocketMap extends PluginBase implements Listener
     public const CONFIG_VERSION = 1.7;
     public const WEB_VERSION = 1.2;
 
-    public const RESOURCE_PACK_NAME = "v1.21.40";
+    public const RESOURCE_PACK_NAME = "v1.21.60";
     public const TEXTURE_SIZE = 16;
 
     public const IGNORED_TEXTURES = [
