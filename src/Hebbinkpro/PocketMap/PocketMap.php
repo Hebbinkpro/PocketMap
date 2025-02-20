@@ -645,6 +645,7 @@ class PocketMap extends PluginBase implements Listener
 
         $merged = $rp1->merge($rp2)->merge($rp3);
         var_dump($rp1->getUUID(), $rp2->getUUID(), $rp3->getUUID(), $merged->getUUID());
+        var_dump(array_keys($merged->getTextures()->getEntities()));
 
     }
 

@@ -43,6 +43,16 @@ final class ResourcePackData
     public const BLOCKS_DIR = "textures/blocks/";
     public const COLOR_MAP_DIR = "textures/colormap/";
     public const ENTITY_DIR = "textures/entity/";
+    public const ENTITY_TEXTURES = [
+        "banner",
+        "bed",
+        "bell",
+        "chest",
+        "piston_arm",
+        "skulls/",
+        "_sign",
+        "sign_"
+    ];
 
     private string $uuid;
     private ?BlocksData $blocks;
@@ -295,7 +305,14 @@ final class ResourcePackData
                 $texture = TextureFile::fromPath($filePath);
                 if ($texture !== null) $textures->addColorMap($texture);
             } elseif (str_starts_with($name, $prefix . self::ENTITY_DIR)) {
-                // TODO check for selected block entities
+                foreach (self::ENTITY_TEXTURES as $t) {
+                    if (sizeof(explode($t, $name)) > 1) {
+                        // found a matching entity
+                        $texture = TextureFile::fromPath($filePath);
+                        if ($texture !== null) $textures->addEntity($texture);
+                        break;
+                    }
+                }
             }
 
 
@@ -317,6 +334,41 @@ final class ResourcePackData
         $blocks = TextureFile::getTexturesFromDir($path . self::BLOCKS_DIR);
         $colorMaps = TextureFile::getTexturesFromDir($path . self::COLOR_MAP_DIR);
         $entities = []; // TODO extract selected block entities
+
+
+        if (is_dir($path . self::ENTITY_DIR) &&
+            ($files = scandir($path . self::ENTITY_DIR)) !== false) {
+
+            /** @var string[] $textures */
+            $textures = [...self::ENTITY_TEXTURES];
+
+            // singular files which must contain the 'texture' in their name
+            foreach ($files as $file) for ($i = 0; $i < sizeof($textures); $i++) {
+                $t = $textures[$i];
+
+                // split to check if the file contains the texture
+                if (sizeof(explode($t, $file)) <= 1) continue;
+
+                // check if the file is a directory
+                if (is_dir($path . self::ENTITY_DIR . $file)) {
+                    $entities = array_merge($entities, TextureFile::getTexturesFromDir($path . self::ENTITY_DIR . $file . "/"));
+                } else {
+                    // the file contains the texture
+                    $texture = TextureFile::fromPath($path . self::ENTITY_DIR . $file);
+                    $entities[$texture->getName()] = $texture;
+                }
+
+                // remove the matched texture, it should not occur again
+                unset($textures[$i]);
+                break;
+
+            }
+
+
+        }
+
+
+
 
         return new ResourcePackTextures($blocks, $colorMaps, $entities);
 
