@@ -1,0 +1,30 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "PocketMap Block Entity Fix",
+    "description": "An Internal Resource Pack for PocketMap to map block entities to their corresponding entity textures",
+    "uuid": "162e393f-ca73-423b-9cfd-577e649655f2",
+    "version": [
+      1,
+      0,
+      0
+    ],
+    "min_engine_version": [
+      1,
+      21,
+      70
+    ]
+  },
+  "modules": [
+    {
+      "description": "PocketMap Block Entity Mapper",
+      "type": "resources",
+      "uuid": "54534ba7-3cf5-4836-8ffe-32e5da9f5174",
+      "version": [
+        1,
+        0,
+        0
+      ]
+    }
+  ]
+}

@@ -1,0 +1,132 @@
+{
+  "resource_pack_name": "vanilla",
+  "texture_name": "atlas.terrain",
+  "padding": 8,
+  "num_mip_levels": 4,
+  "texture_data": {
+    "banner": {
+      "textures": "textures/entity/banner/banner_base"
+    },
+    "bed": {
+      "textures": [
+        "textures/entity/bed/white",
+        "textures/entity/bed/orange",
+        "textures/entity/bed/magenta",
+        "textures/entity/bed/light_blue",
+        "textures/entity/bed/yellow",
+        "textures/entity/bed/lime",
+        "textures/entity/bed/pink",
+        "textures/entity/bed/gray",
+        "textures/entity/bed/light_gray",
+        "textures/entity/bed/cyan",
+        "textures/entity/bed/purple",
+        "textures/entity/bed/blue",
+        "textures/entity/bed/brown",
+        "textures/entity/bed/green",
+        "textures/entity/bed/red",
+        "textures/entity/bed/black"
+      ]
+    },
+    "bell": {
+      "textures": "textures/entity/bell/bell"
+    },
+    "chest": {
+      "textures": [
+        "textures/entity/chest/normal",
+        "textures/entity/chest/double_normal"
+      ]
+    },
+    "trapped_chest": {
+      "textures": [
+        "textures/entity/chest/trapped",
+        "textures/entity/chest/trapped_double"
+      ]
+    },
+    "ender_chest": {
+      "textures": "textures/entity/chest/ender"
+    },
+    "skull": {
+      "textures": [
+        "textures/entity/skulls/skeleton",
+        "textures/entity/skulls/wither_skeleton",
+        "textures/entity/skulls/zombie",
+        "textures/entity/steve",
+        "textures/entity/skulls/creeper",
+        "textures/entity/dragon/dragon",
+        "textures/entity/piglin/piglin"
+      ]
+    },
+    "piston_arm_collision": {
+      "textures": "textures/entity/pistonarm/pistonArm"
+    },
+    "sticky_piston_arm_collision": {
+      "textures": "textures/entity/pistonarm/pistonArmSticky"
+    },
+    "oak_sign": {
+      "textures": "textures/entity/sign"
+    },
+    "spruce_sign": {
+      "textures": "textures/entity/sign_spruce"
+    },
+    "birch_sign": {
+      "textures": "textures/entity/sign_birch"
+    },
+    "jungle_sign": {
+      "textures": "textures/entity/sign_jungle"
+    },
+    "acacia_sign": {
+      "textures": "textures/entity/sign_acacia"
+    },
+    "dark_oak_sign": {
+      "textures": "textures/entity/sign_darkoak"
+    },
+    "mangrove_sign": {
+      "textures": "textures/entity/mangrove_sign"
+    },
+    "crimson_sign": {
+      "textures": "textures/entity/sign_crimson"
+    },
+    "warped_sign": {
+      "textures": "textures/entity/sign_warped"
+    },
+    "cherry_sign": {
+      "textures": "textures/entity/cherry_sign"
+    },
+    "pale_oak_sign": {
+      "textures": "textures/entity/pale_oak_sign"
+    },
+    "oak_hanging_sign": {
+      "textures": "textures/entity/oak_hanging_sign"
+    },
+    "spruce_hanging_sign": {
+      "textures": "textures/entity/spruce_hanging_sign"
+    },
+    "birch_hanging_sign": {
+      "textures": "textures/entity/birch_hanging_sign"
+    },
+    "jungle_hanging_sign": {
+      "textures": "textures/entity/jungle_hanging_sign"
+    },
+    "acacia_hanging_sign": {
+      "textures": "textures/entity/acacia_hanging_sign"
+    },
+    "dark_oak_hanging_sign": {
+      "textures": "textures/entity/dark_oak_hanging_sign"
+    },
+    "mangrove_hanging_sign": {
+      "textures": "textures/entity/mangrove_hanging_sign"
+    },
+    "crimson_hanging_sign": {
+      "textures": "textures/entity/crimson_hanging_sign"
+    },
+    "warped_hanging_sign": {
+      "textures": "textures/entity/warped_hanging_sign"
+    },
+    "cherry_hanging_sign": {
+      "textures": "textures/entity/cherry_hanging_sign"
+    },
+    "pale_oak_hanging_sign": {
+      "textures": "textures/entity/pale_oak_hanging_sign"
+    }
+  }
+}
