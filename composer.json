@@ -9,14 +9,14 @@
     }
   ],
   "require": {
-    "hebbinkpro/pmmp-webserver": "^0.4.2",
-    "muqsit/simple-packet-handler": "dev-pm5"
+    "hebbinkpro/pmmp-webserver": "^0.5.3",
+    "muqsit/simple-packet-handler": "0.1.5"
   },
   "require-dev": {
     "php": "^8.1",
     "pocketmine/pocketmine-mp": "^5.13.0",
-    "himbeer/libskin": "^2.0.1",
-    "paroxity/commando": "^3.1.0",
+    "himbeer/libskin": "^2.1.1",
+    "paroxity/commando": "^3.3.0",
     "phpstan/phpstan": "^1.10.3",
     "phpstan/phpstan-strict-rules": "^1.5.0",
     "phpstan/extension-installer": "^1.2.0"
@@ -27,23 +27,11 @@
     }
   },
   "repositories": {
-    "libskin": {
-      "type": "package",
-      "package": {
-        "name": "himbeer/libskin",
-        "version": "2.0.1",
-        "source": {
-          "url": "https://github.com/HimbeersaftLP/LibSkin.git",
-          "type": "git",
-          "reference": "master"
-        }
-      }
-    },
     "commando": {
       "type": "package",
       "package": {
         "name": "paroxity/commando",
-        "version": "3.1.0",
+        "version": "3.3.0",
         "source": {
           "url": "https://github.com/Paroxity/Commando.git",
           "type": "git",
