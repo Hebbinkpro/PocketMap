@@ -425,7 +425,8 @@ class PocketMap extends PluginBase implements Listener
         }
 
         // create the web server
-        $serverInfo = new HttpServerInfo($webSettings->getString("address", "127.0.0.1"), $webSettings->getInt("port", 3000));
+        $port = max(0, min(65535, $webSettings->getInt("port", 3000)));
+        $serverInfo = new HttpServerInfo($webSettings->getString("address", "127.0.0.1"), $port);
 
         $router = $serverInfo->getRouter();
 
