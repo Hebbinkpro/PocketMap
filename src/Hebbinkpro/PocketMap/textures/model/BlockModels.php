@@ -22,6 +22,7 @@ namespace Hebbinkpro\PocketMap\textures\model;
 use Hebbinkpro\PocketMap\utils\block\BlockUtils;
 use pocketmine\block\Block;
 use pocketmine\block\Button;
+use pocketmine\block\Chain;
 use pocketmine\block\Crops;
 use pocketmine\block\Door;
 use pocketmine\block\DoublePlant;
@@ -88,7 +89,7 @@ final class BlockModels
         $this->register(VanillaBlocks::CAVE_VINES(), new CrossModel());
         $this->register(VanillaBlocks::FIRE(), new CrossModel());
         $this->register(VanillaBlocks::SOUL_FIRE(), new CrossModel());
-        $this->register(VanillaBlocks::CHAIN(), new CrossModel());
+        $this->registerFromBlockType(Chain::class, new CrossModel());;
         $this->register(VanillaBlocks::BIG_DRIPLEAF_STEM(), new CrossModel());
         $this->register(VanillaBlocks::BREWING_STAND(), new CrossModel());
         $this->register(VanillaBlocks::COBWEB(), new CrossModel());

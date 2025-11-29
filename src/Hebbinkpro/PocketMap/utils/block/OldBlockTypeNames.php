@@ -33,6 +33,8 @@ final class OldBlockTypeNames
     public const DOUBLE_WOODEN_SLAB = "minecraft:double_wooden_slab";
     public const GRASS = "minecraft:grass";
 
+    public const CHAIN = "minecraft:chain";
+
     /**
      * Get the type name of a block.
      * If the type name has an old type name, the old type name will be returned,
@@ -63,6 +65,8 @@ final class OldBlockTypeNames
             => self::DOUBLE_WOODEN_SLAB,
 
             BTN::GRASS_BLOCK => self::GRASS,
+
+            BTN::IRON_CHAIN => self::CHAIN,
 
             default => $typeName
         };
