@@ -9,7 +9,7 @@
     }
   ],
   "require": {
-    "hebbinkpro/pmmp-webserver": "^0.5.3",
+    "hebbinkpro/pmmp-webserver": "^0.5.4",
     "muqsit/simple-packet-handler": "0.1.5"
   },
   "require-dev": {
@@ -42,8 +42,7 @@
   },
   "config": {
     "allow-plugins": {
-      "phpstan/extension-installer": true,
-      "wikimedia/composer-merge-plugin": true
+      "phpstan/extension-installer": true
     }
   },
   "scripts": {

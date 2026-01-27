@@ -7,7 +7,7 @@ projects:
     path: ""
     libs:
       - src: Hebbinkpro/pmmp-webserver/pmmp-webserver
-        version: 0.5.3
+        version: 0.5.4
       - src: HimbeersaftLP/LibSkin/LibSkin
         version: 2.1.1
       - src: Paroxity/Commando/Commando

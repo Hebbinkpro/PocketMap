@@ -1,5 +1,12 @@
 # PocketMap
 
+> [!WARNING]
+> This plugin uses the [PMMP WebServer](https://github.com/Hebbinkpro/pmmp-webserver) viron which contains a critical
+> security vulnerability.
+> All versions of this plugin released before **v0.6.4** are affected.
+> Please update the plugin to ensure that the PMMP WebServer virion uses version **v0.5.4 or later** as soon as
+> possible.
+
 A dynamic web-based world map for PocketMine-MP servers.<br>
 For a full overview over all functions of the plugin, go to the [documentation](#documentation)
 
