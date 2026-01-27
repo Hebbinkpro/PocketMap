@@ -8,35 +8,34 @@ on:
 jobs:
   build:
     name: PHPStan analysis
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
-        php:
-          - "8.1"
-          - "8.2"
-          - "8.3"
+        php: [ "8.2", "8.3" ]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup PHP
-        uses: pmmp/setup-php-action@2.0.0
+        uses: pmmp/setup-php-action@3.2.0
         with:
           php-version: ${{ matrix.php }}
           install-path: "./bin"
           pm-version-major: 5
 
       - name: Restore Composer package cache
-        id: composer-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
-          path: "~/.cache/composer"
-          key: "php-${{ matrix.php }}-composer-${{ hashFiles('**/composer.json') }}"
-          restore-keys: "php-${{ matrix.php }}-composer-"
+          path: |
+            ~/.cache/composer/files
+            ~/.cache/composer/vcs
+          key: "composer-v2-cache-${{ matrix.php }}-${{ hashFiles('./composer.lock') }}"
+          restore-keys: |
+            composer-v2-cache-
 
-      - name: Install PHPStan Composer dependencies
+      - name: Install Composer dependencies
         run: composer install --prefer-dist --no-interaction
 
       - name: Run PHPStan
-        run: composer run-script analyse
+        run: ./vendor/bin/phpstan analyze --no-progress --memory-limit=2G
